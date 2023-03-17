@@ -34,6 +34,14 @@ abstract class CodeAnnotatedTextBuilder(
   protected var curType: TextPart.Type? = null
 
   abstract fun addCode(code: String): CodeAnnotatedTextBuilder
+  open fun addComment(code: Array<String>, markups: Array<Triple<String, Int, Int>>): CodeAnnotatedTextBuilder {
+    for ((index, markup) in markups.withIndex()) {
+      this.addMarkup(markup.first, "\n")
+      this.addCode(code[index])
+    }
+
+    return this
+  }
 
   @Suppress("UNUSED_PARAMETER")
   open fun setSettings(settings: Settings) {
