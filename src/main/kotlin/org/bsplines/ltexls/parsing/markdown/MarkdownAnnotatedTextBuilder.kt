@@ -159,6 +159,8 @@
  
      visitChildren(this.parser.parse(clearCode))
  
+     if (this.pos < this.code.length) addMarkup(this.code.length)
+ 
      return this
    }
  
