@@ -42,7 +42,7 @@ jobs:
       - name: "Set up Python"
         uses: "actions/setup-python@v5"
         with:
-          python-version: "3.10.0"
+          python-version: "3.10"
 
       - name: "Create Completion Lists"
         run: "python -u tools/createCompletionLists.py"
@@ -67,7 +67,7 @@ jobs:
       - name: "Set up Python"
         uses: "actions/setup-python@v5"
         with:
-          python-version: "3.10.0"
+          python-version: "3.10"
 
       - name: "Create Completion Lists"
         run: "python -u tools/createCompletionLists.py"
@@ -101,7 +101,7 @@ jobs:
       - name: "Set up Python"
         uses: "actions/setup-python@v5"
         with:
-          python-version: "3.10.0"
+          python-version: "3.10"
 
       - name: "Install Python Dependencies"
         run: "python -u -m pip install --upgrade pip && pip install xmlschema==1.6.4"
@@ -136,7 +136,7 @@ jobs:
   #     - name: "Set up Python"
   #       uses: "actions/setup-python@v5"
   #       with:
-  #         python-version: "3.10.0"
+  #         python-version: "3.10"
 
   #     - name: "Create Completion Lists"
   #       run: "python -u tools/createCompletionLists.py"
@@ -172,7 +172,7 @@ jobs:
       - name: "Set up Python"
         uses: "actions/setup-python@v5"
         with:
-          python-version: "3.10.0"
+          python-version: "3.10"
 
       - name: "Install Python Dependencies"
         run: "python -u -m pip install --upgrade pip && pip install semver==2.13.0"
