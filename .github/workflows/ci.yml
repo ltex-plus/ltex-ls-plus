@@ -25,24 +25,24 @@ jobs:
     strategy:
       matrix:
         os:
-          - "ubuntu-20.04"
-          - "macos-11.0"
-          - "windows-2019"
+          - "ubuntu-latest"
+          - "macos-latest"
+          - "windows-latest"
 
     steps:
       - name: "Checkout Repository"
-        uses: "actions/checkout@v3"
+        uses: "actions/checkout@v4"
 
       - name: "Set up Java"
-        uses: "actions/setup-java@v3"
+        uses: "actions/setup-java@v4"
         with:
-          java-version: "11.0.9"
-          distribution: "zulu"
+          java-version: "21"
+          distribution: "temurin"
 
       - name: "Set up Python"
-        uses: "actions/setup-python@v4"
+        uses: "actions/setup-python@v5"
         with:
-          python-version: "3.9.0"
+          python-version: "3.10.0"
 
       - name: "Create Completion Lists"
         run: "python -u tools/createCompletionLists.py"
@@ -52,22 +52,22 @@ jobs:
 
   inspect:
     name: "CI - Inspect Job"
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-latest"
 
     steps:
       - name: "Checkout Repository"
-        uses: "actions/checkout@v3"
+        uses: "actions/checkout@v4"
 
       - name: "Set up Java"
-        uses: "actions/setup-java@v3"
+        uses: "actions/setup-java@v4"
         with:
-          java-version: "11.0.9"
-          distribution: "zulu"
+          java-version: "21"
+          distribution: "temurin"
 
       - name: "Set up Python"
-        uses: "actions/setup-python@v4"
+        uses: "actions/setup-python@v5"
         with:
-          python-version: "3.9.0"
+          python-version: "3.10.0"
 
       - name: "Create Completion Lists"
         run: "python -u tools/createCompletionLists.py"
@@ -92,16 +92,16 @@ jobs:
 
   validate:
     name: "CI - Validate Job"
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-latest"
 
     steps:
       - name: "Checkout Repository"
-        uses: "actions/checkout@v3"
+        uses: "actions/checkout@v4"
 
       - name: "Set up Python"
-        uses: "actions/setup-python@v4"
+        uses: "actions/setup-python@v5"
         with:
-          python-version: "3.9.0"
+          python-version: "3.10.0"
 
       - name: "Install Python Dependencies"
         run: "python -u -m pip install --upgrade pip && pip install xmlschema==1.6.4"
@@ -118,36 +118,36 @@ jobs:
       - name: "Check Source Consistency"
         run: "python -u tools/checkSourceConsistency.py"
 
-  upload_coverage:
-    name: "CI - Upload Coverage Job"
-    if: "${{ github.event_name != 'pull_request' }}"
-    runs-on: "ubuntu-20.04"
+  # upload_coverage:
+  #   name: "CI - Upload Coverage Job"
+  #   if: "${{ github.event_name != 'pull_request' }}"
+  #   runs-on: "ubuntu-latest"
 
-    steps:
-      - name: "Checkout Repository"
-        uses: "actions/checkout@v3"
+  #   steps:
+  #     - name: "Checkout Repository"
+  #       uses: "actions/checkout@v4"
 
-      - name: "Set up Java"
-        uses: "actions/setup-java@v3"
-        with:
-          java-version: "11.0.9"
-          distribution: "zulu"
+  #     - name: "Set up Java"
+  #       uses: "actions/setup-java@v4"
+  #       with:
+  #         java-version: "21"
+  #         distribution: "temurin"
 
-      - name: "Set up Python"
-        uses: "actions/setup-python@v4"
-        with:
-          python-version: "3.9.0"
+  #     - name: "Set up Python"
+  #       uses: "actions/setup-python@v5"
+  #       with:
+  #         python-version: "3.10.0"
 
-      - name: "Create Completion Lists"
-        run: "python -u tools/createCompletionLists.py"
+  #     - name: "Create Completion Lists"
+  #       run: "python -u tools/createCompletionLists.py"
 
-      - name: "Build LTeX LS"
-        run: "mvn -B -e verify"
+  #     - name: "Build LTeX LS"
+  #       run: "mvn -B -e verify"
 
-      - name: "Upload Coverage Report to Coveralls"
-        env:
-          LTEX_LS_COVERALLS_REPOSITORY_TOKEN: "${{ secrets.LTEX_LS_COVERALLS_REPOSITORY_TOKEN }}"
-        run: "mvn -B -e coveralls:report \"-DrepoToken=$LTEX_LS_COVERALLS_REPOSITORY_TOKEN\""
+  #     - name: "Upload Coverage Report to Coveralls"
+  #       env:
+  #         LTEX_LS_COVERALLS_REPOSITORY_TOKEN: "${{ secrets.LTEX_LS_COVERALLS_REPOSITORY_TOKEN }}"
+  #       run: "mvn -B -e coveralls:report \"-DrepoToken=$LTEX_LS_COVERALLS_REPOSITORY_TOKEN\""
 
   deploy:
     name: "CI - Deploy Job"
@@ -155,24 +155,24 @@ jobs:
       - "build"
       - "inspect"
       - "validate"
-      - "upload_coverage"
+      # - "upload_coverage"
     if: "${{ startsWith(github.ref, 'refs/tags/') }}"
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-latest"
 
     steps:
       - name: "Checkout Repository"
-        uses: "actions/checkout@v3"
+        uses: "actions/checkout@v4"
 
       - name: "Set up Java"
-        uses: "actions/setup-java@v3"
+        uses: "actions/setup-java@v4"
         with:
-          java-version: "11.0.9"
-          distribution: "zulu"
+          java-version: "21"
+          distribution: "temurin"
 
       - name: "Set up Python"
-        uses: "actions/setup-python@v4"
+        uses: "actions/setup-python@v5"
         with:
-          python-version: "3.9.0"
+          python-version: "3.10.0"
 
       - name: "Install Python Dependencies"
         run: "python -u -m pip install --upgrade pip && pip install semver==2.13.0"
@@ -202,7 +202,7 @@ jobs:
         run: "python -u tools/createBinaryArchives.py"
 
       - name: "Create GitHub Release"
-        uses: "softprops/action-gh-release@v0.1.8"
+        uses: "softprops/action-gh-release@v2.0.8"
         with:
           token: "${{ secrets.LTEX_LS_CREATE_GITHUB_RELEASE_TOKEN }}"
           prerelease: "${{ env.LTEX_LS_IS_PRERELEASE }}"
