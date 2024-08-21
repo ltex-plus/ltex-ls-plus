@@ -38,7 +38,7 @@ If you like LT<sub>E</sub>X, but are not able to contribute in any of these ways
 ### Known Issues and Limitations
 
 - The LaTeX parser is not perfect. False positives are sometimes reported as errors. However, it is impossible to fully parse LaTeX's output without compiling the source. This follows from the [Turing-completeness of TeX](https://en.wikipedia.org/w/index.php?title=TeX&oldid=979062806#Typesetting_system) and the [halting problem](https://en.wikipedia.org/w/index.php?title=Halting_problem&oldid=979261081).
-- Initial checking might take a while (up to two minutes), depending on the length of the document. [This is a limitation of LanguageTool.](https://valentjn.github.io/ltex/faq.html#why-does-ltex-have-such-a-high-cpu-load)
+- Initial checking might take a while (up to two minutes), depending on the length of the document. [This is a limitation of LanguageTool.](https://ltex-plus.github.io/ltex-plus/faq.html#why-does-ltex-have-such-a-high-cpu-load)
 
 ## How to Request Features
 
@@ -51,7 +51,7 @@ If you like LT<sub>E</sub>X, but are not able to contribute in any of these ways
 
 ## How to Set Up the Project
 
-[As explained in the FAQ](https://valentjn.github.io/ltex/faq.html#whats-the-difference-between-vscode-ltex-ltex-ls-and-languagetool), LT<sub>E</sub>X consists of two components: [vscode-ltex](https://github.com/valentjn/vscode-ltex) and [ltex-ls](https://github.com/valentjn/ltex-ls). This guide is only about the ltex-ls part. If you want to change vscode-ltex as well, [be sure to read and follow the contribution guidelines of ltex-ls](https://valentjn.github.io/ltex/vscode-ltex/contributing.html).
+[As explained in the FAQ](https://ltex-plus.github.io/ltex-plus/faq.html#whats-the-difference-between-vscode-ltex-ltex-ls-and-languagetool), LT<sub>E</sub>X consists of two components: [vscode-ltex](https://github.com/valentjn/vscode-ltex) and [ltex-ls](https://github.com/valentjn/ltex-ls). This guide is only about the ltex-ls part. If you want to change vscode-ltex as well, [be sure to read and follow the contribution guidelines of ltex-ls](https://ltex-plus.github.io/ltex-plus/vscode-ltex/contributing.html).
 
 1. Install VS Code, Git, and Apache Maven.
 2. Fork ltex-ls on GitHub.
@@ -96,10 +96,10 @@ You can improve the [documentation](https://valentjn.github.io/ltex):
 
 | Page | Sources |
 | ---- | ------- |
-| [Settings](https://valentjn.github.io/ltex/settings.html) | [`package.json`](https://github.com/valentjn/vscode-ltex/blob/develop/package.json), [`package.nls.json`](https://github.com/valentjn/vscode-ltex/blob/develop/package.nls.json) |
-| [Code of Conduct](https://valentjn.github.io/ltex/code-of-conduct.html) | [`CODE_OF_CONDUCT.md`](https://github.com/valentjn/vscode-ltex/blob/develop/CODE_OF_CONDUCT.md) |
-| [ltex-ls → Changelog](https://valentjn.github.io/ltex/ltex-ls/changelog.html) | [`ltex-ls/changelog.xml`](https://github.com/valentjn/ltex-ls/blob/develop/changelog.xml) |
-| [ltex-ls → Contributing](https://valentjn.github.io/ltex/ltex-ls/contributing.html) | [`ltex-ls/CONTRIBUTING.md`](https://github.com/valentjn/ltex-ls/blob/develop/CONTRIBUTING.md) |
+| [Settings](https://ltex-plus.github.io/ltex-plus/settings.html) | [`package.json`](https://github.com/valentjn/vscode-ltex/blob/develop/package.json), [`package.nls.json`](https://github.com/valentjn/vscode-ltex/blob/develop/package.nls.json) |
+| [Code of Conduct](https://ltex-plus.github.io/ltex-plus/code-of-conduct.html) | [`CODE_OF_CONDUCT.md`](https://github.com/valentjn/vscode-ltex/blob/develop/CODE_OF_CONDUCT.md) |
+| [ltex-ls → Changelog](https://ltex-plus.github.io/ltex-plus/ltex-ls-plus/changelog.html) | [`ltex-ls/changelog.xml`](https://github.com/valentjn/ltex-ls/blob/develop/changelog.xml) |
+| [ltex-ls → Contributing](https://ltex-plus.github.io/ltex-plus/ltex-ls-plus/contributing.html) | [`ltex-ls/CONTRIBUTING.md`](https://github.com/valentjn/ltex-ls/blob/develop/CONTRIBUTING.md) |
 
 ## How to Translate the User Interface
 

@@ -26,7 +26,7 @@ def createBinaryArchive(platform: str, arch: str) -> None:
   ltexLsVersion = getLtexLsVersion()
   targetDirPath = pathlib.Path(__file__).parent.parent.joinpath("target")
   ltexLsArchivePath = pathlib.Path(__file__).parent.parent.joinpath(
-      targetDirPath, f"ltex-ls-{ltexLsVersion}.tar.gz")
+      targetDirPath, f"ltex-ls-plus-{ltexLsVersion}.tar.gz")
 
   with tempfile.TemporaryDirectory() as tmpDirPathStr:
     tmpDirPath = pathlib.Path(tmpDirPathStr)
@@ -34,21 +34,21 @@ def createBinaryArchive(platform: str, arch: str) -> None:
     print("Extracting LTeX LS archive...")
     with tarfile.open(ltexLsArchivePath, "r:gz") as tarFile: tarFile.extractall(path=tmpDirPath)
 
-    ltexLsDirPath = tmpDirPath.joinpath(f"ltex-ls-{ltexLsVersion}")
+    ltexLsDirPath = tmpDirPath.joinpath(f"ltex-ls-plus-{ltexLsVersion}")
     relativeJavaDirPath = downloadJava(tmpDirPath, ltexLsDirPath, platform, arch)
 
     print("Setting default for JAVA_HOME in startup script...")
 
     if platform == "windows":
-      ltexLsDirPath.joinpath("bin", "ltex-ls").unlink()
+      ltexLsDirPath.joinpath("bin", "ltex-ls-plus").unlink()
       ltexLsDirPath.joinpath("bin", "ltex-cli").unlink()
-      ltexLsBinScriptPath = ltexLsDirPath.joinpath("bin", "ltex-ls.bat")
+      ltexLsBinScriptPath = ltexLsDirPath.joinpath("bin", "ltex-ls-plus.bat")
       ltexCliBinScriptPath = ltexLsDirPath.joinpath("bin", "ltex-cli.bat")
       binScriptJavaHomeSearchPattern = re.compile("^set REPO=.*$", flags=re.MULTILINE)
     else:
-      ltexLsDirPath.joinpath("bin", "ltex-ls.bat").unlink()
+      ltexLsDirPath.joinpath("bin", "ltex-ls-plus.bat").unlink()
       ltexLsDirPath.joinpath("bin", "ltex-cli.bat").unlink()
-      ltexLsBinScriptPath = ltexLsDirPath.joinpath("bin", "ltex-ls")
+      ltexLsBinScriptPath = ltexLsDirPath.joinpath("bin", "ltex-ls-plus")
       ltexCliBinScriptPath = ltexLsDirPath.joinpath("bin", "ltex-cli")
       binScriptJavaHomeSearchPattern = re.compile("^BASEDIR=.*$", flags=re.MULTILINE)
 
@@ -69,7 +69,7 @@ def createBinaryArchive(platform: str, arch: str) -> None:
     lspCliJsonPath = ltexLsDirPath.joinpath("bin", ".lsp-cli.json")
     with open(lspCliJsonPath, "r") as file: lspCliJson = json.load(file)
     lspCliJson["defaultValues"]["--server-command-line"] = (
-        "ltex-ls.bat" if platform == "windows" else "./ltex-ls")
+        "ltex-ls-plus.bat" if platform == "windows" else "./ltex-ls-plus")
 
     with open(lspCliJsonPath, "w") as file:
       json.dump(lspCliJson, file, indent=2, ensure_ascii=False)
@@ -77,7 +77,7 @@ def createBinaryArchive(platform: str, arch: str) -> None:
     ltexLsBinaryArchiveFormat = ("zip" if platform == "windows" else "gztar")
     ltexLsBinaryArchiveExtension = (".zip" if platform == "windows" else ".tar.gz")
     ltexLsBinaryArchivePath = targetDirPath.joinpath(
-        f"ltex-ls-{ltexLsVersion}-{platform}-{arch}")
+        f"ltex-ls-plus-{ltexLsVersion}-{platform}-{arch}")
 
     print(f"Creating binary archive '{ltexLsBinaryArchivePath}{ltexLsBinaryArchiveExtension}'...")
     shutil.make_archive(str(ltexLsBinaryArchivePath), ltexLsBinaryArchiveFormat,

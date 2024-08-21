@@ -50,7 +50,7 @@ def getLanguageToolVersion() -> str:
 def downloadLanguageTool(tmpDirPath: pathlib.Path) -> pathlib.Path:
   languageToolVersion = getLanguageToolVersion()
   archiveFileName = f"LanguageTool-{languageToolVersion}.zip"
-  url = ("https://github.com/valentjn/languagetool-mirror/releases/download/"
+  url = ("https://github.com/ltex-plus/languagetool-mirror/releases/download/"
       f"{languageToolVersion}/{archiveFileName}")
   archiveFilePath = tmpDirPath.joinpath(archiveFileName)
   print(f"Downloading LanguageTool from {url}...")

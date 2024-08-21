@@ -18,7 +18,7 @@
   - *Examples:* Missing information is provided, bug occurs again due to a regression, etc.
 - Issue comments that do not contribute to the discussion (e.g., “I'm affected, too” on confirmed bug reports) may be hidden. Instead, reactions (e.g., thumbs-up) should be used to upvote issues.
 - Issues that don't follow the **template** may be closed immediately.
-- Issues may be **locked** if they violate the [code of conduct](https://valentjn.github.io/ltex/code-of-conduct.html).
+- Issues may be **locked** if they violate the [code of conduct](https://ltex-plus.github.io/ltex-plus/code-of-conduct.html).
 
 ## Guidelines About Versioning
 
