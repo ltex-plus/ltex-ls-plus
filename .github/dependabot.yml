@@ -13,6 +13,6 @@ updates:
       day: "sunday"
     open-pull-requests-limit: 10
     assignees:
-      - "valentjn"
+      - "spitzerd"
     labels:
       - "pr-dependabot 🤖"
