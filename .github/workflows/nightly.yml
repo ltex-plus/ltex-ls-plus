@@ -13,7 +13,7 @@ on:
 jobs:
   deploy:
     name: "Nightly - Deploy Job"
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-latest"
 
     steps:
       - name: "Checkout Repository"
@@ -22,7 +22,7 @@ jobs:
       - name: "Set up Java"
         uses: "actions/setup-java@v4"
         with:
-          java-version: "21"
+          java-version: "11"
           distribution: "temurin"
 
       - name: "Set up Python"
