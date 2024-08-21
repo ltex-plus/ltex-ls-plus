@@ -208,7 +208,7 @@
       <plugin>
         <groupId>com.github.ozsie</groupId>
         <artifactId>detekt-maven-plugin</artifactId>
-        <version>1.22.0</version>
+        <version>1.23.5</version>
         <configuration>
           <buildUponDefaultConfig>true</buildUponDefaultConfig>
           <config>${project.basedir}/.detekt.yml</config>
