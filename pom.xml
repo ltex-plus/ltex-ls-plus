@@ -96,7 +96,7 @@
     <dependency>
       <groupId>com.vladsch.flexmark</groupId>
       <artifactId>flexmark-ext-tables</artifactId>
-      <version>0.64.0</version>
+      <version>0.64.8</version>
     </dependency>
     <dependency>
       <groupId>com.vladsch.flexmark</groupId>
