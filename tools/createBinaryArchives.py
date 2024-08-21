@@ -41,15 +41,15 @@ def createBinaryArchive(platform: str, arch: str) -> None:
 
     if platform == "windows":
       ltexLsDirPath.joinpath("bin", "ltex-ls-plus").unlink()
-      ltexLsDirPath.joinpath("bin", "ltex-cli").unlink()
+      ltexLsDirPath.joinpath("bin", "ltex-cli-plus").unlink()
       ltexLsBinScriptPath = ltexLsDirPath.joinpath("bin", "ltex-ls-plus.bat")
-      ltexCliBinScriptPath = ltexLsDirPath.joinpath("bin", "ltex-cli.bat")
+      ltexCliBinScriptPath = ltexLsDirPath.joinpath("bin", "ltex-cli-plus.bat")
       binScriptJavaHomeSearchPattern = re.compile("^set REPO=.*$", flags=re.MULTILINE)
     else:
       ltexLsDirPath.joinpath("bin", "ltex-ls-plus.bat").unlink()
-      ltexLsDirPath.joinpath("bin", "ltex-cli.bat").unlink()
+      ltexLsDirPath.joinpath("bin", "ltex-cli-plus.bat").unlink()
       ltexLsBinScriptPath = ltexLsDirPath.joinpath("bin", "ltex-ls-plus")
-      ltexCliBinScriptPath = ltexLsDirPath.joinpath("bin", "ltex-cli")
+      ltexCliBinScriptPath = ltexLsDirPath.joinpath("bin", "ltex-cli-plus")
       binScriptJavaHomeSearchPattern = re.compile("^BASEDIR=.*$", flags=re.MULTILINE)
 
     binScriptJavaHomeInsertString = (

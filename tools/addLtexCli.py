@@ -42,7 +42,7 @@ def main() -> None:
     print("Copying startup scripts...")
 
     for extension in ["", ".bat"]:
-      targetFilePath = targetDirPath.joinpath("bin", f"ltex-cli{extension}")
+      targetFilePath = targetDirPath.joinpath("bin", f"ltex-cli-plus{extension}")
       shutil.copyfile(lspCliDirPath.joinpath("bin", f"lsp-cli{extension}"), targetFilePath)
 
       if extension == "":
@@ -53,7 +53,7 @@ def main() -> None:
     print("Creating .lsp-cli.json...")
     lspCliJson = """
 {
-  "programName": "ltex-cli",
+  "programName": "ltex-cli-plus",
   "helpMessage": {
     "description": "LTeX CLI - Command-line interface for LTeX LS",
     "visibleArguments": [
