@@ -17,7 +17,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-javaVersion = "11.0.12+7"
+javaVersion = "11.0.24+8"
 
 
 
