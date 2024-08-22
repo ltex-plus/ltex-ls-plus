@@ -413,7 +413,7 @@ if %ERROR_CODE% EQU 0 set ERROR_CODE=1</replacevalue>
           <descriptors>
             <descriptor>.assembly.xml</descriptor>
           </descriptors>
-          <finalName>ltex-ls-${project.version}</finalName>
+          <finalName>ltex-ls-plus-${project.version}</finalName>
           <appendAssemblyId>false</appendAssemblyId>
         </configuration>
         <executions>
