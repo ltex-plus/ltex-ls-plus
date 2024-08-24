@@ -8,17 +8,17 @@
 
 # Security Policy
 
-For the LT<sub>E</sub>X project, the security of its users is its top priority. This document contains information on which versions are supported with security updates and how to report potential security vulnerabilities.
+For the LT<sub>E</sub>X+ project, the security of its users is its top priority. This document contains information on which versions are supported with security updates and how to report potential security vulnerabilities.
 
 ## Supported Versions
 
-By default, only the most recent published version of LT<sub>E</sub>X is supported with security updates.
+By default, only the most recent published version of LT<sub>E</sub>X+ is supported with security updates.
 
-If deemed relevant by the maintainers (depending on the severity of the security vulnerability and the need to keep older versions for compatibility), older versions of LT<sub>E</sub>X might also get security updates in exceptional circumstances.
+If deemed relevant by the maintainers (depending on the severity of the security vulnerability and the need to keep older versions for compatibility), older versions of LT<sub>E</sub>X+ might also get security updates in exceptional circumstances.
 
 ## Definition of Vulnerabilities
 
-LT<sub>E</sub>X follows [Microsoft's definition of security vulnerabilities](https://docs.microsoft.com/en-us/previous-versions/tn-archive/cc751383(v=technet.10)).
+LT<sub>E</sub>X+ follows [Microsoft's definition of security vulnerabilities](https://docs.microsoft.com/en-us/previous-versions/tn-archive/cc751383(v=technet.10)).
 
 In this document, the term &ldquo;vulnerability&rdquo; is synonymous to &ldquo;security vulnerability.&rdquo;
 
@@ -57,7 +57,7 @@ You will obtain an update as soon as the next step has been completed, but no la
 
 ## Responsible Disclosure Policy
 
-LT<sub>E</sub>X follows the principle of responsible disclosure. This means that security vulnerabilities are disclosed, but only a specific period of time.
+LT<sub>E</sub>X+ follows the principle of responsible disclosure. This means that security vulnerabilities are disclosed, but only a specific period of time.
 
 Vulnerabilities are disclosed as soon as a fix has been pushed and released or after 30 days after the initial report, whichever comes first. No information must be disclosed before the embargo ends, neither by the reporter nor by the maintainers.
 

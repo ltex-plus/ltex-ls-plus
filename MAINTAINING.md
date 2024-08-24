@@ -26,10 +26,10 @@
   - For bug fixes, the patch version is increased.
   - For new features, the minor version is increased.
   - For breaking changes, the major version is increased.
-    - *Explanation:* Breaking changes are changes that may require action from users (e.g., most changes of existing LT<sub>E</sub>X settings).
+    - *Explanation:* Breaking changes are changes that may require action from users (e.g., most changes of existing LT<sub>E</sub>X+ settings).
 
 ## Guidelines About Fundamental Changes
 
 - **Fundamental changes** are announced as an issue, in the documentation, and/or as message boxes in VS Code three months before their implementation.
-  - *Explanation:* Fundamental changes are possibly breaking changes that change the foundation of LT<sub>E</sub>X (e.g., upgrade from Java 8 to Java 11).
+  - *Explanation:* Fundamental changes are possibly breaking changes that change the foundation of LT<sub>E</sub>X+ (e.g., upgrade from Java 8 to Java 11).
 - **Documentation of fundamental changes** and associated deprecated settings may be deleted three months after their implementation.
