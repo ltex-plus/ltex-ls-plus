@@ -12,9 +12,12 @@
     <author>Julian Valentin, LTeX Development Community</author>
   </properties>
   <body>
-    <release version="16.0.1" date="upcoming">
+    <release version="17.0.0" date="2024-24-08">
       <action type="update">
-        Rename to LTeX+
+        Rename to LTeX LS+
+      </action>
+      <action type="update">
+        Update bundled Java runtime to 11.0.24+8
       </action>
     </release>
     <release version="16.0.0" date="2023-03-19">
