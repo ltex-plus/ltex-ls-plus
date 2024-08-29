@@ -18,12 +18,34 @@ import org.eclipse.lsp4j.Position
 import org.languagetool.DetectedLanguage
 import org.languagetool.language.identifier.SimpleLanguageIdentifier
 import org.languagetool.markup.AnnotatedText
+import java.io.OutputStream
+import java.io.PrintStream
 
 class CompletionListProvider(
   val settingsManager: SettingsManager,
 ) {
+  private var simpleLanguageIdentifier: SimpleLanguageIdentifier
+
+  init {
+    // workaround bugs like https://github.com/languagetool-org/languagetool/issues/3181,
+    // in which LT prints to stdout instead of stderr (this messes up the LSP communication
+    // and results in a deadlock) => temporarily discard output to stdout
+    val stdout: PrintStream = System.out
+    System.setOut(
+      PrintStream(
+        object : OutputStream() {
+          override fun write(b: Int) {
+          }
+        },
+        false,
+        "utf-8",
+      ),
+    )
+    simpleLanguageIdentifier = SimpleLanguageIdentifier()
+    System.setOut(stdout)
+  }
+
   private val fullCompletionListMap: MutableMap<String, List<String>> = HashMap()
-  private val simpleLanguageIdentifier = SimpleLanguageIdentifier()
 
   fun createCompletionList(document: LtexTextDocumentItem, position: Position): CompletionList {
     val codeFragmentPositionPair: Pair<CodeFragment, Int> =

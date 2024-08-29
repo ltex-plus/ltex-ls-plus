@@ -27,6 +27,8 @@ import org.languagetool.DetectedLanguage
 import org.languagetool.language.identifier.SimpleLanguageIdentifier
 import org.languagetool.markup.AnnotatedText
 import org.languagetool.markup.TextPart
+import java.io.OutputStream
+import java.io.PrintStream
 import java.time.Duration
 import java.time.Instant
 import java.util.logging.Level
@@ -34,10 +36,27 @@ import java.util.logging.Level
 class DocumentChecker(
   val settingsManager: SettingsManager,
 ) {
+  private var simpleLanguageIdentifier: SimpleLanguageIdentifier
+  init {
+    // workaround bugs like https://github.com/languagetool-org/languagetool/issues/3181,
+    // in which LT prints to stdout instead of stderr (this messes up the LSP communication
+    // and results in a deadlock) => temporarily discard output to stdout
+    val stdout: PrintStream = System.out
+    System.setOut(
+      PrintStream(
+        object : OutputStream() {
+          override fun write(b: Int) {
+          }
+        },
+        false,
+        "utf-8",
+      ),
+    )
+    simpleLanguageIdentifier = SimpleLanguageIdentifier()
+    System.setOut(stdout)
+  }
   var lastCheckedDocument: LtexTextDocumentItem? = null
     private set
-
-  private val simpleLanguageIdentifier = SimpleLanguageIdentifier()
 
   private fun fragmentizeDocument(
     document: LtexTextDocumentItem,
