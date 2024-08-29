@@ -12,6 +12,11 @@
     <author>Julian Valentin, LTeX Development Community</author>
   </properties>
   <body>
+    <release version="17.0.1" date="2024-08-29">
+      <action type="fix">
+        Silence output to stdout caused by LanguageTool. This issue caused a crash of LTeX LS+ on Linux systems. It's a similar issue to https://github.com/valentjn/vscode-ltex/issues/68
+      </action>
+    </release>
     <release version="17.0.0" date="2024-08-24">
       <action type="update">
         Rename to LTeX LS+
