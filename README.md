@@ -6,7 +6,7 @@
    - file, You can obtain one at https://mozilla.org/MPL/2.0/.
    -->
 
-# LT<sub>E</sub>X LS++ — LT<sub>E</sub>X Language Server
+# LT<sub>E</sub>X LS+ — LT<sub>E</sub>X Language Server
 
 LT<sub>E</sub>X LS+ (LT<sub>E</sub>X Language Server) implements a language server according to the [Language Server Protocol (LSP)](https://microsoft.github.io/language-server-protocol/) and provides grammar and spelling errors in markup documents (L<sup>A</sup>T<sub>E</sub>X, Markdown, etc.). The documents are checked with [LanguageTool](https://languagetool.org/).
 
