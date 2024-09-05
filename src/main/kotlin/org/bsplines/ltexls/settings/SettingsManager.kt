@@ -21,7 +21,7 @@ class SettingsManager {
   var languageToolInterface: LanguageToolInterface? = null
     private set
   var settings = Settings()
-    set(value) { // ktlint-disable experimental:trailing-comma
+    set(value) {
       val newLanguage: String = value.languageShortCode
       val oldSettings: Settings? = this.settingsMap[newLanguage]
 

@@ -10,3 +10,16 @@ ij_kotlin_allow_trailing_comma_on_call_site = true
 indent_size = 2
 insert_final_newline = true
 max_line_length = 100
+
+ktlint_standard_chain-wrapping = disabled
+ktlint_standard_indent = disabled
+ktlint_standard_string-template-indent = disabled
+ktlint_standard_range-spacing = disabled
+ktlint_standard_condition-wrapping = disabled
+ktlint_standard_function-expression-body = disabled
+ktlint_standard_chain-method-continuation = disabled
+ktlint_standard_class-signature = disabled
+ktlint_standard_blank-line-before-declaration = disabled
+ktlint_standard_multiline-expression-wrapping = disabled
+ktlint_standard_function-signature = disabled
+ktlint_standard_function-literal = disabled
