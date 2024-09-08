@@ -10,7 +10,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.bsplines</groupId>
   <artifactId>ltexls-plus</artifactId>
-  <version>17.0.2-alpha.1.develop</version>
+  <version>18.0.0-alpha</version>
   <name>${project.groupId}:${project.artifactId}</name>
   <description>LTeX+ Language Server (LTeX LS): LSP language server for LanguageTool with support for LaTeX, Markdown, and others</description>
   <url>https://github.com/ltex-plus/ltex-ls-plus</url>
@@ -36,7 +36,7 @@
     </license>
   </licenses>
   <properties>
-    <java.version>11</java.version>
+    <java.version>21</java.version>
     <kotlin.version>2.0.20</kotlin.version>
     <kotlin.compiler.languageVersion>1.8</kotlin.compiler.languageVersion>
     <kotlin.compiler.jvmTarget>${java.version}</kotlin.compiler.jvmTarget>

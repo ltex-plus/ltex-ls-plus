@@ -21,7 +21,6 @@ import java.io.UnsupportedEncodingException
 import java.net.MalformedURLException
 import java.net.URI
 import java.net.URISyntaxException
-import java.net.URL
 import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -41,7 +40,7 @@ class LanguageToolHttpInterface(
   init {
     var exception: Exception? = null
     this.uri = try {
-      URL(URL(uriString), "v2/check").toURI()
+      URI(uriString + "/v2/check").toURL().toURI()
     } catch (e: MalformedURLException) {
       exception = e
       null

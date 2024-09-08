@@ -12,6 +12,14 @@
     <author>Julian Valentin, LTeX Development Community</author>
   </properties>
   <body>
+      <release version="18.0.0" date="upcoming">
+      <action type="change">
+        Update from Java 11 to 21. Be aware: Starting from LTeX LS+ 18.0.0, Java 21 or higher is required!
+      </action>
+      <action type="add">
+        Add arm64/aarch64 Java runtimes for Linux (e.g. Raspberry Pi) and MacOS (Apple M1 SoC and it's successors).
+      </action>
+    </release>
     <release version="17.0.1" date="2024-08-29">
       <action type="fix">
         Silence output to stdout caused by LanguageTool. This issue caused a crash of LTeX LS+ on Linux systems. It's a similar issue to https://github.com/valentjn/vscode-ltex/issues/68
