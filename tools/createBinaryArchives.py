@@ -16,8 +16,10 @@ import tempfile
 import urllib.parse
 import urllib.request
 import zipfile
+import os
+import stat
 
-javaVersion = "11.0.24+8"
+javaVersion = "21.0.4+7"
 
 
 
@@ -89,10 +91,10 @@ def createBinaryArchive(platform: str, arch: str) -> None:
 def downloadJava(tmpDirPath: pathlib.Path, ltexLsDirPath: pathlib.Path,
       platform: str, arch: str) -> str:
   javaArchiveExtension = (".zip" if platform == "windows" else ".tar.gz")
-  javaArchiveName = (f"OpenJDK11U-jdk_{arch}_{platform}_hotspot_"
+  javaArchiveName = (f"OpenJDK21U-jdk_{arch}_{platform}_hotspot_"
       f"{javaVersion.replace('+', '_')}{javaArchiveExtension}")
 
-  javaUrl = ("https://github.com/adoptium/temurin11-binaries/releases/download/"
+  javaUrl = ("https://github.com/adoptium/temurin21-binaries/releases/download/"
       f"jdk-{urllib.parse.quote_plus(javaVersion)}/{javaArchiveName}")
   javaArchivePath = ltexLsDirPath.joinpath(javaArchiveName)
   print(f"Downloading JDK from '{javaUrl}' to '{javaArchivePath}'...")
@@ -141,14 +143,12 @@ def downloadJava(tmpDirPath: pathlib.Path, ltexLsDirPath: pathlib.Path,
         "java.xml",
         "java.xml.crypto",
         "jdk.accessibility",
-        "jdk.aot",
         "jdk.charsets",
         "jdk.crypto.cryptoki",
         "jdk.crypto.ec",
         "jdk.dynalink",
         "jdk.httpserver",
-        "jdk.internal.ed",
-        "jdk.internal.le",
+        "jdk.incubator.vector",
         "jdk.internal.vm.ci",
         "jdk.internal.vm.compiler",
         "jdk.internal.vm.compiler.management",
@@ -158,14 +158,10 @@ def downloadJava(tmpDirPath: pathlib.Path, ltexLsDirPath: pathlib.Path,
         "jdk.localedata",
         "jdk.management",
         "jdk.management.agent",
-        "jdk.management.jfr",
         "jdk.naming.dns",
-        "jdk.naming.ldap",
         "jdk.naming.rmi",
         "jdk.net",
-        "jdk.pack",
-        "jdk.scripting.nashorn",
-        "jdk.scripting.nashorn.shell",
+        "jdk.nio.mapmode",
         "jdk.sctp",
         "jdk.security.auth",
         "jdk.security.jgss",
@@ -181,7 +177,7 @@ def downloadJava(tmpDirPath: pathlib.Path, ltexLsDirPath: pathlib.Path,
   assert javaTargetDirPath.is_dir()
 
   print("Removing JDK directory...")
-  shutil.rmtree(jdkDirPath)
+  shutil.rmtree(jdkDirPath, onerror=remove_readonly)
 
   return relativeJavaDirPathString
 
@@ -194,11 +190,17 @@ def getLtexLsVersion() -> str:
     return regexMatch.group(1)
 
 
+def remove_readonly(func, path, _):
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
 
 def main() -> None:
   createBinaryArchive("linux", "x64")
   createBinaryArchive("mac", "x64")
   createBinaryArchive("windows", "x64")
+  createBinaryArchive("linux", "aarch64")
+  createBinaryArchive("mac", "aarch64")
 
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@
         Update from Java 11 to 21. Be aware: Starting from LTeX LS+ 18.0.0, Java 21 or higher is required!
       </action>
       <action type="add">
-        Add arm64/aarch64 Java runtimes for Linux (e.g. Raspberry Pi) and MacOS (Apple M1 SoC and it's successors).
+        Add arm64/aarch64 Java runtimes for Linux (e.g. Raspberry Pi) and macOS (Apple M1 SoC and its successors).
       </action>
     </release>
     <release version="17.0.1" date="2024-08-29">
