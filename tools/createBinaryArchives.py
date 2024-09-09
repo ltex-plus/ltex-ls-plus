@@ -96,6 +96,14 @@ def downloadJava(tmpDirPath: pathlib.Path, ltexLsDirPath: pathlib.Path,
 
   javaUrl = ("https://github.com/adoptium/temurin21-binaries/releases/download/"
       f"jdk-{urllib.parse.quote_plus(javaVersion)}/{javaArchiveName}")
+  relativeJavaDirPathString = f"jdk-{javaVersion}"
+
+  # See https://github.com/adoptium/adoptium-support/issues/616
+  if platform == "windows" and arch == "aarch64":
+    print("Temurin JDK for Windows on ARM is currently available as beta version only.")    
+    relativeJavaDirPathString = "jdk-21+25"
+    javaUrl = "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-2023-06-08-06-49-beta/OpenJDK-jdk_aarch64_windows_hotspot_2023-06-08-06-49.zip"
+
   javaArchivePath = ltexLsDirPath.joinpath(javaArchiveName)
   print(f"Downloading JDK from '{javaUrl}' to '{javaArchivePath}'...")
   urllib.request.urlretrieve(javaUrl, javaArchivePath)
@@ -109,7 +117,6 @@ def downloadJava(tmpDirPath: pathlib.Path, ltexLsDirPath: pathlib.Path,
   print("Removing JDK archive...")
   javaArchivePath.unlink()
 
-  relativeJavaDirPathString = f"jdk-{javaVersion}"
   jdkDirPath = tmpDirPath.joinpath(relativeJavaDirPathString)
   jmodsDirPath = (jdkDirPath.joinpath("jmods") if platform != "mac" else
       jdkDirPath.joinpath("Contents", "Home", "jmods"))
