@@ -13,7 +13,7 @@
   </properties>
   <body>
       <release version="18.0.0" date="upcoming">
-      <action type="change">
+      <action type="update">
         Update from Java 11 to 21. Be aware: Starting from LTeX LS+ 18.0.0, Java 21 or higher is required!
       </action>
       <action type="add">
