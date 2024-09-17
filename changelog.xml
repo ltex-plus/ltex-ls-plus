@@ -9,10 +9,10 @@
 <document xmlns="http://maven.apache.org/changes/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/changes/1.0.0 https://maven.apache.org/xsd/changes-1.0.0.xsd">
   <properties>
     <title>Changelog</title>
-    <author>Julian Valentin, LTeX Development Community</author>
+    <author>Julian Valentin, Daniel Spitzer and LTeX+ Development Community</author>
   </properties>
   <body>
-      <release version="18.0.0" date="upcoming">
+      <release version="18.0.0" date="2024-09-17">
       <action type="update">
         Update from Java 11 to 21. Be aware: Starting from LTeX LS+ 18.0.0, Java 21 or higher is required!
       </action>
