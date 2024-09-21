@@ -653,7 +653,7 @@ Params: {
                 "href": "https://community.languagetool.org/rule/show/DE_AGREEMENT?lang=de-DE"
             },
             "source": "LTeX",
-            "message": "Möglicherweise fehlende grammatische Übereinstimmung des Genus (männlich, weiblich, sächlich - Beispiel: 'der Fahrrad' statt 'das Fahrrad')."
+            "message": "Möglicherweise passen das Nomen und die Wörter, die das Nomen beschreiben, grammatisch nicht zusammen."
         }
     ]
 }
@@ -1336,7 +1336,7 @@ Params: {
                 "href": "https://community.languagetool.org/rule/show/DE_AGREEMENT?lang=de-DE"
             },
             "source": "LTeX",
-            "message": "Möglicherweise fehlende grammatische Übereinstimmung des Genus (männlich, weiblich, sächlich - Beispiel: 'der Fahrrad' statt 'das Fahrrad')."
+            "message": "Möglicherweise passen das Nomen und die Wörter, die das Nomen beschreiben, grammatisch nicht zusammen."
         }
     ]
 }

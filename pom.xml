@@ -10,7 +10,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.bsplines</groupId>
   <artifactId>ltexls-plus</artifactId>
-  <version>18.0.0</version>
+  <version>18.1.0-alpha</version>
   <name>${project.groupId}:${project.artifactId}</name>
   <description>LTeX+ Language Server (LTeX LS): LSP language server for LanguageTool with support for LaTeX, Markdown, and others</description>
   <url>https://github.com/ltex-plus/ltex-ls-plus</url>
@@ -44,6 +44,7 @@
     <main.class>org.bsplines.ltexls.LtexLanguageServerLauncher</main.class>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.jupiter.version>5.11.0</junit.jupiter.version>
+    <languagetool.version>6.4</languagetool.version>
   </properties>
   <dependencies>
     <dependency>
@@ -54,13 +55,13 @@
     <dependency>
       <groupId>org.languagetool</groupId>
       <artifactId>languagetool-core</artifactId>
-      <version>6.0</version>
+      <version>${languagetool.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.languagetool</groupId>
       <artifactId>language-all</artifactId>
-      <version>6.0</version>
+      <version>${languagetool.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -142,7 +143,7 @@
     <dependency>
       <groupId>org.languagetool</groupId>
       <artifactId>languagetool-server</artifactId>
-      <version>6.0</version>
+      <version>${languagetool.version}</version>
       <exclusions>
         <exclusion>
           <artifactId>logback-classic</artifactId>

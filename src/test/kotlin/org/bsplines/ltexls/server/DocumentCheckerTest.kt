@@ -357,16 +357,14 @@ class DocumentCheckerTest {
 
       try {
         assertEquals(
-          "M\u00f6glicherweise fehlende grammatische \u00dcbereinstimmung des "
-          + "Genus (m\u00e4nnlich, weiblich, s\u00e4chlich - "
-          + "Beispiel: 'der Fahrrad' statt 'das Fahrrad').",
+          "M\u00f6glicherweise passen das Nomen und die W\u00f6rter, "
+          + "die das Nomen beschreiben, grammatisch nicht zusammen.",
           matches[1].message,
         )
       } catch (e: AssertionError) {
         assertEquals(
-          "M\u00f6glicherweise fehlende grammatische \u00dcbereinstimmung des "
-          + "Genus (m\u00e4nnlich, weiblich, s\u00e4chlich - "
-          + "Beispiel: \u201ader Fahrrad\u2018 statt \u201adas Fahrrad\u2018).",
+          "M\u00f6glicherweise passen das Nomen und die W\u00f6rter, "
+          + "die das Nomen beschreiben, grammatisch nicht zusammen.",
           matches[1].message,
         )
       }
