@@ -24,26 +24,14 @@ def getLanguageToolVersion() -> str:
 
   pomFilePath =  pathlib.Path(__file__).parent.parent.joinpath("pom.xml")
   tree = xml.etree.ElementTree.parse(pomFilePath)
-  dependencyElements = tree.findall("./{http://maven.apache.org/POM/4.0.0}dependencies/"
-      "{http://maven.apache.org/POM/4.0.0}dependency")
-
-  for dependencyElement in dependencyElements:
-    groupIdElement = dependencyElement.find("./{http://maven.apache.org/POM/4.0.0}groupId")
-    assert groupIdElement is not None
-    artifactIdElement = dependencyElement.find("./{http://maven.apache.org/POM/4.0.0}artifactId")
-    assert artifactIdElement is not None
-
-    if ((groupIdElement.text == "org.languagetool")
-          and (artifactIdElement.text == "languagetool-core")):
-      versionElement = dependencyElement.find("./{http://maven.apache.org/POM/4.0.0}version")
-      assert versionElement is not None
-
-      version = versionElement.text
-      assert version is not None
-
-      return version
-
-  raise RuntimeError(f"Could not determine LanguageTool version in '{pomFilePath}'")
+  versionElement = tree.find("./{http://maven.apache.org/POM/4.0.0}properties/"
+      "{http://maven.apache.org/POM/4.0.0}languagetool.version")
+  assert versionElement is not None
+  version = versionElement.text
+  if version is not None:
+    return version
+  else:
+    raise RuntimeError(f"Could not determine LanguageTool version in '{pomFilePath}'")
 
 
 
