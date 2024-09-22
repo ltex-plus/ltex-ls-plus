@@ -16,6 +16,8 @@ from typing import Sequence, Tuple
 import urllib.request
 import xml.etree.ElementTree
 import zipfile
+import shutil
+import os
 
 
 
@@ -29,10 +31,7 @@ def getLanguageToolVersion() -> str:
   assert versionElement is not None
   version = versionElement.text
   if version is not None:
-    # English dictionaries were moved to https://github.com/languagetool-org/english-pos-dict
-    # Use LT 6.0 as temporary workaound until the code has been adapted
-    # return version
-    return "6.0"
+    return version
   else:
     raise RuntimeError(f"Could not determine LanguageTool version in '{pomFilePath}'")
 
@@ -52,13 +51,14 @@ def downloadLanguageTool(tmpDirPath: pathlib.Path) -> pathlib.Path:
 
 
 
-def searchForDictionaries(languageToolDirPath: pathlib.Path) \
+def searchForDictionaries(languageToolDirPath: pathlib.Path, tmpDictDirPath: pathlib.Path) \
       -> Sequence[Tuple[str, pathlib.Path, pathlib.Path]]:
   print("Searching for dictionaries...")
 
   resourceDirPath = languageToolDirPath.joinpath("org", "languagetool", "resource")
   dictionaries = []
 
+  # German dictionaries are part of the LanguageTool Core
   for languageDirPath in resourceDirPath.iterdir():
     if not languageDirPath.is_dir(): continue
     hunspellDirPath = languageDirPath.joinpath("hunspell")
@@ -70,7 +70,29 @@ def searchForDictionaries(languageToolDirPath: pathlib.Path) \
       infoFilePath = hunspellDirPath.joinpath(f"{path.stem}.info")
       assert infoFilePath.is_file(), \
           f".info file '{infoFilePath}' does not exist for .dict file '{path}'"
+
+      path = shutil.copy(path, str(tmpDictDirPath))
+      infoFilePath = shutil.copy(infoFilePath, str(tmpDictDirPath))
       dictionaries.append((language, path, infoFilePath))
+
+  # English dictionaries are not part of the LanguageTool Core but are stored as dependency.
+  # https://github.com/languagetool-org/english-pos-dict
+  with tempfile.TemporaryDirectory() as tmpDirPathStr:
+    shutil.copy(languageToolDirPath.joinpath("libs", "english-pos-dict.jar"), tmpDirPathStr)
+    with zipfile.ZipFile(pathlib.Path(tmpDirPathStr).joinpath("english-pos-dict.jar"), "r") as file:
+      file.extractall(pathlib.Path(tmpDirPathStr))
+      pathToDict = pathlib.Path(tmpDirPathStr).joinpath("org", "languagetool","resource", "en", "hunspell")
+      print(os.listdir(pathToDict))
+      for path in pathToDict.iterdir():
+        if not path.suffix == ".dict": continue
+        language = path.stem.replace("_", "-")
+        infoFilePath = pathToDict.joinpath(f"{path.stem}.info")
+        assert infoFilePath.is_file(), \
+            f".info file '{infoFilePath}' does not exist for .dict file '{path}'"
+
+        path = shutil.copy(path, str(tmpDictDirPath))
+        infoFilePath = shutil.copy(infoFilePath, str(tmpDictDirPath))
+        dictionaries.append((language, path, infoFilePath))
 
   # in other languages, dictionaries are either missing (e.g., French), very large (e.g., Breton),
   # or don't have a delimiter between the entries (e.g., Italian)
@@ -113,12 +135,14 @@ def main() -> None:
     tmpDirPath = pathlib.Path(tmpDirPathStr)
     languageToolDirPath = (arguments.languagetool_path
         if arguments.languagetool_path is not None else downloadLanguageTool(tmpDirPath))
+    with tempfile.TemporaryDirectory() as tmpDictDirPathStr:
+      tmpDictDirPath = pathlib.Path(tmpDictDirPathStr).joinpath("hunspell")
+      os.makedirs(tmpDictDirPath)
+      dictionaries = searchForDictionaries(languageToolDirPath, tmpDictDirPath)
+      languageToolJarFilePath = languageToolDirPath.joinpath("languagetool.jar")
 
-    dictionaries = searchForDictionaries(languageToolDirPath)
-    languageToolJarFilePath = languageToolDirPath.joinpath("languagetool.jar")
-
-    with multiprocessing.Pool() as pool:
-      pool.map(functools.partial(createCompletionList,
+      with multiprocessing.Pool() as pool:
+        pool.map(functools.partial(createCompletionList,
           languageToolJarFilePath, tmpDirPath, targetDirPath), dictionaries)
 
 
