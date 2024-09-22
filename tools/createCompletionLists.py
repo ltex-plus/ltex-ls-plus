@@ -29,7 +29,10 @@ def getLanguageToolVersion() -> str:
   assert versionElement is not None
   version = versionElement.text
   if version is not None:
-    return version
+    # English dictionaries were moved to https://github.com/languagetool-org/english-pos-dict
+    # Use LT 6.0 as temporary workaound until the code has been adapted
+    # return version
+    return "6.0"
   else:
     raise RuntimeError(f"Could not determine LanguageTool version in '{pomFilePath}'")
 
