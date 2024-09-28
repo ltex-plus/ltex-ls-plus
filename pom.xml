@@ -44,7 +44,7 @@
     <main.class>org.bsplines.ltexls.LtexLanguageServerLauncher</main.class>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.jupiter.version>5.11.0</junit.jupiter.version>
-    <languagetool.version>6.4</languagetool.version>
+    <languagetool.version>6.5</languagetool.version>
   </properties>
   <dependencies>
     <dependency>
