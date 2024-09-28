@@ -36,14 +36,17 @@ import java.net.URLEncoder
 class CodeActionProvider(
   val settingsManager: SettingsManager,
 ) {
-  fun createDiagnostic(match: LanguageToolRuleMatch, document: LtexTextDocumentItem): Diagnostic {
+  fun createDiagnostic(
+    match: LanguageToolRuleMatch,
+    document: LtexTextDocumentItem,
+  ): Diagnostic {
     val diagnostic = Diagnostic()
     val fromPosition: Position = document.convertPosition(match.fromPos)
     val toPosition: Position = document.convertPosition(match.toPos)
     diagnostic.range = Range(fromPosition, toPosition)
 
     val diagnosticSeverityMap: Map<String, DiagnosticSeverity> =
-        this.settingsManager.settings.diagnosticSeverity
+      this.settingsManager.settings.diagnosticSeverity
     var diagnosticSeverity: DiagnosticSeverity? = diagnosticSeverityMap[match.ruleId]
     if (diagnosticSeverity == null) diagnosticSeverity = diagnosticSeverityMap["default"]
     if (diagnosticSeverity == null) diagnosticSeverity = DiagnosticSeverity.Information
@@ -81,18 +84,18 @@ class CodeActionProvider(
 
       for (newWord: String in match.suggestedReplacements) {
         if (
-          (!acceptSuggestionsMatchesMap.containsKey(newWord))
-          && (acceptSuggestionsMatchesMap.size >= MAX_NUMBER_OF_ACCEPT_SUGGESTIONS_CODE_ACTIONS)
+          (!acceptSuggestionsMatchesMap.containsKey(newWord)) &&
+          (acceptSuggestionsMatchesMap.size >= MAX_NUMBER_OF_ACCEPT_SUGGESTIONS_CODE_ACTIONS)
         ) {
           continue
         }
 
         val acceptSuggestionsMatches: ArrayList<LanguageToolRuleMatch> =
-        acceptSuggestionsMatchesMap[newWord] ?: run {
-          val acceptSuggestionsMatches = ArrayList<LanguageToolRuleMatch>()
-          acceptSuggestionsMatchesMap[newWord] = acceptSuggestionsMatches
-          acceptSuggestionsMatches
-        }
+          acceptSuggestionsMatchesMap[newWord] ?: run {
+            val acceptSuggestionsMatches = ArrayList<LanguageToolRuleMatch>()
+            acceptSuggestionsMatchesMap[newWord] = acceptSuggestionsMatches
+            acceptSuggestionsMatches
+          }
 
         acceptSuggestionsMatches.add(match)
       }
@@ -103,8 +106,8 @@ class CodeActionProvider(
     }
 
     for (
-      (newWord: String, acceptSuggestionsMatches: List<LanguageToolRuleMatch>)
-      in acceptSuggestionsMatchesMap
+    (newWord: String, acceptSuggestionsMatches: List<LanguageToolRuleMatch>)
+    in acceptSuggestionsMatchesMap
     ) {
       result.add(
         Either.forRight(
@@ -167,13 +170,14 @@ class CodeActionProvider(
       )
     }
 
-    val codeAction = CodeAction(
-      if (acceptSuggestionsMatches.size == 1) {
-        I18n.format("useWord", newWord)
-      } else {
-        I18n.format("useWordAllSelectedMatches", newWord)
-      },
-    )
+    val codeAction =
+      CodeAction(
+        if (acceptSuggestionsMatches.size == 1) {
+          I18n.format("useWord", newWord)
+        } else {
+          I18n.format("useWordAllSelectedMatches", newWord)
+        },
+      )
     codeAction.kind = ACCEPT_SUGGESTIONS_CODE_ACTION_KIND
     codeAction.diagnostics = diagnostics
     codeAction.edit = WorkspaceEdit(documentChanges)
@@ -202,10 +206,11 @@ class CodeActionProvider(
       val codeFragment: CodeFragment = annotatedTextFragment.codeFragment
       val language: String = codeFragment.languageShortCode
       val offset: Int = codeFragment.fromPos
-      val word: String = annotatedTextFragment.getSubstringOfPlainText(
-        match.fromPos - offset,
-        match.toPos - offset,
-      )
+      val word: String =
+        annotatedTextFragment.getSubstringOfPlainText(
+          match.fromPos - offset,
+          match.toPos - offset,
+        )
 
       addToMap(language, word, unknownWordsMap, unknownWordsJsonObject)
       diagnostics.add(createDiagnostic(match, document))
@@ -216,11 +221,12 @@ class CodeActionProvider(
     arguments.add("words", unknownWordsJsonObject)
 
     val onlyUnknownWord: String? = getOnlyEntry(unknownWordsMap)
-    val commandTitle: String = if (onlyUnknownWord != null) {
-      I18n.format("addWordToDictionary", onlyUnknownWord)
-    } else {
-      I18n.format("addAllUnknownWordsInSelectionToDictionary")
-    }
+    val commandTitle: String =
+      if (onlyUnknownWord != null) {
+        I18n.format("addWordToDictionary", onlyUnknownWord)
+      } else {
+        I18n.format("addAllUnknownWordsInSelectionToDictionary")
+      }
     val command = Command(commandTitle, ADD_TO_DICTIONARY_COMMAND_NAME)
     command.arguments = listOf(arguments)
 
@@ -299,14 +305,15 @@ class CodeActionProvider(
     arguments.addProperty("uri", document.uri)
     arguments.add("falsePositives", falsePositivesJsonObject)
 
-    val command = Command(
-      if (ruleIdSentencePairs.size == 1) {
-        I18n.format("hideFalsePositive")
-      } else {
-        I18n.format("hideAllFalsePositivesInTheSelectedSentences")
-      },
-      HIDE_FALSE_POSITIVES_COMMAND_NAME,
-    )
+    val command =
+      Command(
+        if (ruleIdSentencePairs.size == 1) {
+          I18n.format("hideFalsePositive")
+        } else {
+          I18n.format("hideAllFalsePositivesInTheSelectedSentences")
+        },
+        HIDE_FALSE_POSITIVES_COMMAND_NAME,
+      )
     command.arguments = listOf(arguments)
 
     val codeAction = CodeAction(command.title)
@@ -349,11 +356,12 @@ class CodeActionProvider(
     arguments.addProperty("uri", document.uri)
     arguments.add("ruleIds", ruleIdsJsonObject)
 
-    val commandTitle: String = if (getOnlyEntry(ruleIdsMap) != null) {
-      I18n.format("disableRule")
-    } else {
-      I18n.format("disableAllRulesWithMatchesInSelection")
-    }
+    val commandTitle: String =
+      if (getOnlyEntry(ruleIdsMap) != null) {
+        I18n.format("disableRule")
+      } else {
+        I18n.format("disableAllRulesWithMatchesInSelection")
+      }
     val command = Command(commandTitle, DISABLE_RULES_COMMAND_NAME)
     command.arguments = listOf(arguments)
 
@@ -369,13 +377,13 @@ class CodeActionProvider(
     val SUGGESTION_REGEX = Regex("<suggestion>(.*?)</suggestion>")
 
     private const val ACCEPT_SUGGESTIONS_CODE_ACTION_KIND =
-        CodeActionKind.QuickFix + ".ltex.acceptSuggestions"
+      CodeActionKind.QuickFix + ".ltex.acceptSuggestions"
     private const val ADD_TO_DICTIONARY_CODE_ACTION_KIND =
-        CodeActionKind.QuickFix + ".ltex.addToDictionary"
+      CodeActionKind.QuickFix + ".ltex.addToDictionary"
     private const val DISABLE_RULES_CODE_ACTION_KIND =
-        CodeActionKind.QuickFix + ".ltex.disableRules"
+      CodeActionKind.QuickFix + ".ltex.disableRules"
     private const val HIDE_FALSE_POSITIVES_CODE_ACTION_KIND =
-        CodeActionKind.QuickFix + ".ltex.hideFalsePositives"
+      CodeActionKind.QuickFix + ".ltex.hideFalsePositives"
     private const val ADD_TO_DICTIONARY_COMMAND_NAME = "_ltex.addToDictionary"
     private const val DISABLE_RULES_COMMAND_NAME = "_ltex.disableRules"
     private const val HIDE_FALSE_POSITIVES_COMMAND_NAME = "_ltex.hideFalsePositives"
@@ -384,9 +392,7 @@ class CodeActionProvider(
 
     private const val MAX_NUMBER_OF_ACCEPT_SUGGESTIONS_CODE_ACTIONS = 5
 
-    fun getCodeActionKinds(): List<String> {
-      return listOf(ACCEPT_SUGGESTIONS_CODE_ACTION_KIND)
-    }
+    fun getCodeActionKinds(): List<String> = listOf(ACCEPT_SUGGESTIONS_CODE_ACTION_KIND)
 
     fun findAnnotatedTextFragmentWithMatch(
       annotatedTextFragments: List<AnnotatedTextFragment>,
@@ -405,12 +411,13 @@ class CodeActionProvider(
       map: MutableMap<String, MutableList<String>>,
       jsonObject: JsonObject,
     ) {
-      val unknownWordsList: MutableList<String> = map[key] ?: run {
-        val unknownWordsList = ArrayList<String>()
-        map[key] = unknownWordsList
-        jsonObject.add(key, JsonArray())
-        unknownWordsList
-      }
+      val unknownWordsList: MutableList<String> =
+        map[key] ?: run {
+          val unknownWordsList = ArrayList<String>()
+          map[key] = unknownWordsList
+          jsonObject.add(key, JsonArray())
+          unknownWordsList
+        }
 
       val unknownWordsJsonArray: JsonArray = jsonObject.getAsJsonArray(key)
 
@@ -420,13 +427,12 @@ class CodeActionProvider(
       }
     }
 
-    private fun getOnlyEntry(map: Map<String, List<String>>): String? {
-      return if (map.size == 1) {
+    private fun getOnlyEntry(map: Map<String, List<String>>): String? =
+      if (map.size == 1) {
         val list: List<String> = map.values.toList()[0]
         if (list.size == 1) list[0] else null
       } else {
         null
       }
-    }
   }
 }

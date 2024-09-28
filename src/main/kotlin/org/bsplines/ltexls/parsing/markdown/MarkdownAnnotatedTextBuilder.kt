@@ -36,13 +36,12 @@ class MarkdownAnnotatedTextBuilder(
   private var firstCellInTableRow = false
   private val nodeTypeStack = ArrayDeque<String>()
   private var language: String = "en-US"
-  private val nodeSignatures: MutableList<MarkdownNodeSignature> = ArrayList(
-    MarkdownAnnotatedTextBuilderDefaults.DEFAULT_MARKDOWN_NODE_SIGNATURES,
-  )
+  private val nodeSignatures: MutableList<MarkdownNodeSignature> =
+    ArrayList(
+      MarkdownAnnotatedTextBuilderDefaults.DEFAULT_MARKDOWN_NODE_SIGNATURES,
+    )
 
-  private fun isInNodeType(nodeType: String): Boolean {
-    return this.nodeTypeStack.contains(nodeType)
-  }
+  private fun isInNodeType(nodeType: String): Boolean = this.nodeTypeStack.contains(nodeType)
 
   private fun isInIgnoredNodeType(): Boolean {
     var result = false
@@ -93,7 +92,10 @@ class MarkdownAnnotatedTextBuilder(
     }
   }
 
-  private fun addMarkup(node: Node, interpretAs: String) {
+  private fun addMarkup(
+    node: Node,
+    interpretAs: String,
+  ) {
     addMarkup(node.startOffset)
     val newPos: Int = node.endOffset
     super.addMarkup(this.code.substring(this.pos, newPos), interpretAs)
@@ -107,17 +109,16 @@ class MarkdownAnnotatedTextBuilder(
     }
   }
 
-  private fun generateDummy(): String {
-    return DummyGenerator.getInstance().generate(this.language, this.dummyCounter++)
-  }
+  private fun generateDummy(): String =
+    DummyGenerator.getInstance().generate(this.language, this.dummyCounter++)
 
   override fun addCode(code: String): MarkdownAnnotatedTextBuilder {
     val document: Document = this.parser.parse(code)
 
     if (Logging.LOGGER.isLoggable(Level.FINEST)) {
       Logging.LOGGER.finest(
-        "flexmarkAst = "
-          + AstCollectingVisitor().collectAndGetAstText(document),
+        "flexmarkAst = " +
+          AstCollectingVisitor().collectAndGetAstText(document),
       )
     }
 
@@ -172,33 +173,35 @@ class MarkdownAnnotatedTextBuilder(
     for ((nodeName: String, actionString: String) in settings.markdownNodes) {
       var dummyGenerator: DummyGenerator = DummyGenerator.getInstance()
 
-      val action: MarkdownNodeSignature.Action = when (actionString) {
-        "default" -> MarkdownNodeSignature.Action.Default
-        "ignore" -> MarkdownNodeSignature.Action.Ignore
-        "dummy", "pluralDummy", "vowelDummy" -> {
-          val plural: Boolean = (actionString == "pluralDummy")
-          val vowel: Boolean = (actionString == "vowelDummy")
-          dummyGenerator = DummyGenerator.getInstance(plural = plural, vowel = vowel)
-          MarkdownNodeSignature.Action.Dummy
+      val action: MarkdownNodeSignature.Action =
+        when (actionString) {
+          "default" -> MarkdownNodeSignature.Action.Default
+          "ignore" -> MarkdownNodeSignature.Action.Ignore
+          "dummy", "pluralDummy", "vowelDummy" -> {
+            val plural: Boolean = (actionString == "pluralDummy")
+            val vowel: Boolean = (actionString == "vowelDummy")
+            dummyGenerator = DummyGenerator.getInstance(plural = plural, vowel = vowel)
+            MarkdownNodeSignature.Action.Dummy
+          }
+          else -> continue
         }
-        else -> continue
-      }
 
       this.nodeSignatures.add(MarkdownNodeSignature(nodeName, action, dummyGenerator))
     }
   }
 
   companion object {
-    private val PARSER_OPTIONS: DataHolder = MutableDataSet().set(
-      Parser.EXTENSIONS,
-      listOf(
-        DefinitionExtension.create(),
-        GitLabExtension.create(),
-        LtexMarkdownExtension.create(),
-        StrikethroughExtension.create(),
-        TablesExtension.create(),
-        YamlFrontMatterExtension.create(),
-      ),
-    )
+    private val PARSER_OPTIONS: DataHolder =
+      MutableDataSet().set(
+        Parser.EXTENSIONS,
+        listOf(
+          DefinitionExtension.create(),
+          GitLabExtension.create(),
+          LtexMarkdownExtension.create(),
+          StrikethroughExtension.create(),
+          TablesExtension.create(),
+          YamlFrontMatterExtension.create(),
+        ),
+      )
   }
 }

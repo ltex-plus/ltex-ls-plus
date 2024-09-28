@@ -13,9 +13,10 @@ class GitCommitFragmentizer(
   codeLanguageId: String,
 ) : RegexCodeFragmentizer(codeLanguageId, REGEX) {
   companion object {
-    private val REGEX = Regex(
-      "^[ \t]*#[ \t]+(?i)ltex(?-i):(.*?)[ \t]*$",
-      RegexOption.MULTILINE,
-    )
+    private val REGEX =
+      Regex(
+        "^[ \t]*#[ \t]+(?i)ltex(?-i):(.*?)[ \t]*$",
+        RegexOption.MULTILINE,
+      )
   }
 }

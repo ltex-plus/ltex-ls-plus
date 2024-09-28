@@ -11,7 +11,9 @@ import com.vladsch.flexmark.util.data.DataHolder
 import com.vladsch.flexmark.util.data.MutableDataHolder
 import com.vladsch.flexmark.util.data.MutableDataSetter
 
-class LtexMarkdownOptions(options: DataHolder) : MutableDataSetter {
+class LtexMarkdownOptions(
+  options: DataHolder,
+) : MutableDataSetter {
   var displayMathParser: Boolean = LtexMarkdownExtension.DISPLAY_MATH_PARSER.get(options)
   var inlineMathParser: Boolean = LtexMarkdownExtension.INLINE_MATH_PARSER.get(options)
 

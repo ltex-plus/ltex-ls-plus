@@ -36,7 +36,10 @@ class LatexCommandSignatureMatcher(
     commandRegex = Regex(commandPatternStringBuilder.toString())
   }
 
-  fun startMatching(code: String, ignoreCommandPrototypes: Set<String>) {
+  fun startMatching(
+    code: String,
+    ignoreCommandPrototypes: Set<String>,
+  ) {
     this.code = code
     this.matchResultIterator = this.commandRegex.findAll(code).iterator()
     this.ignoreCommandPrototypes = ignoreCommandPrototypes
@@ -60,7 +63,7 @@ class LatexCommandSignatureMatcher(
       if (COMMENT_REGEX.find(precedingPartOfLine) != null) continue
 
       val bestMatch: LatexCommandSignatureMatch? =
-          findBestMatchingCommandSignature(code, fromPos, ignoreCommandPrototypes)
+        findBestMatchingCommandSignature(code, fromPos, ignoreCommandPrototypes)
       if (bestMatch != null) return bestMatch
     }
 

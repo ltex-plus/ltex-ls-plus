@@ -19,13 +19,14 @@ class DelayedDiagnosticsPublisherRunnableTest {
     val languageClient = MockLtexLanguageClient()
     languageServer.connect(languageClient)
 
-    val document = LtexTextDocumentItem(
-      languageServer,
-      "untitled:test.md",
-      "markdown",
-      1,
-      "This is an test.\n",
-    )
+    val document =
+      LtexTextDocumentItem(
+        languageServer,
+        "untitled:test.md",
+        "markdown",
+        1,
+        "This is an test.\n",
+      )
     document.checkAndPublishDiagnosticsWithCache()
 
     val runnable = DelayedDiagnosticsPublisherRunnable(languageClient, document)
@@ -34,8 +35,8 @@ class DelayedDiagnosticsPublisherRunnableTest {
     assertEquals(2, languageClient.publishDiagnosticsParamsList.size)
 
     for (
-      publishDiagnosticsParams: PublishDiagnosticsParams in
-      languageClient.publishDiagnosticsParamsList
+    publishDiagnosticsParams: PublishDiagnosticsParams in
+    languageClient.publishDiagnosticsParamsList
     ) {
       assertEquals("untitled:test.md", publishDiagnosticsParams.uri)
       assertEquals(1, publishDiagnosticsParams.diagnostics.size)

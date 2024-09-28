@@ -11,21 +11,26 @@ class LatexEnvironmentSignature(
   environmentPrototype: String,
   action: Action = Action.Ignore,
 ) : LatexCommandSignature(
-  if (PREFIX_REGEX.find(environmentPrototype) != null) {
-    environmentPrototype
-  } else {
-    "\\begin{$environmentPrototype}"
-  },
-  action,
-) {
+    if (PREFIX_REGEX.find(environmentPrototype) != null) {
+      environmentPrototype
+    } else {
+      "\\begin{$environmentPrototype}"
+    },
+    action,
+  ) {
   val ignoreAllArguments: Boolean
   val environmentName: String?
 
   init {
     val matchResult: MatchResult? = PREFIX_REGEX.find(environmentPrototype)
-    val environmentName: String = matchResult?.groups?.get(1)?.value.orEmpty().ifEmpty {
-      matchResult?.groups?.get(2)?.value.orEmpty()
-    }
+    val environmentName: String =
+      matchResult?.groups?.get(1)?.value.orEmpty().ifEmpty {
+        matchResult
+          ?.groups
+          ?.get(2)
+          ?.value
+          .orEmpty()
+      }
 
     if (environmentName.isNotEmpty()) {
       this.ignoreAllArguments = false

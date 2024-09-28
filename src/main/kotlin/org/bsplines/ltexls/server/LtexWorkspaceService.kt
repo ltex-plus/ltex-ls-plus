@@ -39,40 +39,39 @@ class LtexWorkspaceService(
   val languageServer: LtexLanguageServer,
 ) : WorkspaceService {
   override fun didChangeConfiguration(params: DidChangeConfigurationParams) {
-    this.languageServer.ltexTextDocumentService.executeFunctionForEachDocument {
-      document: LtexTextDocumentItem ->
-      if (document.beingChecked) document.cancelCheck()
+    this.languageServer.ltexTextDocumentService
+      .executeFunctionForEachDocument { document: LtexTextDocumentItem ->
+        if (document.beingChecked) document.cancelCheck()
 
-      this.languageServer.singleThreadExecutorService.execute {
-        var exception: Exception? = null
+        this.languageServer.singleThreadExecutorService.execute {
+          var exception: Exception? = null
 
-        try {
-          document.checkAndPublishDiagnosticsWithoutCache()
-          document.raiseExceptionIfCanceled()
-        } catch (e: ExecutionException) {
-          exception = e
-        } catch (e: InterruptedException) {
-          exception = e
-        }
+          try {
+            document.checkAndPublishDiagnosticsWithoutCache()
+            document.raiseExceptionIfCanceled()
+          } catch (e: ExecutionException) {
+            exception = e
+          } catch (e: InterruptedException) {
+            exception = e
+          }
 
-        if (exception != null) {
-          Tools.rethrowCancellationException(exception)
-          Logging.LOGGER.warning(I18n.format(exception))
+          if (exception != null) {
+            Tools.rethrowCancellationException(exception)
+            Logging.LOGGER.warning(I18n.format(exception))
+          }
         }
       }
-    }
   }
 
   override fun didChangeWatchedFiles(params: DidChangeWatchedFilesParams) {
   }
 
-  override fun executeCommand(params: ExecuteCommandParams): CompletableFuture<Any> {
-    return when (params.command) {
+  override fun executeCommand(params: ExecuteCommandParams): CompletableFuture<Any> =
+    when (params.command) {
       CHECK_DOCUMENT_COMMAND_NAME -> executeCheckDocumentCommand(params.arguments[0] as JsonObject)
       GET_SERVER_STATUS_COMMAND_NAME -> executeGetServerStatusCommand()
       else -> failCommand(I18n.format("unknownCommand", params.command))
     }
-  }
 
   fun executeCheckDocumentCommand(arguments: JsonObject): CompletableFuture<Any> {
     val uriStr: String = arguments.get("uri").asString
@@ -80,13 +79,14 @@ class LtexWorkspaceService(
     var text: String? = arguments.get("text")?.asString
 
     if ((codeLanguageId == null) || (text == null)) {
-      val path: Path = try {
-        Paths.get(URI(uriStr))
-      } catch (e: IllegalArgumentException) {
-        return failCommand(I18n.format("couldNotParseDocumentUri", e))
-      } catch (e: URISyntaxException) {
-        return failCommand(I18n.format("couldNotParseDocumentUri", e))
-      }
+      val path: Path =
+        try {
+          Paths.get(URI(uriStr))
+        } catch (e: IllegalArgumentException) {
+          return failCommand(I18n.format("couldNotParseDocumentUri", e))
+        } catch (e: URISyntaxException) {
+          return failCommand(I18n.format("couldNotParseDocumentUri", e))
+        }
 
       if (text == null) {
         text = FileIo.readFile(path)
@@ -99,22 +99,24 @@ class LtexWorkspaceService(
 
     val document = LtexTextDocumentItem(this.languageServer, uriStr, codeLanguageId, 1, text)
 
-    val range: Range? = if (arguments.has("range")) {
-      val jsonRange: JsonObject = arguments.getAsJsonObject("range")
-      val jsonStart: JsonObject = jsonRange.getAsJsonObject("start")
-      val jsonEnd: JsonObject = jsonRange.getAsJsonObject("end")
-      Range(
-        Position(jsonStart.get("line").asInt, jsonStart.get("character").asInt),
-        Position(jsonEnd.get("line").asInt, jsonEnd.get("character").asInt),
-      )
-    } else {
-      null
-    }
+    val range: Range? =
+      if (arguments.has("range")) {
+        val jsonRange: JsonObject = arguments.getAsJsonObject("range")
+        val jsonStart: JsonObject = jsonRange.getAsJsonObject("start")
+        val jsonEnd: JsonObject = jsonRange.getAsJsonObject("end")
+        Range(
+          Position(jsonStart.get("line").asInt, jsonStart.get("character").asInt),
+          Position(jsonEnd.get("line").asInt, jsonEnd.get("character").asInt),
+        )
+      } else {
+        null
+      }
 
     if (document.beingChecked) document.cancelCheck()
 
-    return CompletableFutures.computeAsync(this.languageServer.singleThreadExecutorService) {
-      lspCancelChecker: CancelChecker ->
+    return CompletableFutures.computeAsync(
+      this.languageServer.singleThreadExecutorService,
+    ) { lspCancelChecker: CancelChecker ->
       document.lspCancelChecker = lspCancelChecker
 
       try {
@@ -138,10 +140,12 @@ class LtexWorkspaceService(
   @Suppress("SwallowedException")
   fun executeGetServerStatusCommand(): CompletableFuture<Any> {
     val processId: Long = ProcessHandle.current().pid()
-    val wallClockDuration: Double = Duration.between(
-      this.languageServer.startupInstant,
-      Instant.now(),
-    ).toMillis() / MILLISECONDS_PER_SECOND
+    val wallClockDuration: Double =
+      Duration
+        .between(
+          this.languageServer.startupInstant,
+          Instant.now(),
+        ).toMillis() / MILLISECONDS_PER_SECOND
     val cpuDuration: Double?
     var cpuUsage: Double?
     val totalMemory: Double = Runtime.getRuntime().totalMemory().toDouble()
@@ -149,7 +153,7 @@ class LtexWorkspaceService(
 
     if (ManagementFactory.getOperatingSystemMXBean() is OperatingSystemMXBean) {
       val operatingSystemMxBean: OperatingSystemMXBean =
-          ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean
+        ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean
       cpuUsage = operatingSystemMxBean.processCpuLoad
       if (cpuUsage == -1.0) cpuUsage = null
       val cpuDurationLong: Long = operatingSystemMxBean.processCpuTime
@@ -160,22 +164,24 @@ class LtexWorkspaceService(
     }
 
     val singleThreadTestFuture: Future<Boolean> =
-        this.languageServer.singleThreadExecutorService.submit(Callable { true })
-    val isChecking: Boolean = try {
-      !singleThreadTestFuture.get(CHECK_CHECKING_STATUS_MILLISECONDS, TimeUnit.MILLISECONDS)
-    } catch (e: ExecutionException) {
-      true
-    } catch (e: InterruptedException) {
-      true
-    } catch (e: TimeoutException) {
-      true
-    }
+      this.languageServer.singleThreadExecutorService.submit(Callable { true })
+    val isChecking: Boolean =
+      try {
+        !singleThreadTestFuture.get(CHECK_CHECKING_STATUS_MILLISECONDS, TimeUnit.MILLISECONDS)
+      } catch (e: ExecutionException) {
+        true
+      } catch (e: InterruptedException) {
+        true
+      } catch (e: TimeoutException) {
+        true
+      }
 
-    val documentUriBeingChecked: String? = if (isChecking) {
-      languageServer.documentChecker.lastCheckedDocument?.uri
-    } else {
-      null
-    }
+    val documentUriBeingChecked: String? =
+      if (isChecking) {
+        languageServer.documentChecker.lastCheckedDocument?.uri
+      } else {
+        null
+      }
 
     val jsonObject = JsonObject()
     jsonObject.addProperty("success", true)
@@ -209,8 +215,7 @@ class LtexWorkspaceService(
       return CompletableFuture.completedFuture(jsonObject)
     }
 
-    fun getCommandNames(): List<String> {
-      return listOf(CHECK_DOCUMENT_COMMAND_NAME, GET_SERVER_STATUS_COMMAND_NAME)
-    }
+    fun getCommandNames(): List<String> =
+      listOf(CHECK_DOCUMENT_COMMAND_NAME, GET_SERVER_STATUS_COMMAND_NAME)
   }
 }

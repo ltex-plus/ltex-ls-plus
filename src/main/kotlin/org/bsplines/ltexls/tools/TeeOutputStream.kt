@@ -23,7 +23,11 @@ class TeeOutputStream(
     this.teedOutputStream.write(bytes)
   }
 
-  override fun write(bytes: ByteArray, offset: Int, length: Int) {
+  override fun write(
+    bytes: ByteArray,
+    offset: Int,
+    length: Int,
+  ) {
     this.outputStream.write(bytes, offset, length)
     this.teedOutputStream.write(bytes, offset, length)
   }

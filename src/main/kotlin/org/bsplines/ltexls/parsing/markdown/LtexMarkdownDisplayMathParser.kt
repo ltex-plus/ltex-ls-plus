@@ -36,9 +36,7 @@ class LtexMarkdownDisplayMathParser(
     this.block.openingTrailing = openTrailing
   }
 
-  override fun getBlock(): Block {
-    return this.block
-  }
+  override fun getBlock(): Block = this.block
 
   override fun tryContinue(state: ParserState): BlockContinue? {
     if (this.hadClose) return BlockContinue.none()
@@ -46,7 +44,7 @@ class LtexMarkdownDisplayMathParser(
     val index: Int = state.index
     val line: BasedSequence = state.lineWithEOL
     val matchGroup: MatchGroup? =
-        DISPLAY_MATH_END_REGEX.matchEntire(line.subSequence(index))?.groups?.get(1)
+      DISPLAY_MATH_END_REGEX.matchEntire(line.subSequence(index))?.groups?.get(1)
 
     return if (matchGroup != null) {
       val lastChild = this.block.lastChild
@@ -62,10 +60,11 @@ class LtexMarkdownDisplayMathParser(
       this.hadClose = true
       this.block.closingMarker = state.line.subSequence(index, index + 2)
 
-      this.block.closingTrailing = state.lineWithEOL.subSequence(
-        matchGroup.range.first,
-        matchGroup.range.last + 1,
-      )
+      this.block.closingTrailing =
+        state.lineWithEOL.subSequence(
+          matchGroup.range.first,
+          matchGroup.range.last + 1,
+        )
 
       BlockContinue.atIndex(state.lineEndIndex)
     } else {
@@ -73,7 +72,10 @@ class LtexMarkdownDisplayMathParser(
     }
   }
 
-  override fun addLine(state: ParserState, line: BasedSequence) {
+  override fun addLine(
+    state: ParserState,
+    line: BasedSequence,
+  ) {
     this.content?.add(line, state.indent)
   }
 
@@ -84,47 +86,45 @@ class LtexMarkdownDisplayMathParser(
     this.content = null
   }
 
-  override fun isContainer(): Boolean {
-    return false
-  }
+  override fun isContainer(): Boolean = false
 
-  override fun canContain(state: ParserState, blockParser: BlockParser, block: Block): Boolean {
-    return false
-  }
+  override fun canContain(
+    state: ParserState,
+    blockParser: BlockParser,
+    block: Block,
+  ): Boolean = false
 
   override fun parseInlines(inlineParser: InlineParser) {
   }
 
   class Factory : CustomBlockParserFactory {
-    override fun getAfterDependents(): Set<Class<*>>? {
-      return null
-    }
+    override fun getAfterDependents(): Set<Class<*>>? = null
 
-    override fun getBeforeDependents(): Set<Class<*>>? {
-      return null
-    }
+    override fun getBeforeDependents(): Set<Class<*>>? = null
 
-    override fun affectsGlobalScope(): Boolean {
-      return false
-    }
+    override fun affectsGlobalScope(): Boolean = false
 
-    override fun apply(options: DataHolder): BlockParserFactory {
-      return BlockFactory(options)
-    }
+    override fun apply(options: DataHolder): BlockParserFactory = BlockFactory(options)
   }
 
-  private class BlockFactory(options: DataHolder?) : AbstractBlockParserFactory(options) {
-    override fun tryStart(state: ParserState, matchedBlockParser: MatchedBlockParser): BlockStart? {
+  private class BlockFactory(
+    options: DataHolder?,
+  ) : AbstractBlockParserFactory(options) {
+    override fun tryStart(
+      state: ParserState,
+      matchedBlockParser: MatchedBlockParser,
+    ): BlockStart? {
       if (!haveDisplayMathParser(state)) {
         val line = state.lineWithEOL
         val matchGroup: MatchGroup? = DISPLAY_MATH_START_REGEX.matchEntire(line)?.groups?.get(1)
 
         if (matchGroup != null) {
-          val parser = LtexMarkdownDisplayMathParser(
-            state.properties,
-            line.subSequence(0, 2),
-            line.subSequence(matchGroup.range.first, matchGroup.range.last + 1),
-          )
+          val parser =
+            LtexMarkdownDisplayMathParser(
+              state.properties,
+              line.subSequence(0, 2),
+              line.subSequence(matchGroup.range.first, matchGroup.range.last + 1),
+            )
 
           return BlockStart.of(parser).atIndex(state.lineEndIndex)
         }

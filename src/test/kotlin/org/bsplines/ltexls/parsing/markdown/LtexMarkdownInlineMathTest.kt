@@ -25,11 +25,12 @@ class LtexMarkdownInlineMathTest {
     assertTrue(node.text.isNull)
     assertTrue(node.closingMarker.isNull)
 
-    node = LtexMarkdownInlineMath(
-      BasedSequence.of("$"),
-      BasedSequence.of("E = mc^2"),
-      BasedSequence.of("$"),
-    )
+    node =
+      LtexMarkdownInlineMath(
+        BasedSequence.of("$"),
+        BasedSequence.of("E = mc^2"),
+        BasedSequence.of("$"),
+      )
     assertEquals(BasedSequence.of("$"), node.openingMarker)
     assertEquals(BasedSequence.of("E = mc^2"), node.text)
     assertEquals(BasedSequence.of("$"), node.closingMarker)
@@ -37,11 +38,12 @@ class LtexMarkdownInlineMathTest {
 
   @Test
   fun testGetSegments() {
-    val node = LtexMarkdownInlineMath(
-      BasedSequence.of("$"),
-      BasedSequence.of("E = mc^2"),
-      BasedSequence.of("$"),
-    )
+    val node =
+      LtexMarkdownInlineMath(
+        BasedSequence.of("$"),
+        BasedSequence.of("E = mc^2"),
+        BasedSequence.of("$"),
+      )
 
     assertEquals(
       listOf(
@@ -55,11 +57,12 @@ class LtexMarkdownInlineMathTest {
 
   @Test
   fun testGetAstExtra() {
-    val node = LtexMarkdownInlineMath(
-      BasedSequence.of("$"),
-      BasedSequence.of("E = mc^2"),
-      BasedSequence.of("$"),
-    )
+    val node =
+      LtexMarkdownInlineMath(
+        BasedSequence.of("$"),
+        BasedSequence.of("E = mc^2"),
+        BasedSequence.of("$"),
+      )
     val stringBuilder = StringBuilder()
     node.getAstExtra(stringBuilder)
     assertEquals(

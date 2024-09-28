@@ -10,7 +10,7 @@ comments:
     licenseTemplateFile: ".detekt.license-header"
 complexity:
   LongMethod:
-    threshold: 75
+    threshold: 80
 empty-blocks:
   EmptyFunctionBlock:
     active: false

@@ -27,11 +27,12 @@ class MarkdownNodeSignatureTest {
     assertEquals(MarkdownNodeSignature.Action.Dummy, nodeSignature.action)
     assertFalse(nodeSignature.dummyGenerator.plural)
 
-    nodeSignature = MarkdownNodeSignature(
-      "abc",
-      MarkdownNodeSignature.Action.Dummy,
-      DummyGenerator.getInstance(plural = true),
-    )
+    nodeSignature =
+      MarkdownNodeSignature(
+        "abc",
+        MarkdownNodeSignature.Action.Dummy,
+        DummyGenerator.getInstance(plural = true),
+      )
     assertEquals("abc", nodeSignature.name)
     assertEquals(MarkdownNodeSignature.Action.Dummy, nodeSignature.action)
     assertTrue(nodeSignature.dummyGenerator.plural)

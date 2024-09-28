@@ -14,10 +14,13 @@ import org.bsplines.ltexls.settings.Settings
 class ProgramFragmentizer(
   codeLanguageId: String,
 ) : RegexCodeFragmentizer(
-  codeLanguageId,
-  ProgramCommentRegexs.fromCodeLanguageId(codeLanguageId).magicCommentRegex,
-) {
-  override fun fragmentize(code: String, originalSettings: Settings): List<CodeFragment> {
+    codeLanguageId,
+    ProgramCommentRegexs.fromCodeLanguageId(codeLanguageId).magicCommentRegex,
+  ) {
+  override fun fragmentize(
+    code: String,
+    originalSettings: Settings,
+  ): List<CodeFragment> {
     val oldCodeFragments: List<CodeFragment> = super.fragmentize(code, originalSettings)
     val result = ArrayList<CodeFragment>()
 
@@ -37,10 +40,11 @@ class ProgramFragmentizer(
 
       result.add(
         oldCodeFragment.copy(
-          settings = settings.copy(
-            _allDictionaries = settings.getModifiedDictionary(dictionary),
-            _allDisabledRules = settings.getModifiedDisabledRules(disabledRules),
-          ),
+          settings =
+            settings.copy(
+              _allDictionaries = settings.getModifiedDictionary(dictionary),
+              _allDisabledRules = settings.getModifiedDisabledRules(disabledRules),
+            ),
         ),
       )
     }
@@ -49,18 +53,20 @@ class ProgramFragmentizer(
   }
 
   companion object {
-    val DICTIONARY = setOf(
-      "@param",
-      "@return",
-      "param",
-    )
+    val DICTIONARY =
+      setOf(
+        "@param",
+        "@return",
+        "param",
+      )
 
-    val DISABLED_RULES = setOf(
-      "COPYRIGHT",
-      "DASH_RULE",
-      "R_SYMBOL",
-      "UPPERCASE_SENTENCE_START",
-      "WHITESPACE_RULE",
-    )
+    val DISABLED_RULES =
+      setOf(
+        "COPYRIGHT",
+        "DASH_RULE",
+        "R_SYMBOL",
+        "UPPERCASE_SENTENCE_START",
+        "WHITESPACE_RULE",
+      )
   }
 }

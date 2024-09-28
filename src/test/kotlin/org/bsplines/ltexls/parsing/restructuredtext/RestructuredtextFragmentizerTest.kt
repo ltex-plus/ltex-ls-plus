@@ -41,7 +41,10 @@ class RestructuredtextFragmentizerTest {
   }
 
   companion object {
-    fun assertFragmentizer(codeLanguageId: String?, code: String?) {
+    fun assertFragmentizer(
+      codeLanguageId: String?,
+      code: String?,
+    ) {
       val fragmentizer: CodeFragmentizer = CodeFragmentizer.create(codeLanguageId!!)
       val codeFragments: List<CodeFragment> = fragmentizer.fragmentize(code!!, Settings())
       assertEquals(5, codeFragments.size)

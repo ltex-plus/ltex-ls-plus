@@ -32,7 +32,8 @@ class NonServerChecker {
 
   init {
     this.languageServer.settingsManager.settings =
-        this.languageServer.settingsManager.settings.copy(_logLevel = Level.WARNING)
+      this.languageServer.settingsManager.settings
+        .copy(_logLevel = Level.WARNING)
   }
 
   fun loadSettings(settingsFilePath: Path) {
@@ -78,10 +79,10 @@ class NonServerChecker {
     }
 
     val document =
-        LtexTextDocumentItem(this.languageServer, path.toUri().toString(), codeLanguageId, 1, text)
+      LtexTextDocumentItem(this.languageServer, path.toUri().toString(), codeLanguageId, 1, text)
 
     val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
-        this.languageServer.documentChecker.check(document)
+      this.languageServer.documentChecker.check(document)
 
     var terminalWidth: Int = AnsiConsole.getTerminalWidth()
     if (terminalWidth <= 1) terminalWidth = Integer.MAX_VALUE
@@ -96,15 +97,16 @@ class NonServerChecker {
   private fun checkDirectory(path: Path): Int {
     var numberOfMatches = 0
     val plainTextEnabled: Boolean =
-        this.languageServer.settingsManager.settings.enabled.contains("plaintext")
+      this.languageServer.settingsManager.settings.enabled
+        .contains("plaintext")
 
     for (childPath: Path in Files.walk(path).collect(Collectors.toList())) {
       if (childPath.toFile().isFile) {
         val curCodeLanguageId: String? = FileIo.getCodeLanguageIdFromPath(childPath)
 
         if (
-          (curCodeLanguageId != null)
-          && ((curCodeLanguageId != "plaintext") || plainTextEnabled)
+          (curCodeLanguageId != null) &&
+          ((curCodeLanguageId != "plaintext") || plainTextEnabled)
         ) {
           numberOfMatches += check(childPath)
         }
@@ -133,18 +135,20 @@ class NonServerChecker {
       val fromPosition: Position = document.convertPosition(fromPos)
       val message: String = match.message.replace(CodeActionProvider.SUGGESTION_REGEX, "'$1'")
 
-      var color: Color = when (match.type) {
-        RuleMatch.Type.UnknownWord -> Color.RED
-        RuleMatch.Type.Hint -> Color.BLUE
-        RuleMatch.Type.Other -> Color.YELLOW
-        else -> Color.BLUE
-      }
-      var typeString: String = when (match.type) {
-        RuleMatch.Type.UnknownWord -> "spelling"
-        RuleMatch.Type.Hint -> "style"
-        RuleMatch.Type.Other -> "grammar"
-        else -> "style"
-      }
+      var color: Color =
+        when (match.type) {
+          RuleMatch.Type.UnknownWord -> Color.RED
+          RuleMatch.Type.Hint -> Color.BLUE
+          RuleMatch.Type.Other -> Color.YELLOW
+          else -> Color.BLUE
+        }
+      var typeString: String =
+        when (match.type) {
+          RuleMatch.Type.UnknownWord -> "spelling"
+          RuleMatch.Type.Hint -> "style"
+          RuleMatch.Type.Other -> "grammar"
+          else -> "style"
+        }
 
       if (match.isUnknownWordRule()) {
         color = Color.RED
@@ -154,10 +158,26 @@ class NonServerChecker {
       val ruleId: String = match.ruleId ?: ""
 
       println(
-        Ansi.ansi().bold().a(path.toString()).a(":")
-        .a(fromPosition.line + 1).a(":").a(fromPosition.character + 1).a(": ")
-        .fg(color).a(typeString).a(":").reset().bold().a(" ").a(message)
-        .a(" [").a(ruleId).a("]").reset(),
+        Ansi
+          .ansi()
+          .bold()
+          .a(path.toString())
+          .a(":")
+          .a(fromPosition.line + 1)
+          .a(":")
+          .a(fromPosition.character + 1)
+          .a(": ")
+          .fg(color)
+          .a(typeString)
+          .a(":")
+          .reset()
+          .bold()
+          .a(" ")
+          .a(message)
+          .a(" [")
+          .a(ruleId)
+          .a("]")
+          .reset(),
       )
 
       val lineStartPos: Int = document.convertPosition(Position(fromPosition.line, 0))
@@ -165,9 +185,14 @@ class NonServerChecker {
       val line: String = text.substring(lineStartPos, lineEndPos)
 
       println(
-        Ansi.ansi().a(line.substring(0, fromPos - lineStartPos)).bold().fg(color)
-        .a(line.substring(fromPos - lineStartPos, toPos - lineStartPos)).reset()
-        .a(line.substring(toPos - lineStartPos).replaceFirst(TRAILING_WHITESPACE_REGEX, "")),
+        Ansi
+          .ansi()
+          .a(line.substring(0, fromPos - lineStartPos))
+          .bold()
+          .fg(color)
+          .a(line.substring(fromPos - lineStartPos, toPos - lineStartPos))
+          .reset()
+          .a(line.substring(toPos - lineStartPos).replaceFirst(TRAILING_WHITESPACE_REGEX, "")),
       )
 
       var indentationSize = guessIndentationSize(text, lineStartPos, fromPos, terminalWidth)
@@ -182,7 +207,14 @@ class NonServerChecker {
       val indentation: String = " ".repeat(indentationSize)
 
       for (suggestedReplacement: String in suggestedReplacements) {
-        println(Ansi.ansi().a(indentation).fg(Color.GREEN).a(suggestedReplacement).reset())
+        println(
+          Ansi
+            .ansi()
+            .a(indentation)
+            .fg(Color.GREEN)
+            .a(suggestedReplacement)
+            .reset(),
+        )
       }
     }
 

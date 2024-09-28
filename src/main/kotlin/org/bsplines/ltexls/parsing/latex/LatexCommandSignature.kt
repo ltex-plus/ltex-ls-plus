@@ -23,7 +23,7 @@ open class LatexCommandSignature(
 
   init {
     val commandMatchGroup: MatchGroup? =
-        GENERIC_COMMAND_REGEX.find(commandPrototype)?.groups?.get(1)
+      GENERIC_COMMAND_REGEX.find(commandPrototype)?.groups?.get(1)
 
     if (commandMatchGroup != null) {
       this.prefix = commandMatchGroup.value
@@ -32,14 +32,15 @@ open class LatexCommandSignature(
 
       while (true) {
         val argumentMatchResult: MatchResult =
-            ARGUMENT_REGEX.find(commandPrototype.substring(pos)) ?: break
+          ARGUMENT_REGEX.find(commandPrototype.substring(pos)) ?: break
 
-        val argumentType: ArgumentType = when {
-          argumentMatchResult.groups["brace"] != null -> ArgumentType.Brace
-          argumentMatchResult.groups["bracket"] != null -> ArgumentType.Bracket
-          argumentMatchResult.groups["parenthesis"] != null -> ArgumentType.Parenthesis
-          else -> ArgumentType.Brace
-        }
+        val argumentType: ArgumentType =
+          when {
+            argumentMatchResult.groups["brace"] != null -> ArgumentType.Brace
+            argumentMatchResult.groups["bracket"] != null -> ArgumentType.Bracket
+            argumentMatchResult.groups["parenthesis"] != null -> ArgumentType.Parenthesis
+            else -> ArgumentType.Brace
+          }
 
         argumentTypes.add(argumentType)
         pos += argumentMatchResult.value.length
@@ -48,7 +49,7 @@ open class LatexCommandSignature(
 
       this.argumentTypes = argumentTypes
       val regexString: String =
-          "^" + (if (escapeCommandPrefix) Regex.escape(this.prefix) else this.prefix)
+        "^" + (if (escapeCommandPrefix) Regex.escape(this.prefix) else this.prefix)
       this.commandRegex = Regex(regexString)
     } else {
       Logging.LOGGER.warning(I18n.format("invalidCommandPrototype", commandPrototype))
@@ -58,13 +59,19 @@ open class LatexCommandSignature(
     }
   }
 
-  fun matchArgumentsFromPosition(code: String, fromPos: Int): List<Pair<Int, Int>>? {
+  fun matchArgumentsFromPosition(
+    code: String,
+    fromPos: Int,
+  ): List<Pair<Int, Int>>? {
     val arguments = ArrayList<Pair<Int, Int>>()
     val toPos: Int = matchFromPosition(code, fromPos, arguments)
     return if (toPos > -1) arguments else null
   }
 
-  fun matchFromPosition(code: String, fromPos: Int): String {
+  fun matchFromPosition(
+    code: String,
+    fromPos: Int,
+  ): String {
     val toPos: Int = matchFromPosition(code, fromPos, null)
     return if (toPos > -1) code.substring(fromPos, toPos) else ""
   }
@@ -106,24 +113,33 @@ open class LatexCommandSignature(
   companion object {
     private val GENERIC_COMMAND_REGEX = Regex("^(.+?)(\\{}|\\[]|\\(\\))*$")
     private val ARGUMENT_REGEX =
-        Regex("^(?:(?<brace>\\{})|(?<bracket>\\[])|(?<parenthesis>\\(\\)))")
+      Regex("^(?:(?<brace>\\{})|(?<bracket>\\[])|(?<parenthesis>\\(\\)))")
     private val COMMENT_REGEX = Regex("^%.*?($|(\n[ \n\r\t]*))")
 
-    private fun matchPatternFromPosition(code: String, fromPos: Int, regex: Regex): String {
+    private fun matchPatternFromPosition(
+      code: String,
+      fromPos: Int,
+      regex: Regex,
+    ): String {
       if (fromPos >= code.length) return ""
       val matchResult: MatchResult? = regex.find(code.substring(fromPos))
       return matchResult?.value ?: ""
     }
 
     @Suppress("ComplexMethod", "NestedBlockDepth")
-    fun matchArgumentFromPosition(code: String, fromPos: Int, argumentType: ArgumentType): String {
+    fun matchArgumentFromPosition(
+      code: String,
+      fromPos: Int,
+      argumentType: ArgumentType,
+    ): String {
       if (fromPos >= code.length) return ""
       var pos: Int = fromPos
-      val openChar: Char = when (argumentType) {
-        ArgumentType.Brace -> '{'
-        ArgumentType.Bracket -> '['
-        ArgumentType.Parenthesis -> '('
-      }
+      val openChar: Char =
+        when (argumentType) {
+          ArgumentType.Brace -> '{'
+          ArgumentType.Bracket -> '['
+          ArgumentType.Parenthesis -> '('
+        }
 
       if (code[pos] != openChar) return ""
       pos++
@@ -136,11 +152,12 @@ open class LatexCommandSignature(
           '{' -> argumentTypeStack.addLast(ArgumentType.Brace)
           '[' -> argumentTypeStack.addLast(ArgumentType.Bracket)
           '}', ']' -> {
-            val curArgumentType: ArgumentType = when (curChar) {
-              '}' -> ArgumentType.Brace
-              ']' -> ArgumentType.Bracket
-              else -> ArgumentType.Brace
-            }
+            val curArgumentType: ArgumentType =
+              when (curChar) {
+                '}' -> ArgumentType.Brace
+                ']' -> ArgumentType.Bracket
+                else -> ArgumentType.Brace
+              }
 
             when {
               argumentTypeStack.isNotEmpty() && (argumentTypeStack.last() != curArgumentType) -> {
@@ -152,8 +169,8 @@ open class LatexCommandSignature(
           }
           ')' -> {
             if (
-              (argumentTypeStack.size == 1)
-              && (argumentTypeStack.last() == ArgumentType.Parenthesis)
+              (argumentTypeStack.size == 1) &&
+              (argumentTypeStack.last() == ArgumentType.Parenthesis)
             ) {
               return code.substring(fromPos, pos + 1)
             }

@@ -22,13 +22,14 @@ class LtexTextDocumentItemTest {
   @Test
   fun testConvertPosition() {
     val languageServer = LtexLanguageServer()
-    var document = LtexTextDocumentItem(
-      languageServer,
-      "untitled:test.md",
-      "markdown",
-      1,
-      "Hello\nEnthusiastic\r\nReader\r!",
-    )
+    var document =
+      LtexTextDocumentItem(
+        languageServer,
+        "untitled:test.md",
+        "markdown",
+        1,
+        "Hello\nEnthusiastic\r\nReader\r!",
+      )
 
     assertPosition(document, 0, Position(0, 0))
     assertPosition(document, 6, Position(1, 0))
@@ -52,13 +53,14 @@ class LtexTextDocumentItemTest {
   @Test
   fun testApplyIncrementalTextChangeEvents() {
     val languageServer = LtexLanguageServer()
-    val document = LtexTextDocumentItem(
-      languageServer,
-      "untitled:test.md",
-      "markdown",
-      1,
-      "abcdef",
-    )
+    val document =
+      LtexTextDocumentItem(
+        languageServer,
+        "untitled:test.md",
+        "markdown",
+        1,
+        "abcdef",
+      )
     val pastInstant: Instant = Instant.now().minus(Duration.ofSeconds(10))
 
     document.lastCaretChangeInstant = pastInstant
@@ -138,13 +140,14 @@ class LtexTextDocumentItemTest {
   @Test
   fun testProperties() {
     val languageServer = LtexLanguageServer()
-    val originalDocument = LtexTextDocumentItem(
-      languageServer,
-      "untitled:test.md",
-      "markdown",
-      1,
-      "abc",
-    )
+    val originalDocument =
+      LtexTextDocumentItem(
+        languageServer,
+        "untitled:test.md",
+        "markdown",
+        1,
+        "abc",
+      )
     assertEquals(originalDocument, originalDocument)
     originalDocument.hashCode()
     assertEquals(languageServer, originalDocument.languageServer)
@@ -181,7 +184,11 @@ class LtexTextDocumentItemTest {
   }
 
   companion object {
-    private fun assertPosition(document: LtexTextDocumentItem, pos: Int, position: Position) {
+    private fun assertPosition(
+      document: LtexTextDocumentItem,
+      pos: Int,
+      position: Position,
+    ) {
       assertEquals(position, document.convertPosition(pos))
       assertEquals(pos, document.convertPosition(position))
     }

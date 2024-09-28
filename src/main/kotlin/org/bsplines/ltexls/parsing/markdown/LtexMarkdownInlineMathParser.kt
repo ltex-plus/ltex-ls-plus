@@ -19,25 +19,16 @@ class LtexMarkdownInlineMathParser(
   private val inlineParser: LightInlineParser?,
 ) : InlineParserExtension {
   class Factory : InlineParserExtensionFactory {
-    override fun getAfterDependents(): Set<Class<*>>? {
-      return null
-    }
+    override fun getAfterDependents(): Set<Class<*>>? = null
 
-    override fun getCharacters(): CharSequence {
-      return "$"
-    }
+    override fun getCharacters(): CharSequence = "$"
 
-    override fun getBeforeDependents(): Set<Class<*>>? {
-      return null
-    }
+    override fun getBeforeDependents(): Set<Class<*>>? = null
 
-    override fun apply(lightInlineParser: LightInlineParser): InlineParserExtension {
-      return LtexMarkdownInlineMathParser(lightInlineParser)
-    }
+    override fun apply(lightInlineParser: LightInlineParser): InlineParserExtension =
+      LtexMarkdownInlineMathParser(lightInlineParser)
 
-    override fun affectsGlobalScope(): Boolean {
-      return false
-    }
+    override fun affectsGlobalScope(): Boolean = false
   }
 
   override fun finalizeDocument(inlineParser: InlineParser) {
@@ -56,11 +47,12 @@ class LtexMarkdownInlineMathParser(
         val openingMarker: BasedSequence = input.subSequence(matcher.start(), matcher.start(1))
         val closingMarker: BasedSequence = input.subSequence(matcher.end(1), matcher.end())
 
-        val inlineMath = LtexMarkdownInlineMath(
-          openingMarker,
-          openingMarker.baseSubSequence(openingMarker.endOffset, closingMarker.startOffset),
-          closingMarker,
-        )
+        val inlineMath =
+          LtexMarkdownInlineMath(
+            openingMarker,
+            openingMarker.baseSubSequence(openingMarker.endOffset, closingMarker.startOffset),
+            closingMarker,
+          )
 
         inlineParser.block.appendChild(inlineMath)
         return true
@@ -71,8 +63,9 @@ class LtexMarkdownInlineMathParser(
   }
 
   companion object {
-    private val MATH_PATTERN = Pattern.compile(
-      "\\$([^ ]|[^ ](?:.|\n)*?[^ ])(?<!\\\\)(?:\\\${2,}|\\$(?![0-9]))",
-    )
+    private val MATH_PATTERN =
+      Pattern.compile(
+        "\\$([^ ]|[^ ](?:.|\n)*?[^ ])(?<!\\\\)(?:\\\${2,}|\\$(?![0-9]))",
+      )
   }
 }

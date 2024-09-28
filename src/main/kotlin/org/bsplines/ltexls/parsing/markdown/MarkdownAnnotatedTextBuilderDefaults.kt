@@ -8,15 +8,16 @@
 package org.bsplines.ltexls.parsing.markdown
 
 object MarkdownAnnotatedTextBuilderDefaults {
-  val DEFAULT_MARKDOWN_NODE_SIGNATURES: List<MarkdownNodeSignature> = listOf(
-    MarkdownNodeSignature("AutoLink", MarkdownNodeSignature.Action.Dummy),
-    MarkdownNodeSignature("Code", MarkdownNodeSignature.Action.Dummy),
-    MarkdownNodeSignature("CodeBlock"),
-    MarkdownNodeSignature("FencedCodeBlock"),
-    MarkdownNodeSignature("GitLabInlineMath", MarkdownNodeSignature.Action.Dummy),
-    MarkdownNodeSignature("IndentedCodeBlock"),
-    MarkdownNodeSignature("LtexMarkdownDisplayMath"),
-    MarkdownNodeSignature("LtexMarkdownInlineMath", MarkdownNodeSignature.Action.Dummy),
-    MarkdownNodeSignature("TableSeparator"),
-  )
+  val DEFAULT_MARKDOWN_NODE_SIGNATURES: List<MarkdownNodeSignature> =
+    listOf(
+      MarkdownNodeSignature("AutoLink", MarkdownNodeSignature.Action.Dummy),
+      MarkdownNodeSignature("Code", MarkdownNodeSignature.Action.Dummy),
+      MarkdownNodeSignature("CodeBlock"),
+      MarkdownNodeSignature("FencedCodeBlock"),
+      MarkdownNodeSignature("GitLabInlineMath", MarkdownNodeSignature.Action.Dummy),
+      MarkdownNodeSignature("IndentedCodeBlock"),
+      MarkdownNodeSignature("LtexMarkdownDisplayMath"),
+      MarkdownNodeSignature("LtexMarkdownInlineMath", MarkdownNodeSignature.Action.Dummy),
+      MarkdownNodeSignature("TableSeparator"),
+    )
 }

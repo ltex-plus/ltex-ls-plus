@@ -25,7 +25,10 @@ import org.bsplines.ltexls.tools.Logging
 abstract class CodeFragmentizer(
   val codeLanguageId: String,
 ) {
-  abstract fun fragmentize(code: String, originalSettings: Settings): List<CodeFragment>
+  abstract fun fragmentize(
+    code: String,
+    originalSettings: Settings,
+  ): List<CodeFragment>
 
   fun fragmentize(fragments: List<CodeFragment>): List<CodeFragment> {
     val newFragments = ArrayList<CodeFragment>()
@@ -43,8 +46,8 @@ abstract class CodeFragmentizer(
 
   companion object {
     @Suppress("ComplexMethod")
-    fun create(codeLanguageId: String): CodeFragmentizer {
-      return when (codeLanguageId) {
+    fun create(codeLanguageId: String): CodeFragmentizer =
+      when (codeLanguageId) {
         "bib",
         "bibtex",
         -> BibtexFragmentizer(codeLanguageId)
@@ -78,6 +81,5 @@ abstract class CodeFragmentizer(
           }
         }
       }
-    }
   }
 }

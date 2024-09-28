@@ -30,40 +30,47 @@ object I18n {
     }
   }
 
-  fun setLocale(locale: Locale, log: Boolean = true) {
+  fun setLocale(
+    locale: Locale,
+    log: Boolean = true,
+  ) {
     if (log) Logging.LOGGER.info(format("settingLocale", locale.language))
     messages = ResourceBundle.getBundle("LtexLsMessagesBundle", locale)
   }
 
-  fun format(key: String, vararg messageArguments: Any?): String {
+  fun format(
+    key: String,
+    vararg messageArguments: Any?,
+  ): String {
     val messages: ResourceBundle? = messages
 
-    val message: String = if ((messages != null) && messages.containsKey(key)) {
-      messages.getString(key)
-    } else {
-      val builder = StringBuilder()
-
-      if (messages == null) {
-        builder.append("MessagesBundle is null while trying to get i18n message with key '")
-        builder.append(key)
-        builder.append("'")
+    val message: String =
+      if ((messages != null) && messages.containsKey(key)) {
+        messages.getString(key)
       } else {
-        builder.append("i18n message with key '")
-        builder.append(key)
-        builder.append("' not found")
+        val builder = StringBuilder()
+
+        if (messages == null) {
+          builder.append("MessagesBundle is null while trying to get i18n message with key '")
+          builder.append(key)
+          builder.append("'")
+        } else {
+          builder.append("i18n message with key '")
+          builder.append(key)
+          builder.append("' not found")
+        }
+
+        builder.append(", message arguments: ")
+
+        for (i in messageArguments.indices) {
+          if (i > 0) builder.append(", ")
+          builder.append("'{")
+          builder.append(i.toString())
+          builder.append("}'")
+        }
+
+        builder.toString()
       }
-
-      builder.append(", message arguments: ")
-
-      for (i in messageArguments.indices) {
-        if (i > 0) builder.append(", ")
-        builder.append("'{")
-        builder.append(i.toString())
-        builder.append("}'")
-      }
-
-      builder.toString()
-    }
 
     val formatter = MessageFormat("")
     formatter.applyPattern(message.replace("'", "''"))
@@ -76,7 +83,11 @@ object I18n {
     return formatter.format(stringArguments)
   }
 
-  fun format(key: String, e: Exception, vararg messageArguments: Any?): String {
+  fun format(
+    key: String,
+    e: Exception,
+    vararg messageArguments: Any?,
+  ): String {
     val builder = StringBuilder()
     builder.append(format(key, messageArguments))
     builder.append(". ")

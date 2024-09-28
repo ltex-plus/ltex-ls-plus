@@ -29,17 +29,16 @@ abstract class LanguageToolInterface {
   protected fun checkMatchValidity(
     annotatedTextFragment: AnnotatedTextFragment,
     match: LanguageToolRuleMatch,
-  ): Boolean {
-    return (
+  ): Boolean =
+    (
       (
-        !match.isUnknownWordRule()
-        || !this.dictionary.contains(
-          annotatedTextFragment.getSubstringOfPlainText(match.fromPos, match.toPos),
-        )
-      )
-      && !this.disabledRules.contains(match.ruleId)
+        !match.isUnknownWordRule() ||
+          !this.dictionary.contains(
+            annotatedTextFragment.getSubstringOfPlainText(match.fromPos, match.toPos),
+          )
+      ) &&
+        !this.disabledRules.contains(match.ruleId)
     )
-  }
 
   abstract fun isInitialized(): Boolean
 
@@ -48,7 +47,10 @@ abstract class LanguageToolInterface {
   ): List<LanguageToolRuleMatch>
 
   abstract fun activateDefaultFalseFriendRules()
+
   abstract fun activateLanguageModelRules(languageModelRulesDirectory: String)
+
   abstract fun enableRules(ruleIds: Set<String>)
+
   abstract fun enableEasterEgg()
 }

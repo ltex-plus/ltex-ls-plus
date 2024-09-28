@@ -11,7 +11,9 @@ import com.vladsch.flexmark.util.ast.DelimitedNode
 import com.vladsch.flexmark.util.ast.Node
 import com.vladsch.flexmark.util.sequence.BasedSequence
 
-class LtexMarkdownInlineMath : DelimitedNode, Node {
+class LtexMarkdownInlineMath :
+  DelimitedNode,
+  Node {
   private var openingMarker: BasedSequence = BasedSequence.NULL
   private var text: BasedSequence = BasedSequence.NULL
   private var closingMarker: BasedSequence = BasedSequence.NULL
@@ -32,33 +34,26 @@ class LtexMarkdownInlineMath : DelimitedNode, Node {
     this.closingMarker = closingMarker
   }
 
-  override fun getSegments(): Array<BasedSequence> {
-    return arrayOf(this.openingMarker, this.text, this.closingMarker)
-  }
+  override fun getSegments(): Array<BasedSequence> =
+    arrayOf(this.openingMarker, this.text, this.closingMarker)
 
   override fun getAstExtra(out: StringBuilder) {
     delimitedSegmentSpanChars(out, this.openingMarker, this.text, this.closingMarker, "text")
   }
 
-  override fun getOpeningMarker(): BasedSequence {
-    return this.openingMarker
-  }
+  override fun getOpeningMarker(): BasedSequence = this.openingMarker
 
   override fun setOpeningMarker(openingMarker: BasedSequence) {
     this.openingMarker = openingMarker
   }
 
-  override fun getText(): BasedSequence {
-    return this.text
-  }
+  override fun getText(): BasedSequence = this.text
 
   override fun setText(text: BasedSequence) {
     this.text = text
   }
 
-  override fun getClosingMarker(): BasedSequence {
-    return this.closingMarker
-  }
+  override fun getClosingMarker(): BasedSequence = this.closingMarker
 
   override fun setClosingMarker(closingMarker: BasedSequence) {
     this.closingMarker = closingMarker

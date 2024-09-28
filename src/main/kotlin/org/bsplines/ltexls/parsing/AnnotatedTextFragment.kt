@@ -25,17 +25,22 @@ class AnnotatedTextFragment(
   private var plainText: String? = null
   private var inverseAnnotatedText: AnnotatedText? = null
 
-  fun getSubstringOfPlainText(fromPos: Int, toPos: Int): String {
-    val plainText: String = this.plainText ?: run {
-      val plainText = this.annotatedText.plainText
-      this.plainText = plainText
-      plainText
-    }
-    val inverseAnnotatedText: AnnotatedText = this.inverseAnnotatedText ?: run {
-      val inverseAnnotatedText: AnnotatedText = invertAnnotatedText(this.annotatedText)
-      this.inverseAnnotatedText = inverseAnnotatedText
-      inverseAnnotatedText
-    }
+  fun getSubstringOfPlainText(
+    fromPos: Int,
+    toPos: Int,
+  ): String {
+    val plainText: String =
+      this.plainText ?: run {
+        val plainText = this.annotatedText.plainText
+        this.plainText = plainText
+        plainText
+      }
+    val inverseAnnotatedText: AnnotatedText =
+      this.inverseAnnotatedText ?: run {
+        val inverseAnnotatedText: AnnotatedText = invertAnnotatedText(this.annotatedText)
+        this.inverseAnnotatedText = inverseAnnotatedText
+        inverseAnnotatedText
+      }
 
     val plainTextFromPos: Int = getOriginalTextPosition(inverseAnnotatedText, fromPos, false)
     val plainTextToPos: Int = getOriginalTextPosition(inverseAnnotatedText, toPos, true)
@@ -57,19 +62,21 @@ class AnnotatedTextFragment(
   }
 
   companion object {
-    private val ANNOTATED_TEXT_MAPPING_FIELD: Field = run {
-      val annotatedTextMappingField: Field = AnnotatedText::class.java.getDeclaredField("mapping")
-      annotatedTextMappingField.isAccessible = true
-      annotatedTextMappingField
-    }
+    private val ANNOTATED_TEXT_MAPPING_FIELD: Field =
+      run {
+        val annotatedTextMappingField: Field = AnnotatedText::class.java.getDeclaredField("mapping")
+        annotatedTextMappingField.isAccessible = true
+        annotatedTextMappingField
+      }
 
-    private val MAPPING_VALUE_GET_TOTAL_POSITION_METHOD: Method = run {
-      val mappingValueClass: Class<*> = Class.forName("org.languagetool.markup.MappingValue")
-      val mappingValueGetTotalPositionMethod: Method =
+    private val MAPPING_VALUE_GET_TOTAL_POSITION_METHOD: Method =
+      run {
+        val mappingValueClass: Class<*> = Class.forName("org.languagetool.markup.MappingValue")
+        val mappingValueGetTotalPositionMethod: Method =
           mappingValueClass.getDeclaredMethod("getTotalPosition")
-      mappingValueGetTotalPositionMethod.isAccessible = true
-      mappingValueGetTotalPositionMethod
-    }
+        mappingValueGetTotalPositionMethod.isAccessible = true
+        mappingValueGetTotalPositionMethod
+      }
 
     fun getOriginalTextPosition(
       annotatedText: AnnotatedText,
@@ -79,18 +86,19 @@ class AnnotatedTextFragment(
       @Suppress("UNCHECKED_CAST")
       val mapping: Map<Int, *> = ANNOTATED_TEXT_MAPPING_FIELD.get(annotatedText) as Map<Int, *>
 
-      val mappingList: MutableList<Pair<Int, Int>> = run {
-        val mappingList = ArrayList<Pair<Int, Int>>()
-        mappingList.add(Pair(0, 0))
+      val mappingList: MutableList<Pair<Int, Int>> =
+        run {
+          val mappingList = ArrayList<Pair<Int, Int>>()
+          mappingList.add(Pair(0, 0))
 
-        for ((key: Int, value: Any?) in mapping) {
-          val totalPosition: Int = MAPPING_VALUE_GET_TOTAL_POSITION_METHOD.invoke(value) as Int
-          if (key == plainTextPos) return totalPosition
-          mappingList.add(Pair(key, totalPosition))
+          for ((key: Int, value: Any?) in mapping) {
+            val totalPosition: Int = MAPPING_VALUE_GET_TOTAL_POSITION_METHOD.invoke(value) as Int
+            if (key == plainTextPos) return totalPosition
+            mappingList.add(Pair(key, totalPosition))
+          }
+
+          mappingList
         }
-
-        mappingList
-      }
 
       val i: Int = searchPlainTextPos(mappingList, plainTextPos, isToPos)
       val lowerNeighbor: Pair<Int, Int> = mappingList[i - 1]
@@ -112,7 +120,7 @@ class AnnotatedTextFragment(
 
       val t: Float = (
         (plainTextPos - lowerNeighbor.first).toFloat() /
-        (upperNeighbor.first - lowerNeighbor.first).toFloat()
+          (upperNeighbor.first - lowerNeighbor.first).toFloat()
       )
       return ((1 - t) * lowerNeighbor.second + t * upperNeighbor.second).roundToInt()
     }
@@ -124,19 +132,20 @@ class AnnotatedTextFragment(
     ): Int {
       // cannot use compareBy/thenBy, otherwise Jacoco tries to find a file "Comparisons.kt"
       // (probably due to inlining), which doesn't exist, and uploading to Coveralls fails
-      val comparator = Comparator<Pair<Int, Int>> { a, b ->
-        if (a.first < b.first) {
-          -1
-        } else if (a.first > b.first) {
-          1
-        } else if (a.second < b.second) {
-          -1
-        } else if (a.second > b.second) {
-          1
-        } else {
-          0
+      val comparator =
+        Comparator<Pair<Int, Int>> { a, b ->
+          if (a.first < b.first) {
+            -1
+          } else if (a.first > b.first) {
+            1
+          } else if (a.second < b.second) {
+            -1
+          } else if (a.second > b.second) {
+            1
+          } else {
+            0
+          }
         }
-      }
 
       mappingList.sortWith(comparator)
 
@@ -167,15 +176,16 @@ class AnnotatedTextFragment(
           TextPart.Type.TEXT -> inverseAnnotatedTextBuilder.addText(textPart.part)
           TextPart.Type.FAKE_CONTENT -> inverseAnnotatedTextBuilder.addMarkup(textPart.part)
           TextPart.Type.MARKUP -> {
-            val markup: String = if (
-              (i < textParts.size - 1) &&
-              (textParts[i + 1].type == TextPart.Type.FAKE_CONTENT)
-            ) {
-              i++
-              textParts[i].part
-            } else {
-              ""
-            }
+            val markup: String =
+              if (
+                (i < textParts.size - 1) &&
+                (textParts[i + 1].type == TextPart.Type.FAKE_CONTENT)
+              ) {
+                i++
+                textParts[i].part
+              } else {
+                ""
+              }
 
             inverseAnnotatedTextBuilder.addMarkup(markup, textPart.part)
           }

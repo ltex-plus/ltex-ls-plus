@@ -15,7 +15,10 @@ open class RegexCodeFragmentizer(
   codeLanguageId: String,
   val regex: Regex,
 ) : CodeFragmentizer(codeLanguageId) {
-  override fun fragmentize(code: String, originalSettings: Settings): List<CodeFragment> {
+  override fun fragmentize(
+    code: String,
+    originalSettings: Settings,
+  ): List<CodeFragment> {
     val codeFragments = ArrayList<CodeFragment>()
     var curSettings: Settings = originalSettings
     var curPos = 0
@@ -46,9 +49,10 @@ open class RegexCodeFragmentizer(
       for ((settingKey: String, settingValue: String) in settingsMap) {
         when {
           settingKey.equals("enabled", ignoreCase = true) -> {
-            curSettings = curSettings.copy(
-              _enabled = (if (settingValue == "true") Settings.DEFAULT_ENABLED else emptySet()),
-            )
+            curSettings =
+              curSettings.copy(
+                _enabled = (if (settingValue == "true") Settings.DEFAULT_ENABLED else emptySet()),
+              )
           }
           settingKey.equals("language", ignoreCase = true) -> {
             curSettings = curSettings.copy(_languageShortCode = settingValue)

@@ -26,7 +26,11 @@ class TeeInputStream(
     return length
   }
 
-  override fun read(bytes: ByteArray, offset: Int, length: Int): Int {
+  override fun read(
+    bytes: ByteArray,
+    offset: Int,
+    length: Int,
+  ): Int {
     val actualLength: Int = this.inputStream.read(bytes, offset, length)
     if (actualLength != -1) this.teedOutputStream.write(bytes, offset, actualLength)
     return actualLength
@@ -44,19 +48,19 @@ class TeeInputStream(
     return bytes
   }
 
-  override fun readNBytes(bytes: ByteArray, offset: Int, length: Int): Int {
+  override fun readNBytes(
+    bytes: ByteArray,
+    offset: Int,
+    length: Int,
+  ): Int {
     val actualLength: Int = this.inputStream.readNBytes(bytes, offset, length)
     if (actualLength != -1) this.teedOutputStream.write(bytes, offset, actualLength)
     return actualLength
   }
 
-  override fun skip(length: Long): Long {
-    return this.inputStream.skip(length)
-  }
+  override fun skip(length: Long): Long = this.inputStream.skip(length)
 
-  override fun available(): Int {
-    return this.inputStream.available()
-  }
+  override fun available(): Int = this.inputStream.available()
 
   override fun close() {
     this.inputStream.close()

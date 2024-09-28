@@ -13,11 +13,12 @@ class LatexPackageOption(
   val valueInfo: KeyValueInfo,
 ) {
   val key: String = code.substring(keyInfo.fromPos, keyInfo.toPos)
-  val value: String = if ((valueInfo.fromPos != -1) && (valueInfo.toPos != -1)) {
-    code.substring(valueInfo.fromPos, valueInfo.toPos)
-  } else {
-    ""
-  }
+  val value: String =
+    if ((valueInfo.fromPos != -1) && (valueInfo.toPos != -1)) {
+      code.substring(valueInfo.fromPos, valueInfo.toPos)
+    } else {
+      ""
+    }
 
   data class KeyValueInfo(
     val fromPos: Int,

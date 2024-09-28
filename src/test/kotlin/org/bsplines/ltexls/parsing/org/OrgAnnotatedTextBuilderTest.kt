@@ -15,16 +15,16 @@ class OrgAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("org") {
   fun testHeadlinesAndSections() {
     assertPlainText(
       "* \n\n" +
-      """
-      ** DONE
+        """
+        ** DONE
 
-      *** This is a test
+        *** This is a test
 
-      **** TODO [#A] COMMENT Another test :tag:a2%:
+        **** TODO [#A] COMMENT Another test :tag:a2%:
 
-      **** TODO [#A] Final test :tag:a2%:
+        **** TODO [#A] Final test :tag:a2%:
 
-      """.trimIndent(),
+        """.trimIndent(),
       "\n\n\n\n\n\n\n\n\nThis is a test\n\n\n\n\n\n\nFinal test\n\n",
     )
   }

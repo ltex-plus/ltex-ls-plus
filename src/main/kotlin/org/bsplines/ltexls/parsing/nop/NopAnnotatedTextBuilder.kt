@@ -9,7 +9,9 @@ package org.bsplines.ltexls.parsing.nop
 
 import org.bsplines.ltexls.parsing.CodeAnnotatedTextBuilder
 
-class NopAnnotatedTextBuilder(codeLanguageId: String) : CodeAnnotatedTextBuilder(codeLanguageId) {
+class NopAnnotatedTextBuilder(
+  codeLanguageId: String,
+) : CodeAnnotatedTextBuilder(codeLanguageId) {
   override fun addCode(code: String): CodeAnnotatedTextBuilder {
     addMarkup(code)
     return this

@@ -47,31 +47,32 @@ class NonServerCheckerTest {
         "This is [an test.](qwert) This is LTeX.\n",
       )
 
-      val result: Pair<Int, String> = LtexLanguageServerLauncherTest.captureStdout {
-        LtexLanguageServerLauncherTest.mockStdin("This is an test. This is LTeX.\n") {
-          nonServerChecker.check(listOf(inputFilePath, inputDirectory2, Path.of("-")))
+      val result: Pair<Int, String> =
+        LtexLanguageServerLauncherTest.captureStdout {
+          LtexLanguageServerLauncherTest.mockStdin("This is an test. This is LTeX.\n") {
+            nonServerChecker.check(listOf(inputFilePath, inputDirectory2, Path.of("-")))
+          }
         }
-      }
 
       assertEquals(3, result.first)
 
       val message: String = (
-        "\\Q\u001b[33mgrammar:\u001b[0;1m Use 'a' instead of 'an' if the "
-        + "following word doesn't start with a vowel sound, e.g. 'a sentence', 'a university'. "
-        + "[EN_A_VS_AN]\u001b[m\\E"
+        "\\Q\u001b[33mgrammar:\u001b[0;1m Use 'a' instead of 'an' if the " +
+          "following word doesn't start with a vowel sound, e.g. 'a sentence', 'a university'. " +
+          "[EN_A_VS_AN]\u001b[m\\E"
       )
       assertContains(
         result.second,
         Regex(
-          "^\u001b\\[1m.*?:1:17: $message\r?\n"
-          + "This is \\\\textbf\\{\u001b\\[1;33man\u001b\\[m test\\.} This is LTeX\\.\r?\n"
-          + " {16}\u001b\\[32ma\u001b\\[m\r?\n"
-          + ".*?:1:10: $message\r?\n"
-          + "This is \\[\u001b\\[1;33man\u001b\\[m test\\.]\\(qwert\\) This is LTeX\\.\r?\n"
-          + " {9}\u001b\\[32ma\u001b\\[m\r?\n"
-          + ".*?:1:9: $message\r?\n"
-          + "This is \u001b\\[1;33man\u001b\\[m test\\. This is LTeX\\.\r?\n"
-          + " {8}\u001b\\[32ma\u001b\\[m\r?\n$",
+          "^\u001b\\[1m.*?:1:17: $message\r?\n" +
+            "This is \\\\textbf\\{\u001b\\[1;33man\u001b\\[m test\\.} This is LTeX\\.\r?\n" +
+            " {16}\u001b\\[32ma\u001b\\[m\r?\n" +
+            ".*?:1:10: $message\r?\n" +
+            "This is \\[\u001b\\[1;33man\u001b\\[m test\\.]\\(qwert\\) This is LTeX\\.\r?\n" +
+            " {9}\u001b\\[32ma\u001b\\[m\r?\n" +
+            ".*?:1:9: $message\r?\n" +
+            "This is \u001b\\[1;33man\u001b\\[m test\\. This is LTeX\\.\r?\n" +
+            " {8}\u001b\\[32ma\u001b\\[m\r?\n$",
         ),
       )
     } finally {

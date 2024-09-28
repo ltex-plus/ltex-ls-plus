@@ -12,48 +12,54 @@ data class ProgramCommentRegexs(
   val blockCommentEndRegexString: String?,
   val lineCommentRegexString: String?,
 ) {
-  val commentBlockRegex: Regex = run {
-    val builder = StringBuilder()
+  val commentBlockRegex: Regex =
+    run {
+      val builder = StringBuilder()
 
-    if ((this.blockCommentStartRegexString != null) && (this.blockCommentEndRegexString != null)) {
-      if (builder.isNotEmpty()) builder.append("|")
-      builder.append(
-        "^[ \t]*" + this.blockCommentStartRegexString
-        + "(?:[ \t]|$)(?<blockComment>(?:(?!" + this.blockCommentEndRegexString
-        + ").|\r?\n)*?)(?:[ \t]|^)" + this.blockCommentEndRegexString + "[ \t]*$",
-      )
+      if ((this.blockCommentStartRegexString != null) &&
+        (this.blockCommentEndRegexString != null)
+      ) {
+        if (builder.isNotEmpty()) builder.append("|")
+        builder.append(
+          "^[ \t]*" + this.blockCommentStartRegexString +
+            "(?:[ \t]|$)(?<blockComment>(?:(?!" + this.blockCommentEndRegexString +
+            ").|\r?\n)*?)(?:[ \t]|^)" + this.blockCommentEndRegexString + "[ \t]*$",
+        )
+      }
+
+      if (this.lineCommentRegexString != null) {
+        if (builder.isNotEmpty()) builder.append("|")
+        builder.append(
+          "(?<lineComment>(?:^[ \t]*" + this.lineCommentRegexString + "[ \t](?:.*?)$(?:\r?\n)?)+)",
+        )
+      }
+
+      Regex(builder.toString(), RegexOption.MULTILINE)
     }
 
-    if (this.lineCommentRegexString != null) {
-      if (builder.isNotEmpty()) builder.append("|")
-      builder.append(
-        "(?<lineComment>(?:^[ \t]*" + this.lineCommentRegexString + "[ \t](?:.*?)$(?:\r?\n)?)+)",
-      )
+  val magicCommentRegex: Regex =
+    run {
+      val builder = StringBuilder()
+
+      if ((this.blockCommentStartRegexString != null) &&
+        (this.blockCommentEndRegexString != null)
+      ) {
+        if (builder.isNotEmpty()) builder.append("|")
+        builder.append(
+          "^[ \t]*" + this.blockCommentStartRegexString +
+            "[ \t]*(?i)ltex(?-i):(.*?)[ \t]*" + this.blockCommentEndRegexString + "[ \t]*$",
+        )
+      }
+
+      if (this.lineCommentRegexString != null) {
+        if (builder.isNotEmpty()) builder.append("|")
+        builder.append(
+          "^[ \t]*" + this.lineCommentRegexString + "[ \t]*(?i)ltex(?-i):(.*?)[ \t]*$",
+        )
+      }
+
+      Regex(builder.toString(), RegexOption.MULTILINE)
     }
-
-    Regex(builder.toString(), RegexOption.MULTILINE)
-  }
-
-  val magicCommentRegex: Regex = run {
-    val builder = StringBuilder()
-
-    if ((this.blockCommentStartRegexString != null) && (this.blockCommentEndRegexString != null)) {
-      if (builder.isNotEmpty()) builder.append("|")
-      builder.append(
-        "^[ \t]*" + this.blockCommentStartRegexString
-        + "[ \t]*(?i)ltex(?-i):(.*?)[ \t]*" + this.blockCommentEndRegexString + "[ \t]*$",
-      )
-    }
-
-    if (this.lineCommentRegexString != null) {
-      if (builder.isNotEmpty()) builder.append("|")
-      builder.append(
-        "^[ \t]*" + this.lineCommentRegexString + "[ \t]*(?i)ltex(?-i):(.*?)[ \t]*$",
-      )
-    }
-
-    Regex(builder.toString(), RegexOption.MULTILINE)
-  }
 
   companion object {
     private val CACHE_MAP: MutableMap<String, ProgramCommentRegexs> = HashMap()
@@ -126,11 +132,12 @@ data class ProgramCommentRegexs(
         }
       }
 
-      val programCommentRegexs = ProgramCommentRegexs(
-        blockCommentStartRegexString,
-        blockCommentEndRegexString,
-        lineCommentRegexString,
-      )
+      val programCommentRegexs =
+        ProgramCommentRegexs(
+          blockCommentStartRegexString,
+          blockCommentEndRegexString,
+          lineCommentRegexString,
+        )
       CACHE_MAP[codeLanguageId] = programCommentRegexs
       return programCommentRegexs
     }
@@ -138,9 +145,9 @@ data class ProgramCommentRegexs(
     fun isSupportedCodeLanguageId(codeLanguageId: String): Boolean {
       val regexs: ProgramCommentRegexs = fromCodeLanguageId(codeLanguageId)
       return (
-        (regexs.blockCommentStartRegexString != null)
-        || (regexs.blockCommentEndRegexString != null)
-        || (regexs.lineCommentRegexString != null)
+        (regexs.blockCommentStartRegexString != null) ||
+          (regexs.blockCommentEndRegexString != null) ||
+          (regexs.lineCommentRegexString != null)
       )
     }
   }

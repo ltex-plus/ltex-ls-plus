@@ -32,22 +32,17 @@ class MockLtexLanguageClient : LtexLanguageClient {
 
   override fun showMessageRequest(
     showMessageRequestParams: ShowMessageRequestParams,
-  ): CompletableFuture<MessageActionItem> {
-    return CompletableFuture.completedFuture(MessageActionItem("foobar"))
-  }
+  ): CompletableFuture<MessageActionItem> =
+    CompletableFuture.completedFuture(MessageActionItem("foobar"))
 
   override fun logMessage(messageParams: MessageParams) {
   }
 
   override fun configuration(
     configurationParams: ConfigurationParams,
-  ): CompletableFuture<List<Any>> {
-    return CompletableFuture.completedFuture(listOf(JsonObject()))
-  }
+  ): CompletableFuture<List<Any>> = CompletableFuture.completedFuture(listOf(JsonObject()))
 
   override fun ltexWorkspaceSpecificConfiguration(
     configurationParams: ConfigurationParams,
-  ): CompletableFuture<List<Any?>> {
-    return CompletableFuture.completedFuture(listOf(JsonObject()))
-  }
+  ): CompletableFuture<List<Any?>> = CompletableFuture.completedFuture(listOf(JsonObject()))
 }

@@ -58,10 +58,10 @@ class LtexLanguageServerLauncher : Callable<Int> {
     hidden = true,
     arity = "1..*",
     description = [
-      "Instead of running as server, check the documents at the paths "
-      + "<inputDocuments>, print the results to standard output, and exit. "
-      + "Directories are traversed recursively. "
-      + "If - is given, standard input will be checked as plain text.",
+      "Instead of running as server, check the documents at the paths " +
+        "<inputDocuments>, print the results to standard output, and exit. " +
+        "Directories are traversed recursively. " +
+        "If - is given, standard input will be checked as plain text.",
     ],
   )
   private var inputDocuments: List<Path>? = null
@@ -70,12 +70,12 @@ class LtexLanguageServerLauncher : Callable<Int> {
     names = ["--settings-file"],
     hidden = true,
     description = [
-      "Use the settings stored in the JSON file <settingsFile> "
-      + "(only relevant when using --input-documents). "
-      + "The format is either nested JSON objects ({\"latex\": {\"commands\": ...}}) or "
-      + "a flattened JSON object ({\"latex.commands\": ...}). "
-      + "Setting names may be prefixed by a top level named `ltex` "
-      + "(e.g., {\"ltex.latex.commands\": ...} is accepted as well).",
+      "Use the settings stored in the JSON file <settingsFile> " +
+        "(only relevant when using --input-documents). " +
+        "The format is either nested JSON objects ({\"latex\": {\"commands\": ...}}) or " +
+        "a flattened JSON object ({\"latex.commands\": ...}). " +
+        "Setting names may be prefixed by a top level named `ltex` " +
+        "(e.g., {\"ltex.latex.commands\": ...} is accepted as well).",
     ],
   )
   private var settingsFile: Path? = null
@@ -89,8 +89,8 @@ class LtexLanguageServerLauncher : Callable<Int> {
   @Option(
     names = ["--host"],
     description = [
-      "Listen for TCP connections on host <host> "
-      + "(IP address or hostname; only relevant if server type is tcpSocket).",
+      "Listen for TCP connections on host <host> " +
+        "(IP address or hostname; only relevant if server type is tcpSocket).",
     ],
   )
   private var host: String = "localhost"
@@ -98,10 +98,10 @@ class LtexLanguageServerLauncher : Callable<Int> {
   @Option(
     names = ["--port"],
     description = [
-      "Listen for TCP connections on port <port> "
-      + "(only relevant if server type is tcpSocket). "
-      + "A value of 0 will have the system automatically determine a free port "
-      + "(the actual port number will be printed to the log).",
+      "Listen for TCP connections on port <port> " +
+        "(only relevant if server type is tcpSocket). " +
+        "A value of 0 will have the system automatically determine a free port " +
+        "(the actual port number will be printed to the log).",
     ],
   )
   private var port: Int = 0
@@ -109,10 +109,10 @@ class LtexLanguageServerLauncher : Callable<Int> {
   @Option(
     names = ["--log-file"],
     description = [
-      "Tee server/client communication and server log "
-      + "to <logFile>. $${'$'}{PID} is replaced by the process ID of LTeX LS. "
-      + "The parent directory of <logFile> must exist. "
-      + "If <logFile> is an existing directory, then ltex-ls-$${'$'}{PID}.log is used as filename.",
+      "Tee server/client communication and server log " +
+        "to <logFile>. $${'$'}{PID} is replaced by the process ID of LTeX LS. " +
+        "The parent directory of <logFile> must exist. " +
+        "If <logFile> is an existing directory, then ltex-ls-$${'$'}{PID}.log is used as filename.",
     ],
   )
   private var logFile: Path? = null
@@ -124,16 +124,18 @@ class LtexLanguageServerLauncher : Callable<Int> {
     try {
       if (this.logFile != null) logOutputStream = setupLogFileOutput()
 
-      val port: Int = if (this.serverType == ServerType.TcpSocket) {
-        serverSocket = ServerSocket(
-          this.port,
-          SERVER_SOCKET_BACKLOG_SIZE,
-          InetAddress.getByName(this.host),
-        )
-        serverSocket.localPort
-      } else {
-        this.port
-      }
+      val port: Int =
+        if (this.serverType == ServerType.TcpSocket) {
+          serverSocket =
+            ServerSocket(
+              this.port,
+              SERVER_SOCKET_BACKLOG_SIZE,
+              InetAddress.getByName(this.host),
+            )
+          serverSocket.localPort
+        } else {
+          this.port
+        }
 
       do {
         val exitCode: Int? = launchServer(serverSocket, logOutputStream, port)
@@ -159,7 +161,7 @@ class LtexLanguageServerLauncher : Callable<Int> {
     }
 
     val logFileString: String =
-        logFile.absolutePath.replace("\${PID}", ProcessHandle.current().pid().toString())
+      logFile.absolutePath.replace("\${PID}", ProcessHandle.current().pid().toString())
     val logOutputStream: OutputStream = FileOutputStream(logFileString, true)
     System.setErr(
       PrintStream(TeeOutputStream(System.err, logOutputStream), true, StandardCharsets.UTF_8),
@@ -219,7 +221,7 @@ class LtexLanguageServerLauncher : Callable<Int> {
     fun main(arguments: Array<String>) {
       AnsiConsole.systemInstall()
       val commandLine =
-          CommandLine(LtexLanguageServerLauncher()).setCaseInsensitiveEnumValuesAllowed(true)
+        CommandLine(LtexLanguageServerLauncher()).setCaseInsensitiveEnumValuesAllowed(true)
       val exitCode: Int = commandLine.execute(*arguments)
       if (exitCode != 0) exitProcess(exitCode)
     }
@@ -247,7 +249,10 @@ class LtexLanguageServerLauncher : Callable<Int> {
       }
     }
 
-    fun launch(inputStream: InputStream, outputStream: OutputStream) {
+    fun launch(
+      inputStream: InputStream,
+      outputStream: OutputStream,
+    ) {
       val server = LtexLanguageServer()
       val executorService: ExecutorService = Executors.newSingleThreadScheduledExecutor()
 

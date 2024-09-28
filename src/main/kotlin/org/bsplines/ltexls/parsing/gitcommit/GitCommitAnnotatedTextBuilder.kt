@@ -16,8 +16,8 @@ class GitCommitAnnotatedTextBuilder(
     var matchResult: MatchResult? = null
 
     if (
-      this.isStartOfLine
-      && (matchFromPosition(COMMENT_REGEX)?.also { matchResult = it } != null)
+      this.isStartOfLine &&
+      (matchFromPosition(COMMENT_REGEX)?.also { matchResult = it } != null)
     ) {
       addMarkup(matchResult?.value, "\n")
     } else {

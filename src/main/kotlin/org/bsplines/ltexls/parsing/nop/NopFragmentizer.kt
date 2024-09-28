@@ -14,7 +14,8 @@ import org.bsplines.ltexls.settings.Settings
 class NopFragmentizer(
   codeLanguageId: String,
 ) : CodeFragmentizer(codeLanguageId) {
-  override fun fragmentize(code: String, originalSettings: Settings): List<CodeFragment> {
-    return listOf(CodeFragment(codeLanguageId, code, 0, originalSettings))
-  }
+  override fun fragmentize(
+    code: String,
+    originalSettings: Settings,
+  ): List<CodeFragment> = listOf(CodeFragment(codeLanguageId, code, 0, originalSettings))
 }

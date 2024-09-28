@@ -17,10 +17,11 @@ import org.languagetool.markup.AnnotatedText
 class ProgramAnnotatedTextBuilder(
   codeLanguageId: String,
 ) : CodeAnnotatedTextBuilder(codeLanguageId) {
-  private val annotatedTextBuilder = when (codeLanguageId) {
-    "python" -> RestructuredtextAnnotatedTextBuilder("restructuredtext")
-    else -> MarkdownAnnotatedTextBuilder("markdown")
-  }
+  private val annotatedTextBuilder =
+    when (codeLanguageId) {
+      "python" -> RestructuredtextAnnotatedTextBuilder("restructuredtext")
+      else -> MarkdownAnnotatedTextBuilder("markdown")
+    }
 
   private val commentRegexs = ProgramCommentRegexs.fromCodeLanguageId(codeLanguageId)
   private val commentBlockRegex: Regex = commentRegexs.commentBlockRegex
@@ -54,13 +55,25 @@ class ProgramAnnotatedTextBuilder(
     return this
   }
 
-  private fun addComment(comment: String, isLineComment: Boolean): CodeAnnotatedTextBuilder {
+  private fun addComment(
+    comment: String,
+    isLineComment: Boolean,
+  ): CodeAnnotatedTextBuilder {
     val commonFirstCharacter: String = getCommonFirstCharacterInComment(comment)
-    val lineContentsRegex = Regex(
-      "[ \t]*"
-      + (if (isLineComment && (lineCommentPatternString != null)) lineCommentPatternString else "")
-      + "(?:" + Regex.escape(commonFirstCharacter) + ")?[ \t]*(.*?)(?:\r?\n|$)",
-    )
+    val lineContentsRegex =
+      Regex(
+        "[ \t]*" +
+          (
+            if (isLineComment &&
+              (lineCommentPatternString != null)
+            ) {
+              lineCommentPatternString
+            } else {
+              ""
+            }
+          ) +
+          "(?:" + Regex.escape(commonFirstCharacter) + ")?[ \t]*(.*?)(?:\r?\n|$)",
+      )
     var curPos = 0
 
     for (matchResult: MatchResult in lineContentsRegex.findAll(comment)) {
@@ -101,9 +114,7 @@ class ProgramAnnotatedTextBuilder(
     return commonFirstCharacter
   }
 
-  override fun build(): AnnotatedText {
-    return annotatedTextBuilder.build()
-  }
+  override fun build(): AnnotatedText = annotatedTextBuilder.build()
 
   companion object {
     private val LINE_SEPARATOR_REGEX = Regex("\r?\n")

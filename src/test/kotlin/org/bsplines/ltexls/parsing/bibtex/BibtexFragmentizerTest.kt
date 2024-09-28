@@ -18,28 +18,29 @@ class BibtexFragmentizerTest {
   fun testFragmentizer() {
     val settings = Settings()
     val fragmentizer: CodeFragmentizer = CodeFragmentizer.create("bibtex")
-    val codeFragments: List<CodeFragment> = fragmentizer.fragmentize(
-      """
-      @article{some-label,
-        name = {Some Name},
-        description = {This is a test.}
-      }
+    val codeFragments: List<CodeFragment> =
+      fragmentizer.fragmentize(
+        """
+        @article{some-label,
+          name = {Some Name},
+          description = {This is a test.}
+        }
 
-      @entry{some-label2,
-        name = {Some Other Name},
-        description = {This is another
-        test.},
-      }
+        @entry{some-label2,
+          name = {Some Other Name},
+          description = {This is another
+          test.},
+        }
 
-      @abbreviation{some-label3,
-        short =shortform,
-        see   = {abc},
-        long  = longform,
-       }
+        @abbreviation{some-label3,
+          short =shortform,
+          see   = {abc},
+          long  = longform,
+         }
 
-      """.trimIndent(),
-      settings,
-    )
+        """.trimIndent(),
+        settings,
+      )
     assertEquals(6, codeFragments.size)
 
     for ((codeLanguageId: String) in codeFragments) {

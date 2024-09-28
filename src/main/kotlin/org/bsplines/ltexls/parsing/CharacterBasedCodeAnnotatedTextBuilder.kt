@@ -94,12 +94,14 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
 
   protected abstract fun processCharacter()
 
-  protected fun matchFromPosition(regex: Regex, pos: Int = this.pos): MatchResult? {
+  protected fun matchFromPosition(
+    regex: Regex,
+    pos: Int = this.pos,
+  ): MatchResult? {
     val matchResult: MatchResult? = regex.find(this.code.substring(pos))
     return if ((matchResult != null) && matchResult.value.isNotEmpty()) matchResult else null
   }
 
-  protected open fun generateDummy(): String {
-    return this.dummyGenerator.generate(this.language, this.dummyCounter++)
-  }
+  protected open fun generateDummy(): String =
+    this.dummyGenerator.generate(this.language, this.dummyCounter++)
 }

@@ -35,7 +35,9 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.system.exitProcess
 
-class LtexLanguageServer : LanguageServer, LanguageClientAware {
+class LtexLanguageServer :
+  LanguageServer,
+  LanguageClientAware {
   var languageClient: LtexLanguageClient? = null
   val singleThreadExecutorService: ExecutorService = Executors.newSingleThreadScheduledExecutor()
   val settingsManager = SettingsManager()
@@ -81,11 +83,11 @@ class LtexLanguageServer : LanguageServer, LanguageClientAware {
 
       if (initializationOptionsObject.has("customCapabilities")) {
         val customCapabilities: JsonObject =
-            initializationOptionsObject.getAsJsonObject("customCapabilities")
+          initializationOptionsObject.getAsJsonObject("customCapabilities")
 
         if (customCapabilities.has("workspaceSpecificConfiguration")) {
           this.clientSupportsWorkspaceSpecificConfiguration =
-              customCapabilities.get("workspaceSpecificConfiguration").asBoolean
+            customCapabilities.get("workspaceSpecificConfiguration").asBoolean
         }
       }
     }
@@ -95,10 +97,10 @@ class LtexLanguageServer : LanguageServer, LanguageClientAware {
     val serverCapabilities = ServerCapabilities()
 
     serverCapabilities.codeActionProvider =
-        Either.forRight(CodeActionOptions(CodeActionProvider.getCodeActionKinds()))
+      Either.forRight(CodeActionOptions(CodeActionProvider.getCodeActionKinds()))
     serverCapabilities.completionProvider = CompletionOptions()
     serverCapabilities.executeCommandProvider =
-        ExecuteCommandOptions(LtexWorkspaceService.getCommandNames())
+      ExecuteCommandOptions(LtexWorkspaceService.getCommandNames())
     serverCapabilities.textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
 
     return CompletableFuture.completedFuture(InitializeResult(serverCapabilities))
@@ -122,11 +124,7 @@ class LtexLanguageServer : LanguageServer, LanguageClientAware {
     this.languageClient = languageClient as LtexLanguageClient
   }
 
-  override fun getTextDocumentService(): TextDocumentService {
-    return this.ltexTextDocumentService
-  }
+  override fun getTextDocumentService(): TextDocumentService = this.ltexTextDocumentService
 
-  override fun getWorkspaceService(): WorkspaceService {
-    return this.ltexWorkspaceService
-  }
+  override fun getWorkspaceService(): WorkspaceService = this.ltexWorkspaceService
 }

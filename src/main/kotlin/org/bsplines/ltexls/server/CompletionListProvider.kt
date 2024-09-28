@@ -47,20 +47,25 @@ class CompletionListProvider(
 
   private val fullCompletionListMap: MutableMap<String, List<String>> = HashMap()
 
-  fun createCompletionList(document: LtexTextDocumentItem, position: Position): CompletionList {
+  fun createCompletionList(
+    document: LtexTextDocumentItem,
+    position: Position,
+  ): CompletionList {
     val codeFragmentPositionPair: Pair<CodeFragment, Int> =
-        getCodeFragmentFromPosition(document, position) ?: return CompletionList(emptyList())
+      getCodeFragmentFromPosition(document, position) ?: return CompletionList(emptyList())
 
     val annotatedTextFragment: AnnotatedTextFragment =
-        buildAnnotatedTextFragment(document, codeFragmentPositionPair.first)
+      buildAnnotatedTextFragment(document, codeFragmentPositionPair.first)
 
-    val languageShortCode: String = getLanguageShortCode(annotatedTextFragment) ?:
-        return CompletionList(emptyList())
+    val languageShortCode: String =
+      getLanguageShortCode(annotatedTextFragment)
+        ?: return CompletionList(emptyList())
 
-    val prefix: String = getPrefixFromPosition(
-      annotatedTextFragment.codeFragment.code,
-      codeFragmentPositionPair.second,
-    )
+    val prefix: String =
+      getPrefixFromPosition(
+        annotatedTextFragment.codeFragment.code,
+        codeFragmentPositionPair.second,
+      )
     if (prefix.isEmpty()) return CompletionList(emptyList())
 
     val fullCompletionList: List<String> = getFullCompletionList(languageShortCode)
@@ -86,7 +91,7 @@ class CompletionListProvider(
     val codeFragmentizer: CodeFragmentizer = CodeFragmentizer.create(document.languageId)
     val code: String = document.text
     val codeFragments: List<CodeFragment> =
-        codeFragmentizer.fragmentize(code, this.settingsManager.settings)
+      codeFragmentizer.fragmentize(code, this.settingsManager.settings)
     val pos: Int = document.convertPosition(position)
 
     var matchingCodeFragment: CodeFragment? = null
@@ -96,8 +101,8 @@ class CompletionListProvider(
         (codeFragment.fromPos <= pos) && (pos < codeFragment.fromPos + codeFragment.code.length)
       ) {
         if (
-          (matchingCodeFragment == null)
-          || (codeFragment.fromPos > matchingCodeFragment.fromPos)
+          (matchingCodeFragment == null) ||
+          (codeFragment.fromPos > matchingCodeFragment.fromPos)
         ) {
           matchingCodeFragment = codeFragment
         }
@@ -116,27 +121,30 @@ class CompletionListProvider(
     codeFragment: CodeFragment,
   ): AnnotatedTextFragment {
     val builder: CodeAnnotatedTextBuilder =
-        CodeAnnotatedTextBuilder.create(codeFragment.codeLanguageId)
+      CodeAnnotatedTextBuilder.create(codeFragment.codeLanguageId)
     builder.setSettings(codeFragment.settings)
     builder.addCode(codeFragment.code)
     val annotatedText: AnnotatedText = builder.build()
     return AnnotatedTextFragment(annotatedText, codeFragment, document)
   }
 
-  private fun getLanguageShortCode(annotatedTextFragment: AnnotatedTextFragment): String? {
-    return if (annotatedTextFragment.codeFragment.settings.languageShortCode == "auto") {
-      val cleanText: String = this.simpleLanguageIdentifier.cleanAndShortenText(
-        annotatedTextFragment.annotatedText.plainText,
-      )
+  private fun getLanguageShortCode(annotatedTextFragment: AnnotatedTextFragment): String? =
+    if (annotatedTextFragment.codeFragment.settings.languageShortCode == "auto") {
+      val cleanText: String =
+        this.simpleLanguageIdentifier.cleanAndShortenText(
+          annotatedTextFragment.annotatedText.plainText,
+        )
       val detectedLanguage: DetectedLanguage? =
         this.simpleLanguageIdentifier.detectLanguage(cleanText, emptyList(), emptyList())
       detectedLanguage?.detectedLanguage?.shortCodeWithCountryAndVariant
     } else {
       annotatedTextFragment.codeFragment.settings.languageShortCode
     }
-  }
 
-  private fun getPrefixFromPosition(code: String, pos: Int): String {
+  private fun getPrefixFromPosition(
+    code: String,
+    pos: Int,
+  ): String {
     if (pos >= code.length) return ""
 
     for (curPos: Int in pos - 1 downTo 0) {
@@ -148,23 +156,26 @@ class CompletionListProvider(
   }
 
   private fun getFullCompletionList(languageShortCode: String): List<String> {
-    val fullCompletionList: List<String> = fullCompletionListMap[languageShortCode] ?: run {
-      if (LANGUAGE_SHORT_CODE_REGEX.matches(languageShortCode)) {
-        val completionListText: String =
-          javaClass.getResource("/completionList.$languageShortCode.txt")?.readText()?.trim() ?: ""
+    val fullCompletionList: List<String> =
+      fullCompletionListMap[languageShortCode] ?: run {
+        if (LANGUAGE_SHORT_CODE_REGEX.matches(languageShortCode)) {
+          val completionListText: String =
+            javaClass.getResource("/completionList.$languageShortCode.txt")?.readText()?.trim()
+              ?: ""
 
-        val fullCompletionList: List<String> = if (completionListText.isNotEmpty()) {
-          completionListText.split('\n')
+          val fullCompletionList: List<String> =
+            if (completionListText.isNotEmpty()) {
+              completionListText.split('\n')
+            } else {
+              emptyList()
+            }
+
+          fullCompletionListMap[languageShortCode] = fullCompletionList
+          fullCompletionList
         } else {
           emptyList()
         }
-
-        fullCompletionListMap[languageShortCode] = fullCompletionList
-        fullCompletionList
-      } else {
-        emptyList()
       }
-    }
 
     return fullCompletionList
   }

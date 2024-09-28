@@ -31,23 +31,25 @@ class DocumentCheckerTest {
   @Test
   @Suppress("LongMethod")
   fun testLatex() {
-    var document: LtexTextDocumentItem = createDocument(
-      "latex",
-      "This is an \\textbf{test.}\n% LTeX: language=de-DE\nDies ist eine \\textbf{Test.}\n",
-    )
+    var document: LtexTextDocumentItem =
+      createDocument(
+        "latex",
+        "This is an \\textbf{test.}\n% LTeX: language=de-DE\nDies ist eine \\textbf{Test.}\n",
+      )
     var checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
-        checkDocument(document)
+      checkDocument(document)
     assertMatches(checkingResult.first, 8, 10, 58, 75)
 
-    document = createDocument(
-      "latex",
-      """
-      This is a qwertyzuiopa\footnote{This is another qwertyzuiopb.}.
-      % ltex: language=de-DE
-      Dies ist ein Qwertyzuiopc\todo[name]{Dies ist ein weiteres Qwertyzuiopd.}.
+    document =
+      createDocument(
+        "latex",
+        """
+        This is a qwertyzuiopa\footnote{This is another qwertyzuiopb.}.
+        % ltex: language=de-DE
+        Dies ist ein Qwertyzuiopc\todo[name]{Dies ist ein weiteres Qwertyzuiopd.}.
 
-      """.trimIndent(),
-    )
+        """.trimIndent(),
+      )
     checkingResult = checkDocument(document)
 
     val matches: List<LanguageToolRuleMatch> = checkingResult.first
@@ -112,46 +114,49 @@ class DocumentCheckerTest {
 
   @Test
   fun testMarkdown() {
-    val document: LtexTextDocumentItem = createDocument(
-      "markdown",
-      """
-      This is an **test.**
+    val document: LtexTextDocumentItem =
+      createDocument(
+        "markdown",
+        """
+        This is an **test.**
 
-      <!-- LTeX: language=de-DE -->
+        <!-- LTeX: language=de-DE -->
 
-      Dies ist eine **Test**.
+        Dies ist eine **Test**.
 
-      """.trimIndent(),
-    )
+        """.trimIndent(),
+      )
     assertMatches(checkDocument(document).first, 8, 10, 62, 73)
   }
 
   @Test
   fun testLanguageDetection() {
-    val document: LtexTextDocumentItem = createDocument(
-      "markdown",
-      """
-      This is an **test.**
+    val document: LtexTextDocumentItem =
+      createDocument(
+        "markdown",
+        """
+        This is an **test.**
 
-      <!-- LTeX: language=auto -->
+        <!-- LTeX: language=auto -->
 
-      Dies ist eine **Test**.
+        Dies ist eine **Test**.
 
-      """.trimIndent(),
-    )
+        """.trimIndent(),
+      )
     assertMatches(checkDocument(document).first, 8, 10, 61, 72)
   }
 
   @Test
   fun testRange() {
-    var document: LtexTextDocumentItem = createDocument(
-      "markdown",
-      "# Test\n\nThis is an **test.**\n\nThis is an **test.**\n",
-    )
+    var document: LtexTextDocumentItem =
+      createDocument(
+        "markdown",
+        "# Test\n\nThis is an **test.**\n\nThis is an **test.**\n",
+      )
     val settingsManager = SettingsManager(Settings(_logLevel = Level.FINEST))
     val documentChecker = DocumentChecker(settingsManager)
     var checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
-        documentChecker.check(document, Range(Position(4, 0), Position(4, 20)))
+      documentChecker.check(document, Range(Position(4, 0), Position(4, 20)))
     var matches: List<LanguageToolRuleMatch> = checkingResult.first
     assertEquals(1, matches.size)
     assertEquals("EN_A_VS_AN", matches[0].ruleId)
@@ -159,18 +164,19 @@ class DocumentCheckerTest {
     assertEquals(38, matches[0].fromPos)
     assertEquals(40, matches[0].toPos)
 
-    document = createDocument(
-      "cpp",
-      """
-      #include <iostream>
+    document =
+      createDocument(
+        "cpp",
+        """
+        #include <iostream>
 
-      int main() {
-        std::cout << "This is an test." << std::endl;
-        return 0;
-      }
+        int main() {
+          std::cout << "This is an test." << std::endl;
+          return 0;
+        }
 
-      """.trimIndent(),
-    )
+        """.trimIndent(),
+      )
     checkingResult = documentChecker.check(document, Range(Position(3, 16), Position(3, 32)))
     matches = checkingResult.first
     assertEquals(1, matches.size)
@@ -182,39 +188,42 @@ class DocumentCheckerTest {
 
   @Test
   fun testCodeActionGenerator() {
-    val document: LtexTextDocumentItem = createDocument(
-      "markdown",
-      "This is an unknownword.\n",
-    )
+    val document: LtexTextDocumentItem =
+      createDocument(
+        "markdown",
+        "This is an unknownword.\n",
+      )
     val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
-        checkDocument(document)
-    val params = CodeActionParams(
-      TextDocumentIdentifier(document.uri),
-      Range(Position(0, 0), Position(100, 0)),
-      CodeActionContext(emptyList()),
-    )
+      checkDocument(document)
+    val params =
+      CodeActionParams(
+        TextDocumentIdentifier(document.uri),
+        Range(Position(0, 0), Position(100, 0)),
+        CodeActionContext(emptyList()),
+      )
     val settingsManager = SettingsManager()
     val codeActionProvider = CodeActionProvider(settingsManager)
     val result: List<Either<Command, CodeAction>> =
-        codeActionProvider.generate(params, document, checkingResult)
+      codeActionProvider.generate(params, document, checkingResult)
     assertEquals(4, result.size)
   }
 
   @Test
   fun testEnabled() {
-    val document: LtexTextDocumentItem = createDocument(
-      "latex",
-      """
-      This is a firstunknownword.
-      % ltex: enabled=false
-      This is a secondunknownword.
-      % ltex: enabled=true
-      This is a thirdunknownword.
+    val document: LtexTextDocumentItem =
+      createDocument(
+        "latex",
+        """
+        This is a firstunknownword.
+        % ltex: enabled=false
+        This is a secondunknownword.
+        % ltex: enabled=true
+        This is a thirdunknownword.
 
-      """.trimIndent(),
-    )
+        """.trimIndent(),
+      )
     val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
-        checkDocument(document)
+      checkDocument(document)
     assertEquals(2, checkingResult.first.size)
   }
 
@@ -230,10 +239,11 @@ class DocumentCheckerTest {
     val jsonWorkspaceSpecificSettings = JsonObject()
     jsonWorkspaceSpecificSettings.add("dictionary", jsonDictionaryObject)
 
-    var document = createDocument(
-      "latex",
-      "This is an unknownword.\n% ltex: language=de-DE\nDies ist ein unbekannteswort.\n",
-    )
+    var document =
+      createDocument(
+        "latex",
+        "This is an unknownword.\n% ltex: language=de-DE\nDies ist ein unbekannteswort.\n",
+      )
     var settings: Settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
     var checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
       checkDocument(document, settings)
@@ -267,14 +277,16 @@ class DocumentCheckerTest {
   @Test
   fun testHiddenFalsePositives() {
     val document: LtexTextDocumentItem = createDocument("markdown", "This is an unknownword.\n")
-    val settings = Settings(
-      _allHiddenFalsePositives = mapOf(
-        Pair(
-          "en-US",
-          setOf(HiddenFalsePositive("MORFOLOGIK_RULE_EN_US", "This is an unknownword\\.")),
-        ),
-      ),
-    )
+    val settings =
+      Settings(
+        _allHiddenFalsePositives =
+          mapOf(
+            Pair(
+              "en-US",
+              setOf(HiddenFalsePositive("MORFOLOGIK_RULE_EN_US", "This is an unknownword\\.")),
+            ),
+          ),
+      )
     val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
       checkDocument(document, settings)
     assertTrue(checkingResult.first.isEmpty())
@@ -290,7 +302,10 @@ class DocumentCheckerTest {
       return documentChecker.check(document)
     }
 
-    fun createDocument(codeLanguageId: String, code: String): LtexTextDocumentItem {
+    fun createDocument(
+      codeLanguageId: String,
+      code: String,
+    ): LtexTextDocumentItem {
       val languageServer = LtexLanguageServer()
       return LtexTextDocumentItem(languageServer, "untitled:test.txt", codeLanguageId, 1, code)
     }
@@ -334,16 +349,16 @@ class DocumentCheckerTest {
 
       try {
         assertEquals(
-          "Use <suggestion>a</suggestion> instead of 'an' if the following "
-          + "word doesn't start with a vowel sound, e.g. "
-          + "'a sentence', 'a university'.",
+          "Use <suggestion>a</suggestion> instead of 'an' if the following " +
+            "word doesn't start with a vowel sound, e.g. " +
+            "'a sentence', 'a university'.",
           matches[0].message,
         )
       } catch (e: AssertionError) {
         assertEquals(
-          "Use \u201ca\u201d instead of \u2018an\u2019 if the following "
-          + "word doesn\u2019t start with a vowel sound, e.g.\u00a0"
-          + "\u2018a sentence\u2019, \u2018a university\u2019.",
+          "Use \u201ca\u201d instead of \u2018an\u2019 if the following " +
+            "word doesn\u2019t start with a vowel sound, e.g.\u00a0" +
+            "\u2018a sentence\u2019, \u2018a university\u2019.",
           matches[0].message,
         )
       }
@@ -357,14 +372,14 @@ class DocumentCheckerTest {
 
       try {
         assertEquals(
-          "M\u00f6glicherweise passen das Nomen und die W\u00f6rter, "
-          + "die das Nomen beschreiben, grammatisch nicht zusammen.",
+          "M\u00f6glicherweise passen das Nomen und die W\u00f6rter, " +
+            "die das Nomen beschreiben, grammatisch nicht zusammen.",
           matches[1].message,
         )
       } catch (e: AssertionError) {
         assertEquals(
-          "M\u00f6glicherweise passen das Nomen und die W\u00f6rter, "
-          + "die das Nomen beschreiben, grammatisch nicht zusammen.",
+          "M\u00f6glicherweise passen das Nomen und die W\u00f6rter, " +
+            "die das Nomen beschreiben, grammatisch nicht zusammen.",
           matches[1].message,
         )
       }

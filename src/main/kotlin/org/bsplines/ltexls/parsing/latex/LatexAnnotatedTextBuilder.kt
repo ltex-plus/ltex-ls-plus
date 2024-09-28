@@ -32,14 +32,14 @@ class LatexAnnotatedTextBuilder(
   private var curMode: Mode = Mode.ParagraphText
 
   private val commandSignatures: MutableList<LatexCommandSignature> =
-      ArrayList(LatexAnnotatedTextBuilderDefaults.DEFAULT_LATEX_COMMAND_SIGNATURES)
+    ArrayList(LatexAnnotatedTextBuilderDefaults.DEFAULT_LATEX_COMMAND_SIGNATURES)
   private var commandSignatureMap: Map<String, List<LatexCommandSignature>> =
-      createCommandSignatureMap(commandSignatures)
+    createCommandSignatureMap(commandSignatures)
 
   private val environmentSignatures: MutableList<LatexEnvironmentSignature> =
-      ArrayList(LatexAnnotatedTextBuilderDefaults.DEFAULT_LATEX_ENVIRONMENT_SIGNATURES)
+    ArrayList(LatexAnnotatedTextBuilderDefaults.DEFAULT_LATEX_ENVIRONMENT_SIGNATURES)
   private var environmentSignatureMap: Map<String, List<LatexEnvironmentSignature>> =
-      createCommandSignatureMap(environmentSignatures)
+    createCommandSignatureMap(environmentSignatures)
 
   override fun setSettings(settings: Settings) {
     super.setSettings(settings)
@@ -53,17 +53,18 @@ class LatexAnnotatedTextBuilder(
     for ((key: String, actionString: String) in settings.latexCommands) {
       var dummyGenerator: DummyGenerator = DummyGenerator.getInstance()
 
-      val action: LatexCommandSignature.Action = when (actionString) {
-        "default" -> LatexCommandSignature.Action.Default
-        "ignore" -> LatexCommandSignature.Action.Ignore
-        "dummy", "pluralDummy", "vowelDummy" -> {
-          val plural: Boolean = (actionString == "pluralDummy")
-          val vowel: Boolean = (actionString == "vowelDummy")
-          dummyGenerator = DummyGenerator.getInstance(plural = plural, vowel = vowel)
-          LatexCommandSignature.Action.Dummy
+      val action: LatexCommandSignature.Action =
+        when (actionString) {
+          "default" -> LatexCommandSignature.Action.Default
+          "ignore" -> LatexCommandSignature.Action.Ignore
+          "dummy", "pluralDummy", "vowelDummy" -> {
+            val plural: Boolean = (actionString == "pluralDummy")
+            val vowel: Boolean = (actionString == "vowelDummy")
+            dummyGenerator = DummyGenerator.getInstance(plural = plural, vowel = vowel)
+            LatexCommandSignature.Action.Dummy
+          }
+          else -> continue
         }
-        else -> continue
-      }
 
       this.commandSignatures.add(LatexCommandSignature(key, action, dummyGenerator))
     }
@@ -76,13 +77,14 @@ class LatexAnnotatedTextBuilder(
     )
 
     for ((key, actionString) in settings.latexEnvironments) {
-      val action: LatexCommandSignature.Action = if (actionString == "default") {
-        LatexCommandSignature.Action.Default
-      } else if (actionString == "ignore") {
-        LatexCommandSignature.Action.Ignore
-      } else {
-        continue
-      }
+      val action: LatexCommandSignature.Action =
+        if (actionString == "default") {
+          LatexCommandSignature.Action.Default
+        } else if (actionString == "ignore") {
+          LatexCommandSignature.Action.Ignore
+        } else {
+          continue
+        }
 
       this.environmentSignatures.add(LatexEnvironmentSignature(key, action))
     }
@@ -111,7 +113,10 @@ class LatexAnnotatedTextBuilder(
     return this
   }
 
-  override fun addMarkup(markup: String?, interpretAs: String?): LatexAnnotatedTextBuilder {
+  override fun addMarkup(
+    markup: String?,
+    interpretAs: String?,
+  ): LatexAnnotatedTextBuilder {
     super.addMarkup(markup, interpretAs)
 
     if (interpretAs?.isNotEmpty() == true) {
@@ -180,10 +185,10 @@ class LatexAnnotatedTextBuilder(
     var command = matchFromPositionAsString(COMMAND_REGEX)
 
     if (
-      (command == "\\begin")
-      || (command == "\\end")
-      || command.startsWith("\\start")
-      || command.startsWith("\\stop")
+      (command == "\\begin") ||
+      (command == "\\end") ||
+      command.startsWith("\\start") ||
+      command.startsWith("\\stop")
     ) {
       this.preserveDummyLast = true
       val isBeginEnvironment: Boolean = ((command == "\\begin") || command.startsWith("\\start"))
@@ -193,12 +198,13 @@ class LatexAnnotatedTextBuilder(
       if ((command == "\\begin") || (command == "\\end")) {
         argument = matchFromPositionAsString(ARGUMENT_REGEX, this.pos + command.length)
         environmentName =
-            if (argument.length >= 2) argument.substring(1, argument.length - 1) else ""
+          if (argument.length >= 2) argument.substring(1, argument.length - 1) else ""
       } else {
         argument = ""
-        environmentName = command.substring(
-          if (isBeginEnvironment) LENGTH_OF_START_PREFIX else LENGTH_OF_STOP_PREFIX,
-        )
+        environmentName =
+          command.substring(
+            if (isBeginEnvironment) LENGTH_OF_START_PREFIX else LENGTH_OF_STOP_PREFIX,
+          )
       }
 
       var argumentsProcessed = false
@@ -219,7 +225,7 @@ class LatexAnnotatedTextBuilder(
         }
       } else if (isBeginEnvironment) {
         val possibleEnvironmentSignatures: List<LatexEnvironmentSignature> =
-            this.environmentSignatureMap[command + argument] ?: emptyList()
+          this.environmentSignatureMap[command + argument] ?: emptyList()
 
         var match = ""
         var matchingEnvironmentSignature: LatexEnvironmentSignature? = null
@@ -228,8 +234,8 @@ class LatexAnnotatedTextBuilder(
           val curMatch: String = latexEnvironmentSignature.matchFromPosition(this.code, this.pos)
 
           if (
-            curMatch.isNotEmpty()
-            && ((curMatch.length >= match.length) || latexEnvironmentSignature.ignoreAllArguments)
+            curMatch.isNotEmpty() &&
+            ((curMatch.length >= match.length) || latexEnvironmentSignature.ignoreAllArguments)
           ) {
             match = curMatch
             matchingEnvironmentSignature = latexEnvironmentSignature
@@ -239,11 +245,12 @@ class LatexAnnotatedTextBuilder(
         if (matchingEnvironmentSignature != null) {
           if (matchingEnvironmentSignature.action == LatexCommandSignature.Action.Ignore) {
             this.modeStack.add(Mode.IgnoreEnvironment)
-            this.ignoreEnvironmentEndRegex = if (command == "\\begin") {
-              Regex("^\\\\end\\{" + Regex.escape(environmentName) + "}")
-            } else {
-              Regex("^\\\\stop" + Regex.escape(environmentName) + "(?![A-Za-z])")
-            }
+            this.ignoreEnvironmentEndRegex =
+              if (command == "\\begin") {
+                Regex("^\\\\end\\{" + Regex.escape(environmentName) + "}")
+              } else {
+                Regex("^\\\\stop" + Regex.escape(environmentName) + "(?![A-Za-z])")
+              }
           }
 
           if (matchingEnvironmentSignature.ignoreAllArguments) {
@@ -312,21 +319,21 @@ class LatexAnnotatedTextBuilder(
       // small sharp s
       addMarkup(command, if (isMathMode(this.curMode)) "" else "\u00df")
     } else if (
-      (command == "\\`")
-      || (command == "\\'")
-      || (command == "\\^")
-      || (command == "\\~")
-      || (command == "\\\"")
-      || (command == "\\=")
-      || (command == "\\.")
-      || (command == "\\H")
-      || (command == "\\b")
-      || (command == "\\c")
-      || (command == "\\d")
-      || (command == "\\k")
-      || (command == "\\r")
-      || (command == "\\u")
-      || (command == "\\v")
+      (command == "\\`") ||
+      (command == "\\'") ||
+      (command == "\\^") ||
+      (command == "\\~") ||
+      (command == "\\\"") ||
+      (command == "\\=") ||
+      (command == "\\.") ||
+      (command == "\\H") ||
+      (command == "\\b") ||
+      (command == "\\c") ||
+      (command == "\\d") ||
+      (command == "\\k") ||
+      (command == "\\r") ||
+      (command == "\\u") ||
+      (command == "\\v")
     ) {
       if (!isMathMode(this.curMode)) {
         val matchResult: MatchResult? = ACCENT_REGEX.find(this.code.substring(this.pos))
@@ -334,13 +341,14 @@ class LatexAnnotatedTextBuilder(
         if (matchResult != null) {
           val accentCommand: String? = matchResult.groups["accentCommand"]?.value
           val letter: String? =
-              matchResult.groups["letter1"]?.value ?: matchResult.groups["letter2"]?.value
+            matchResult.groups["letter1"]?.value ?: matchResult.groups["letter2"]?.value
 
-          val interpretAs: String = if ((accentCommand != null) && (letter != null)) {
-            convertAccentCommandToUnicode(accentCommand, letter)
-          } else {
-            ""
-          }
+          val interpretAs: String =
+            if ((accentCommand != null) && (letter != null)) {
+              convertAccentCommandToUnicode(accentCommand, letter)
+            } else {
+              ""
+            }
 
           addMarkup(matchResult.value, interpretAs)
         } else {
@@ -352,16 +360,16 @@ class LatexAnnotatedTextBuilder(
     } else if (command == "\\-") {
       addMarkup(command)
     } else if (
-      (command == "\\ ")
-      || (command == "\\,")
-      || (command == "\\;")
-      || (command == "\\\\")
-      || (command == "\\hfill")
-      || (command == "\\hspace")
-      || (command == "\\hspace*")
-      || (command == "\\quad")
-      || (command == "\\qquad")
-      || (command == "\\newline")
+      (command == "\\ ") ||
+      (command == "\\,") ||
+      (command == "\\;") ||
+      (command == "\\\\") ||
+      (command == "\\hfill") ||
+      (command == "\\hspace") ||
+      (command == "\\hspace*") ||
+      (command == "\\quad") ||
+      (command == "\\qquad") ||
+      (command == "\\newline")
     ) {
       if ((command == "\\hspace") || (command == "\\hspace*")) {
         val argument: String = matchFromPositionAsString(ARGUMENT_REGEX, this.pos + command.length)
@@ -389,54 +397,56 @@ class LatexAnnotatedTextBuilder(
         }
       }
     } else if (
-      (command == "\\dots")
-      || (command == "\\eg")
-      || (command == "\\egc")
-      || (command == "\\euro")
-      || (command == "\\ie")
-      || (command == "\\iec")
+      (command == "\\dots") ||
+      (command == "\\eg") ||
+      (command == "\\egc") ||
+      (command == "\\euro") ||
+      (command == "\\ie") ||
+      (command == "\\iec")
     ) {
-      val interpretAs: String = if (!isMathMode(this.curMode)) {
-        when (command) {
-          "\\dots" -> "\u2026"
-          "\\eg" -> "e.g."
-          "\\egc" -> "e.g.,"
-          "\\euro" -> "\u20ac"
-          "\\ie" -> "i.e."
-          "\\iec" -> "i.e.,"
-          else -> ""
+      val interpretAs: String =
+        if (!isMathMode(this.curMode)) {
+          when (command) {
+            "\\dots" -> "\u2026"
+            "\\eg" -> "e.g."
+            "\\egc" -> "e.g.,"
+            "\\euro" -> "\u20ac"
+            "\\ie" -> "i.e."
+            "\\iec" -> "i.e.,"
+            else -> ""
+          }
+        } else {
+          ""
         }
-      } else {
-        ""
-      }
 
       addMarkup(command, interpretAs)
     } else if ((command == "\\notag") || (command == "\\qed")) {
       this.preserveDummyLast = true
       addMarkup(command)
     } else if (
-      (command == "\\part")
-      || (command == "\\chapter")
-      || (command == "\\section")
-      || (command == "\\subsection")
-      || (command == "\\subsubsection")
-      || (command == "\\paragraph")
-      || (command == "\\subparagraph")
-      || (command == "\\part*")
-      || (command == "\\chapter*")
-      || (command == "\\section*")
-      || (command == "\\subsection*")
-      || (command == "\\subsubsection*")
-      || (command == "\\paragraph*")
-      || (command == "\\subparagraph*")
+      (command == "\\part") ||
+      (command == "\\chapter") ||
+      (command == "\\section") ||
+      (command == "\\subsection") ||
+      (command == "\\subsubsection") ||
+      (command == "\\paragraph") ||
+      (command == "\\subparagraph") ||
+      (command == "\\part*") ||
+      (command == "\\chapter*") ||
+      (command == "\\section*") ||
+      (command == "\\subsection*") ||
+      (command == "\\subsubsection*") ||
+      (command == "\\paragraph*") ||
+      (command == "\\subparagraph*")
     ) {
       addMarkup(command)
 
-      val headingArgument: String = LatexCommandSignature.matchArgumentFromPosition(
-        this.code,
-        this.pos,
-        LatexCommandSignature.ArgumentType.Bracket,
-      )
+      val headingArgument: String =
+        LatexCommandSignature.matchArgumentFromPosition(
+          this.code,
+          this.pos,
+          LatexCommandSignature.ArgumentType.Bracket,
+        )
 
       if (headingArgument.isNotEmpty()) addMarkup(headingArgument)
       this.modeStack.addLast(Mode.Heading)
@@ -450,7 +460,7 @@ class LatexAnnotatedTextBuilder(
       addMarkup(verbCommand, generateDummy())
     } else {
       val possibleCommandSignatures: List<LatexCommandSignature> =
-          this.commandSignatureMap[command] ?: emptyList()
+        this.commandSignatureMap[command] ?: emptyList()
       var match = ""
       var matchingCommandSignature: LatexCommandSignature? = null
 
@@ -464,8 +474,8 @@ class LatexAnnotatedTextBuilder(
       }
 
       if (
-        (matchingCommandSignature != null)
-        && (matchingCommandSignature.action != LatexCommandSignature.Action.Default)
+        (matchingCommandSignature != null) &&
+        (matchingCommandSignature.action != LatexCommandSignature.Action.Default)
       ) {
         when (matchingCommandSignature.action) {
           LatexCommandSignature.Action.Ignore -> {
@@ -480,43 +490,44 @@ class LatexAnnotatedTextBuilder(
         }
       } else {
         if (isMathMode(curMode) && (this.mathVowelState == MathVowelState.Undecided)) {
-          this.mathVowelState = when (command) {
-            "\\bm",
-            "\\boldsymbol",
-            "\\hat",
-            "\\mathbb",
-            "\\mathbf",
-            "\\mathcal",
-            "\\mathfrak",
-            "\\mathit",
-            "\\mathnormal",
-            "\\mathsf",
-            "\\mathtt",
-            "\\mathop",
-            "\\operatorname",
-            "\\overbrace",
-            "\\overleftarrow",
-            "\\overleftrightarrow",
-            "\\overline",
-            "\\overrightarrow",
-            "\\tilde",
-            "\\underbrace",
-            "\\underline",
-            "\\vec",
-            "\\widetilde",
-            "\\widehat",
-            -> this.mathVowelState
-            "\\alpha",
-            "\\ell",
-            "\\epsilon",
-            "\\eta",
-            "\\iota",
-            "\\Omega",
-            "\\omega",
-            "\\varepsilon",
-            -> MathVowelState.StartsWithVowel
-            else -> MathVowelState.StartsWithConsonant
-          }
+          this.mathVowelState =
+            when (command) {
+              "\\bm",
+              "\\boldsymbol",
+              "\\hat",
+              "\\mathbb",
+              "\\mathbf",
+              "\\mathcal",
+              "\\mathfrak",
+              "\\mathit",
+              "\\mathnormal",
+              "\\mathsf",
+              "\\mathtt",
+              "\\mathop",
+              "\\operatorname",
+              "\\overbrace",
+              "\\overleftarrow",
+              "\\overleftrightarrow",
+              "\\overline",
+              "\\overrightarrow",
+              "\\tilde",
+              "\\underbrace",
+              "\\underline",
+              "\\vec",
+              "\\widetilde",
+              "\\widehat",
+              -> this.mathVowelState
+              "\\alpha",
+              "\\ell",
+              "\\epsilon",
+              "\\eta",
+              "\\iota",
+              "\\Omega",
+              "\\omega",
+              "\\varepsilon",
+              -> MathVowelState.StartsWithVowel
+              else -> MathVowelState.StartsWithConsonant
+            }
         }
         addMarkup(command)
       }
@@ -534,13 +545,14 @@ class LatexAnnotatedTextBuilder(
     ) {
       val accentCommand: String? = matchResult?.groups?.get("accentCommand")?.value
       val letter: String? =
-          matchResult?.groups?.get("letter1")?.value ?: matchResult?.groups?.get("letter2")?.value
+        matchResult?.groups?.get("letter1")?.value ?: matchResult?.groups?.get("letter2")?.value
 
-      val interpretAs: String = if ((accentCommand != null) && (letter != null)) {
-        convertAccentCommandToUnicode(accentCommand, letter)
-      } else {
-        ""
-      }
+      val interpretAs: String =
+        if ((accentCommand != null) && (letter != null)) {
+          convertAccentCommandToUnicode(accentCommand, letter)
+        } else {
+          ""
+        }
 
       addMarkup(matchResult?.value, interpretAs)
     } else {
@@ -550,20 +562,21 @@ class LatexAnnotatedTextBuilder(
   }
 
   private fun processClosingBrace() {
-    val interpretAs: String = if (
-      (this.curMode == Mode.Heading)
-      && this.lastPunctuation.isEmpty()
-    ) {
-      "."
-    } else if (
-      isTextMode(this.curMode)
-      && (this.pos + 1 < this.code.length)
-      && (this.code[this.pos + 1] == '{')
-    ) {
-      " "
-    } else {
-      ""
-    }
+    val interpretAs: String =
+      if (
+        (this.curMode == Mode.Heading) &&
+        this.lastPunctuation.isEmpty()
+      ) {
+        "."
+      } else if (
+        isTextMode(this.curMode) &&
+        (this.pos + 1 < this.code.length) &&
+        (this.code[this.pos + 1] == '{')
+      ) {
+        " "
+      } else {
+        ""
+      }
 
     popMode()
     addMarkup(this.curString, interpretAs)
@@ -606,11 +619,12 @@ class LatexAnnotatedTextBuilder(
   }
 
   private fun processWhitespace() {
-    val whitespace: String = if ((this.curChar != '~') && (this.curChar != '&')) {
-      matchFromPositionAsString(WHITESPACE_REGEX)
-    } else {
-      this.curString
-    }
+    val whitespace: String =
+      if ((this.curChar != '~') && (this.curChar != '&')) {
+        matchFromPositionAsString(WHITESPACE_REGEX)
+      } else {
+        this.curString
+      }
 
     this.preserveDummyLast = true
     this.isMathCharTrivial = true
@@ -711,47 +725,48 @@ class LatexAnnotatedTextBuilder(
       if (isPunctuation(this.curChar)) this.dummyLastPunctuation = this.curString
 
       if (this.mathVowelState == MathVowelState.Undecided) {
-        this.mathVowelState = if (isVowel(this.curChar)) {
-          MathVowelState.StartsWithVowel
-        } else {
-          MathVowelState.StartsWithConsonant
-        }
+        this.mathVowelState =
+          if (isVowel(this.curChar)) {
+            MathVowelState.StartsWithVowel
+          } else {
+            MathVowelState.StartsWithConsonant
+          }
       }
     }
   }
 
-  private fun matchFromPositionAsString(regex: Regex, pos: Int = this.pos): String {
-    return matchFromPosition(regex, pos)?.value ?: ""
-  }
+  private fun matchFromPositionAsString(
+    regex: Regex,
+    pos: Int = this.pos,
+  ): String = matchFromPosition(regex, pos)?.value ?: ""
 
-  override fun generateDummy(): String {
-    return generateDummy(this.dummyGenerator)
-  }
+  override fun generateDummy(): String = generateDummy(this.dummyGenerator)
 
   private fun generateDummy(dummyGenerator: DummyGenerator): String {
     val startsWithVowel: Boolean = (this.mathVowelState == MathVowelState.StartsWithVowel)
 
-    val dummy: String = if (isTextMode(this.curMode)) {
-      dummyGenerator.generate(this.language, this.dummyCounter++, startsWithVowel)
-    } else if (this.isMathEmpty) {
-      if (this.curMode == Mode.DisplayMath) {
-        if (this.lastSpace.isEmpty()) " " else ""
+    val dummy: String =
+      if (isTextMode(this.curMode)) {
+        dummyGenerator.generate(this.language, this.dummyCounter++, startsWithVowel)
+      } else if (this.isMathEmpty) {
+        if (this.curMode == Mode.DisplayMath) {
+          if (this.lastSpace.isEmpty()) " " else ""
+        } else {
+          ""
+        }
+      } else if (this.curMode == Mode.DisplayMath) {
+        (
+          (if (this.lastSpace.isEmpty()) " " else "") +
+            dummyGenerator.generate(this.language, this.dummyCounter++) +
+            this.dummyLastPunctuation +
+            (if (this.modeStack.lastOrNull() == Mode.InlineText) this.dummyLastSpace else " ")
+        )
       } else {
-        ""
+        (
+          dummyGenerator.generate(language, dummyCounter++, startsWithVowel) +
+            this.dummyLastPunctuation + this.dummyLastSpace
+        )
       }
-    } else if (this.curMode == Mode.DisplayMath) {
-      (
-        (if (this.lastSpace.isEmpty()) " " else "")
-        + dummyGenerator.generate(this.language, this.dummyCounter++)
-        + this.dummyLastPunctuation
-        + (if (this.modeStack.lastOrNull() == Mode.InlineText) this.dummyLastSpace else " ")
-      )
-    } else {
-      (
-        dummyGenerator.generate(language, dummyCounter++, startsWithVowel)
-        + this.dummyLastPunctuation + this.dummyLastSpace
-      )
-    }
 
     this.dummyLastSpace = ""
     this.dummyLastPunctuation = ""
@@ -762,10 +777,11 @@ class LatexAnnotatedTextBuilder(
   private fun textAdded(text: String) {
     if (text.isEmpty()) return
     val lastChar: Char = text[text.length - 1]
-    this.lastSpace = when (lastChar) {
-      ' ', '\n', '\r' -> " "
-      else -> ""
-    }
+    this.lastSpace =
+      when (lastChar) {
+        ' ', '\n', '\r' -> " "
+        else -> ""
+      }
     this.lastPunctuation = (if (isPunctuation(lastChar)) " " else "")
   }
 
@@ -790,46 +806,51 @@ class LatexAnnotatedTextBuilder(
   }
 
   @Suppress("ComplexMethod")
-  private fun convertAccentCommandToUnicode(accentCommand: String, letter: String): String {
-    var unicode: String = when (letter) {
-      "\\i" -> "\u0131"
-      "\\j" -> "\u0237"
-      else -> letter
-    }
+  private fun convertAccentCommandToUnicode(
+    accentCommand: String,
+    letter: String,
+  ): String {
+    var unicode: String =
+      when (letter) {
+        "\\i" -> "\u0131"
+        "\\j" -> "\u0237"
+        else -> letter
+      }
 
-    unicode += when (accentCommand[1]) {
-      // grave
-      '`' -> "\u0300"
-      // acute
-      '\'' -> "\u0301"
-      // circumflex
-      '^' -> "\u0302"
-      // tilde
-      '~' -> "\u0303"
-      // diaeresis/umlaut
-      '"' -> "\u0308"
-      // macron
-      '=' -> "\u0304"
-      // dot above
-      '.' -> "\u0307"
-      // double acute
-      'H' -> "\u030b"
-      // macron below
-      'b' -> "\u0331"
-      // cedilla
-      'c' -> "\u0327"
-      // dot below
-      'd' -> "\u0323"
-      // ogonek
-      'k' -> "\u0328"
-      // ring above
-      'r' -> "\u030a"
-      // breve
-      'u' -> "\u0306"
-      // caron
-      'v' -> "\u030c"
-      else -> ""
-    }
+    unicode +=
+      when (accentCommand[1]) {
+        // grave
+        '`' -> "\u0300"
+        // acute
+        '\'' -> "\u0301"
+        // circumflex
+        '^' -> "\u0302"
+        // tilde
+        '~' -> "\u0303"
+        // diaeresis/umlaut
+        '"' -> "\u0308"
+        // macron
+        '=' -> "\u0304"
+        // dot above
+        '.' -> "\u0307"
+        // double acute
+        'H' -> "\u030b"
+        // macron below
+        'b' -> "\u0331"
+        // cedilla
+        'c' -> "\u0327"
+        // dot below
+        'd' -> "\u0323"
+        // ogonek
+        'k' -> "\u0328"
+        // ring above
+        'r' -> "\u030a"
+        // breve
+        'u' -> "\u0306"
+        // caron
+        'v' -> "\u030c"
+        else -> ""
+      }
 
     unicode = Normalizer.normalize(unicode, Normalizer.Form.NFC)
     return unicode
@@ -838,33 +859,36 @@ class LatexAnnotatedTextBuilder(
   @Suppress("LoopWithTooManyJumpStatements")
   private fun processEnvironmentArguments() {
     while (this.pos < this.code.length) {
-      var environmentArgument: String = LatexCommandSignature.matchArgumentFromPosition(
-        this.code,
-        this.pos,
-        LatexCommandSignature.ArgumentType.Brace,
-      )
+      var environmentArgument: String =
+        LatexCommandSignature.matchArgumentFromPosition(
+          this.code,
+          this.pos,
+          LatexCommandSignature.ArgumentType.Brace,
+        )
 
       if (environmentArgument.isNotEmpty()) {
         addMarkup(environmentArgument)
         continue
       }
 
-      environmentArgument = LatexCommandSignature.matchArgumentFromPosition(
-        this.code,
-        this.pos,
-        LatexCommandSignature.ArgumentType.Bracket,
-      )
+      environmentArgument =
+        LatexCommandSignature.matchArgumentFromPosition(
+          this.code,
+          this.pos,
+          LatexCommandSignature.ArgumentType.Bracket,
+        )
 
       if (environmentArgument.isNotEmpty()) {
         addMarkup(environmentArgument)
         continue
       }
 
-      environmentArgument = LatexCommandSignature.matchArgumentFromPosition(
-        this.code,
-        this.pos,
-        LatexCommandSignature.ArgumentType.Parenthesis,
-      )
+      environmentArgument =
+        LatexCommandSignature.matchArgumentFromPosition(
+          this.code,
+          this.pos,
+          LatexCommandSignature.ArgumentType.Parenthesis,
+        )
 
       if (environmentArgument.isNotEmpty()) {
         addMarkup(environmentArgument)
@@ -894,8 +918,8 @@ class LatexAnnotatedTextBuilder(
   companion object {
     private const val LENGTH_REGEX_STRING = "-?[0-9]*(\\.[0-9]+)?(pt|mm|cm|ex|em|bp|dd|pc|in)"
     private const val ACCENT_REGEX_STRING = (
-      "(?<accentCommand>\\\\[`'^~\"=.Hbcdkruv])"
-      + "(?: *(?<letter1>[A-Za-z]|\\\\i|\\\\j)|\\{(?<letter2>[A-Za-z]|\\\\i|\\\\j)})"
+      "(?<accentCommand>\\\\[`'^~\"=.Hbcdkruv])" +
+        "(?: *(?<letter1>[A-Za-z]|\\\\i|\\\\j)|\\{(?<letter2>[A-Za-z]|\\\\i|\\\\j)})"
     )
 
     private val COMMAND_REGEX = Regex("^\\\\(([^A-Za-z@]|([A-Za-z@]+))\\*?)")
@@ -913,25 +937,26 @@ class LatexAnnotatedTextBuilder(
     private val RSWEAVE_BEGIN_REGEX = Regex("^<<.*?>>=")
     private val RSWEAVE_END_REGEX = Regex("^@")
 
-    private val MATH_ENVIRONMENTS: List<String> = listOf(
-      "align",
-      "align*",
-      "alignat",
-      "alignat*",
-      "displaymath",
-      "eqnarray",
-      "eqnarray*",
-      "equation",
-      "equation*",
-      "flalign",
-      "flalign*",
-      "formula",
-      "gather",
-      "gather*",
-      "math",
-      "multline",
-      "multline*",
-    )
+    private val MATH_ENVIRONMENTS: List<String> =
+      listOf(
+        "align",
+        "align*",
+        "alignat",
+        "alignat*",
+        "displaymath",
+        "eqnarray",
+        "eqnarray*",
+        "equation",
+        "equation*",
+        "flalign",
+        "flalign*",
+        "formula",
+        "gather",
+        "gather*",
+        "math",
+        "multline",
+        "multline*",
+      )
 
     private const val LENGTH_OF_START_PREFIX = 6
     private const val LENGTH_OF_STOP_PREFIX = 5
@@ -943,11 +968,12 @@ class LatexAnnotatedTextBuilder(
 
       for (commandSignature: T in commandSignatures) {
         val commandPrefix: String = commandSignature.prefix
-        val list: MutableList<T> = map[commandPrefix] ?: run {
-          val list = ArrayList<T>()
-          map[commandPrefix] = list
-          list
-        }
+        val list: MutableList<T> =
+          map[commandPrefix] ?: run {
+            val list = ArrayList<T>()
+            map[commandPrefix] = list
+            list
+          }
 
         list.add(commandSignature)
       }
@@ -955,38 +981,29 @@ class LatexAnnotatedTextBuilder(
       return map
     }
 
-    private fun isPunctuation(ch: Char): Boolean {
-      return when (ch) {
+    private fun isPunctuation(ch: Char): Boolean =
+      when (ch) {
         '.', ',', ':', ';', '\u2026' -> true
         else -> false
       }
-    }
 
-    private fun isVowel(ch: Char): Boolean {
-      return when (Character.toLowerCase(ch)) {
+    private fun isVowel(ch: Char): Boolean =
+      when (Character.toLowerCase(ch)) {
         'a', 'e', 'f', 'h', 'i', 'l', 'm', 'n', 'o', 'r', 's', 'x' -> true
         else -> false
       }
-    }
 
-    private fun isMathMode(mode: Mode?): Boolean {
-      return ((mode == Mode.InlineMath) || (mode == Mode.DisplayMath))
-    }
+    private fun isMathMode(mode: Mode?): Boolean =
+      ((mode == Mode.InlineMath) || (mode == Mode.DisplayMath))
 
-    private fun isIgnoreEnvironmentMode(mode: Mode?): Boolean {
-      return (mode == Mode.IgnoreEnvironment)
-    }
+    private fun isIgnoreEnvironmentMode(mode: Mode?): Boolean = (mode == Mode.IgnoreEnvironment)
 
-    private fun isRsweaveMode(mode: Mode?): Boolean {
-      return (mode == Mode.Rsweave)
-    }
+    private fun isRsweaveMode(mode: Mode?): Boolean = (mode == Mode.Rsweave)
 
-    private fun isTextMode(mode: Mode?): Boolean {
-      return (!isMathMode(mode) && !isIgnoreEnvironmentMode(mode))
-    }
+    private fun isTextMode(mode: Mode?): Boolean =
+      (!isMathMode(mode) && !isIgnoreEnvironmentMode(mode))
 
-    private fun containsTwoEndsOfLine(text: String): Boolean {
-      return (text.contains("\n\n") || text.contains("\r\n\r\n"))
-    }
+    private fun containsTwoEndsOfLine(text: String): Boolean =
+      (text.contains("\n\n") || text.contains("\r\n\r\n"))
   }
 }

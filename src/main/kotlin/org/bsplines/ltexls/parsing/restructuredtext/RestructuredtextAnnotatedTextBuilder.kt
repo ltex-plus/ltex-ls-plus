@@ -35,9 +35,9 @@ class RestructuredtextAnnotatedTextBuilder(
     if (this.isStartOfLine && processStartOfLine()) {
       // skip
     } else if (
-      (this.blockType == BlockType.Comment)
-      || (this.blockType == BlockType.GridTable)
-      || (this.blockType == BlockType.SimpleTable)
+      (this.blockType == BlockType.Comment) ||
+      (this.blockType == BlockType.GridTable) ||
+      (this.blockType == BlockType.SimpleTable)
     ) {
       addMarkup(this.curString)
     } else {
@@ -196,14 +196,14 @@ class RestructuredtextAnnotatedTextBuilder(
     }
   }
 
-  private fun isParagraph(): Boolean {
-    return (
+  private fun isParagraph(): Boolean =
+    (
       (
-        this.isExplicitBlockType()
-          && ((this.indentation == 0) || (this.indentation < this.lastIndentation))
-        ) || this.isTableBlockType()
-      )
-  }
+        this.isExplicitBlockType() &&
+          ((this.indentation == 0) || (this.indentation < this.lastIndentation))
+      ) ||
+        this.isTableBlockType()
+    )
 
   @Suppress("ComplexMethod")
   private fun matchInlineStartFromPosition(regex: Regex): MatchResult? {
@@ -221,15 +221,16 @@ class RestructuredtextAnnotatedTextBuilder(
       return null
     }
 
-    val forbiddenFollowingChar: Char = when (this.code[pos - 1]) {
-      '\'' -> '\''
-      '"' -> '"'
-      '<' -> '>'
-      '(' -> ')'
-      '[' -> ']'
-      '{' -> '}'
-      else -> return matchResult
-    }
+    val forbiddenFollowingChar: Char =
+      when (this.code[pos - 1]) {
+        '\'' -> '\''
+        '"' -> '"'
+        '<' -> '>'
+        '(' -> ')'
+        '[' -> ']'
+        '{' -> '}'
+        else -> return matchResult
+      }
 
     return if (this.code[this.pos + 1] == forbiddenFollowingChar) null else matchResult
   }
@@ -242,8 +243,8 @@ class RestructuredtextAnnotatedTextBuilder(
     val matchResult: MatchResult? = matchFromPosition(regex)
 
     return if (
-      (matchResult == null)
-      || (
+      (matchResult == null) ||
+      (
         matchFromPosition(INLINE_END_FOLLOWING_REGEX, this.pos + matchResult.value.length) != null
       )
     ) {
@@ -253,20 +254,18 @@ class RestructuredtextAnnotatedTextBuilder(
     }
   }
 
-  private fun isExplicitBlockType(): Boolean {
-    return (
-      (blockType == BlockType.Footnote)
-      || (blockType == BlockType.Directive)
-      || (blockType == BlockType.Comment)
+  private fun isExplicitBlockType(): Boolean =
+    (
+      (blockType == BlockType.Footnote) ||
+        (blockType == BlockType.Directive) ||
+        (blockType == BlockType.Comment)
     )
-  }
 
-  private fun isTableBlockType(): Boolean {
-    return (
-      (blockType == BlockType.GridTable)
-      || (blockType == BlockType.SimpleTable)
+  private fun isTableBlockType(): Boolean =
+    (
+      (blockType == BlockType.GridTable) ||
+        (blockType == BlockType.SimpleTable)
     )
-  }
 
   private enum class BlockType {
     Paragraph,
@@ -281,26 +280,29 @@ class RestructuredtextAnnotatedTextBuilder(
     private val BLOCK_SEPARATOR_REGEX = Regex("^([ \t]*\r?\n)+")
     private val WHITESPACE_REGEX = Regex("^[ \t]*")
 
-    private val FOOTNOTE_REGEX = Regex(
-      "^\\.\\. \\[([0-9]+|[#*]|#[0-9A-Za-z\\-_.:+]+)]([ \t\r\n]|$)",
-    )
+    private val FOOTNOTE_REGEX =
+      Regex(
+        "^\\.\\. \\[([0-9]+|[#*]|#[0-9A-Za-z\\-_.:+]+)]([ \t\r\n]|$)",
+      )
     private val DIRECTIVE_REGEX = Regex("^\\.\\. [0-9A-Za-z\\-_.:+]+::([ \t\r\n]|$)")
     private val COMMENT_REGEX = Regex("^\\.\\.([ \t\r\n]|$)")
 
     private val GRID_TABLE_START_REGEX = Regex("^(\\+-{3,}){2,}\\+\r?\n")
     private val SIMPLE_TABLE_START_REGEX = Regex("^={3,}( +={3,})+\r?\n")
 
-    private val SECTION_TITLE_ADORNMENT_REGEX = Regex(
-      "^(={3,}|-{3,}|`{3,}|:{3,}|\\.{3,}|'{3,}|\"{3,}|"
-      + "~{3,}|\\^{3,}|_{3,}|\\*{3,}|\\+{3,}|#{3,})\r?\n",
-    )
+    private val SECTION_TITLE_ADORNMENT_REGEX =
+      Regex(
+        "^(={3,}|-{3,}|`{3,}|:{3,}|\\.{3,}|'{3,}|\"{3,}|" +
+          "~{3,}|\\^{3,}|_{3,}|\\*{3,}|\\+{3,}|#{3,})\r?\n",
+      )
     private val LINE_BLOCK_REGEX = Regex("^\\|[ \t]+(?=.*?[^|](\r?\n|$))")
 
     private val BULLET_LIST_REGEX = Regex("^[*+\\-\u2022\u2023\u2043][ \t]+")
-    private val ENUMERATED_LIST_REGEX = Regex(
-      "^(([0-9]+|[A-Za-z#]|[IVXLCDM]+|[ivxlcdm]+)\\.|"
-      + "\\(?([0-9]+|[A-Za-z#]|[IVXLCDM]+|[ivxlcdm]+)\\))[ \t]+",
-    )
+    private val ENUMERATED_LIST_REGEX =
+      Regex(
+        "^(([0-9]+|[A-Za-z#]|[IVXLCDM]+|[ivxlcdm]+)\\.|" +
+          "\\(?([0-9]+|[A-Za-z#]|[IVXLCDM]+|[ivxlcdm]+)\\))[ \t]+",
+      )
 
     private val INLINE_START_PRECEDING_REGEX = Regex("^[ \t\r\n\\-:/'\"<(\\[{]")
     private val INLINE_START_FOLLOWING_REGEX = Regex("^[^ \t\r\n]")

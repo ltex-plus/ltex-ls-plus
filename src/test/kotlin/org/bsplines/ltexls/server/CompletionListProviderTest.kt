@@ -17,14 +17,15 @@ class CompletionListProviderTest {
   @Test
   fun testCreateCompletionList() {
     val languageServer = LtexLanguageServer()
-    languageServer.settingsManager.settings = languageServer.settingsManager.settings.copy(
-      _allDictionaries = mapOf(Pair("en-US", setOf("testfoobar"))),
-    )
+    languageServer.settingsManager.settings =
+      languageServer.settingsManager.settings.copy(
+        _allDictionaries = mapOf(Pair("en-US", setOf("testfoobar"))),
+      )
 
     val document =
-        LtexTextDocumentItem(languageServer, "untitled:test.md", "markdown", 1, "This is a test.\n")
+      LtexTextDocumentItem(languageServer, "untitled:test.md", "markdown", 1, "This is a test.\n")
     val completionList: CompletionList =
-        languageServer.completionListProvider.createCompletionList(document, Position(0, 14))
+      languageServer.completionListProvider.createCompletionList(document, Position(0, 14))
 
     assertTrue(completionList.items.size >= 10)
     var containsDictionaryWord = false

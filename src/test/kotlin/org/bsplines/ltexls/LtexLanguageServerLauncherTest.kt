@@ -23,9 +23,10 @@ import kotlin.test.assertTrue
 class LtexLanguageServerLauncherTest {
   @Test
   fun testHelp() {
-    val result: Pair<Int, String> = captureStdout {
-      LtexLanguageServerLauncher.mainWithoutExit(arrayOf("--help"))
-    }
+    val result: Pair<Int, String> =
+      captureStdout {
+        LtexLanguageServerLauncher.mainWithoutExit(arrayOf("--help"))
+      }
     assertEquals(0, result.first)
     val output: String = result.second
     assertTrue(output.contains("Usage:"))
@@ -36,9 +37,10 @@ class LtexLanguageServerLauncherTest {
 
   @Test
   fun testVersion() {
-    val result: Pair<Int, String> = captureStdout {
-      LtexLanguageServerLauncher.mainWithoutExit(arrayOf("--version"))
-    }
+    val result: Pair<Int, String> =
+      captureStdout {
+        LtexLanguageServerLauncher.mainWithoutExit(arrayOf("--version"))
+      }
     assertEquals(0, result.first)
     val output: String = result.second
 
@@ -58,25 +60,29 @@ class LtexLanguageServerLauncherTest {
       val outputStream = ByteArrayOutputStream()
       val charset: Charset = StandardCharsets.UTF_8
 
-      val exitCode = PrintStream(outputStream, true, charset.name()).use {
-        printStream: PrintStream ->
-        System.setOut(printStream)
+      val exitCode =
+        PrintStream(outputStream, true, charset.name()).use { printStream: PrintStream ->
+          System.setOut(printStream)
 
-        try {
-          function()
-        } finally {
-          System.setOut(stdout)
+          try {
+            function()
+          } finally {
+            System.setOut(stdout)
+          }
         }
-      }
 
       return Pair(exitCode, String(outputStream.toByteArray(), charset))
     }
 
-    fun mockStdin(text: String, function: (() -> Int)): Int {
+    fun mockStdin(
+      text: String,
+      function: (() -> Int),
+    ): Int {
       val stdin: InputStream = System.`in`
 
-      return ByteArrayInputStream(text.toByteArray(StandardCharsets.UTF_8)).use {
-        inputStream: ByteArrayInputStream ->
+      return ByteArrayInputStream(
+        text.toByteArray(StandardCharsets.UTF_8),
+      ).use { inputStream: ByteArrayInputStream ->
         System.setIn(inputStream)
 
         try {

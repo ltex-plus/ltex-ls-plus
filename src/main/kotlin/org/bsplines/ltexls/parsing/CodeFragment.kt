@@ -17,10 +17,9 @@ data class CodeFragment(
   val settings: Settings,
   var languageShortCode: String = settings.languageShortCode,
 ) {
-  fun contains(match: LanguageToolRuleMatch): Boolean {
-    return (
-      (match.fromPos >= this.fromPos)
-      && (match.toPos <= this.fromPos + this.code.length)
+  fun contains(match: LanguageToolRuleMatch): Boolean =
+    (
+      (match.fromPos >= this.fromPos) &&
+        (match.toPos <= this.fromPos + this.code.length)
     )
-  }
 }

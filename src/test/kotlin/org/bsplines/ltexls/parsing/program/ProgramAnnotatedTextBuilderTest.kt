@@ -36,11 +36,11 @@ class ProgramAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("") {
   @Test
   fun testPython() {
     assertPlainText(
-      "Sentence 1 - no check # Sentence 2 - no check\n#Sentence 3 - no check\n# Sentence 4 -\n"
-      + "# check\n\nSentence 5 - no check \"\"\" Sentence 6 - no check \"\"\"\n"
-      + "\"\"\" Sentence 7 - no check \"\"\" Sentence 8 - no check\n"
-      + "\"\"\"Sentence 9 - no check \"\"\"\n\"\"\" Sentence 10 - check \"\"\"\n"
-      + "\"\"\" Sentence 11 -\ncheck \"\"\"\n",
+      "Sentence 1 - no check # Sentence 2 - no check\n#Sentence 3 - no check\n# Sentence 4 -\n" +
+        "# check\n\nSentence 5 - no check \"\"\" Sentence 6 - no check \"\"\"\n" +
+        "\"\"\" Sentence 7 - no check \"\"\" Sentence 8 - no check\n" +
+        "\"\"\"Sentence 9 - no check \"\"\"\n\"\"\" Sentence 10 - check \"\"\"\n" +
+        "\"\"\" Sentence 11 -\ncheck \"\"\"\n",
       "\n\n\nSentence 4 -\ncheck\n\n\nSentence 10 - check\n\n\n\nSentence 11 -\ncheck\n",
       "python",
     )

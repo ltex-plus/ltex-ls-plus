@@ -14,13 +14,19 @@ import org.bsplines.ltexls.settings.Settings
 import org.bsplines.ltexls.tools.I18n
 import org.bsplines.ltexls.tools.Logging
 
-class LatexFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguageId) {
+class LatexFragmentizer(
+  codeLanguageId: String,
+) : CodeFragmentizer(codeLanguageId) {
   private val commentFragmentizer = RegexCodeFragmentizer(codeLanguageId, COMMENT_REGEX)
 
-  override fun fragmentize(code: String, originalSettings: Settings): List<CodeFragment> {
-    var fragments: List<CodeFragment> = listOf(
-      CodeFragment(codeLanguageId, code, 0, originalSettings),
-    )
+  override fun fragmentize(
+    code: String,
+    originalSettings: Settings,
+  ): List<CodeFragment> {
+    var fragments: List<CodeFragment> =
+      listOf(
+        CodeFragment(codeLanguageId, code, 0, originalSettings),
+      )
 
     fragments = commentFragmentizer.fragmentize(fragments)
     fragments = fragmentizeBabelUsePackageCommands(fragments)
@@ -49,12 +55,12 @@ class LatexFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguageI
 
       while (true) {
         val match: LatexCommandSignatureMatch =
-            USE_PACKAGE_COMMAND_SIGNATURE_MATCHER.findNextMatch() ?: break
+          USE_PACKAGE_COMMAND_SIGNATURE_MATCHER.findNextMatch() ?: break
 
         val packageName: String = match.getArgumentContents(1)
         if (packageName != "babel") continue
         val packageOptions: List<LatexPackageOption> =
-            LatexPackageOptionsParser.parse(match.getArgumentContents(0))
+          LatexPackageOptionsParser.parse(match.getArgumentContents(0))
 
         var babelLanguage: String? = null
 
@@ -62,8 +68,8 @@ class LatexFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguageI
           if (BABEL_LANGUAGE_MAP.containsKey(packageOption.keyInfo.plainText)) {
             babelLanguage = packageOption.keyInfo.plainText
           } else if (
-            (packageOption.keyInfo.plainText == "main")
-            && BABEL_LANGUAGE_MAP.containsKey(packageOption.valueInfo.plainText)
+            (packageOption.keyInfo.plainText == "main") &&
+            BABEL_LANGUAGE_MAP.containsKey(packageOption.valueInfo.plainText)
           ) {
             babelLanguage = packageOption.valueInfo.plainText
             break
@@ -122,7 +128,7 @@ class LatexFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguageI
 
       while (true) {
         val match: LatexCommandSignatureMatch =
-            BABEL_SWITCH_COMMAND_SIGNATURE_MATCHER.findNextMatch() ?: break
+          BABEL_SWITCH_COMMAND_SIGNATURE_MATCHER.findNextMatch() ?: break
 
         val babelLanguage: String = match.getArgumentContents(0)
         val languageShortCode: String? = BABEL_LANGUAGE_MAP[babelLanguage]
@@ -177,7 +183,7 @@ class LatexFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguageI
 
       while (true) {
         val match: LatexCommandSignatureMatch =
-            BABEL_INLINE_COMMAND_SIGNATURE_MATCHER.findNextMatch() ?: break
+          BABEL_INLINE_COMMAND_SIGNATURE_MATCHER.findNextMatch() ?: break
 
         var languageShortCode: String? = BABEL_INLINE_COMMAND_SIGNATURE_MAP[match.commandSignature]
         var babelLanguage = ""
@@ -235,14 +241,14 @@ class LatexFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguageI
 
       while (settingsStack.isNotEmpty()) {
         val match: LatexCommandSignatureMatch =
-            BABEL_ENVIRONMENT_COMMAND_SIGNATURE_MATCHER.findNextMatch() ?: break
+          BABEL_ENVIRONMENT_COMMAND_SIGNATURE_MATCHER.findNextMatch() ?: break
 
         val commandPrototype: String = match.commandSignature.commandPrototype
         val isBegin: Boolean = commandPrototype.startsWith("\\begin")
 
         if (isBegin) {
           var languageShortCode: String? =
-              BABEL_ENVIRONMENT_COMMAND_SIGNATURE_MAP[match.commandSignature]
+            BABEL_ENVIRONMENT_COMMAND_SIGNATURE_MAP[match.commandSignature]
           var babelLanguage = ""
 
           if (languageShortCode == null) {
@@ -319,7 +325,7 @@ class LatexFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguageI
 
       while (true) {
         val match: LatexCommandSignatureMatch =
-            EXTRA_COMMAND_SIGNATURE_MATCHER.findNextMatch() ?: break
+          EXTRA_COMMAND_SIGNATURE_MATCHER.findNextMatch() ?: break
         val contents: String = match.getArgumentContents(match.getArgumentsSize() - 1)
         val contentsFromPos: Int = match.getArgumentContentsFromPos(match.getArgumentsSize() - 1)
 
@@ -340,190 +346,199 @@ class LatexFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguageI
   }
 
   companion object {
-    private val COMMENT_REGEX = Regex(
-      "^[ \t]*%[ \t]*(?i)ltex(?-i):(.*?)$",
-      RegexOption.MULTILINE,
-    )
+    private val COMMENT_REGEX =
+      Regex(
+        "^[ \t]*%[ \t]*(?i)ltex(?-i):(.*?)$",
+        RegexOption.MULTILINE,
+      )
 
-    private val EXTRA_COMMAND_SIGNATURE_MATCHER = LatexCommandSignatureMatcher(
-      listOf(
-        LatexCommandSignature("\\footnote{}"),
-        LatexCommandSignature("\\footnote[]{}"),
-        LatexCommandSignature("\\todo{}"),
-        LatexCommandSignature("\\todo[]{}"),
-      ),
-    )
+    private val EXTRA_COMMAND_SIGNATURE_MATCHER =
+      LatexCommandSignatureMatcher(
+        listOf(
+          LatexCommandSignature("\\footnote{}"),
+          LatexCommandSignature("\\footnote[]{}"),
+          LatexCommandSignature("\\todo{}"),
+          LatexCommandSignature("\\todo[]{}"),
+        ),
+      )
 
     private val LANGUAGE_TAG_REPLACEMENT_REGEX = Regex("[^A-Za-z]+")
 
-    val BABEL_LANGUAGE_MAP: Map<String, String> = run {
-      val map = HashMap<String, String>()
+    val BABEL_LANGUAGE_MAP: Map<String, String> =
+      run {
+        val map = HashMap<String, String>()
 
-      map["ar"] = "ar"
-      map["ast"] = "ast-ES"
-      map["ast-ES"] = "ast-ES"
-      map["be"] = "be-BY"
-      map["be-BY"] = "be-BY"
-      map["br"] = "br-FR"
-      map["br-FR"] = "br-FR"
-      map["ca"] = "ca-ES"
-      map["ca-ES"] = "ca-ES"
-      map["ca-ES-valencia"] = "ca-ES-valencia"
-      map["da"] = "da-DK"
-      map["da-DK"] = "da-DK"
-      map["de"] = "de"
-      map["de-AT"] = "de-AT"
-      map["de-CH"] = "de-CH"
-      map["de-DE"] = "de-DE"
-      map["de-DE-x-simple-language"] = "de-DE-x-simple-language"
-      map["el"] = "el-GR"
-      map["el-GR"] = "el-GR"
-      map["en"] = "en"
-      map["en-AU"] = "en-AU"
-      map["en-CA"] = "en-CA"
-      map["en-GB"] = "en-GB"
-      map["en-NZ"] = "en-NZ"
-      map["en-US"] = "en-US"
-      map["en-ZA"] = "en-ZA"
-      map["eo"] = "eo"
-      map["es"] = "es"
-      map["fa"] = "fa"
-      map["fr"] = "fr"
-      map["ga"] = "ga-IE"
-      map["ga-IE"] = "ga-IE"
-      map["gl"] = "gl-ES"
-      map["gl-ES"] = "gl-ES"
-      // clash with \textit
-      // map.put("it", "it");
-      map["ja"] = "ja-JP"
-      map["ja-JP"] = "ja-JP"
-      map["km"] = "km-KH"
-      map["km-KH"] = "km-KH"
-      map["nl"] = "nl"
-      map["pl"] = "pl-PL"
-      map["pl-PL"] = "pl-PL"
-      map["pt"] = "pt"
-      map["pt-AO"] = "pt-AO"
-      map["pt-BR"] = "pt-BR"
-      map["pt-MZ"] = "pt-MZ"
-      map["pt-PT"] = "pt-PT"
-      map["ro"] = "ro-RO"
-      map["ro-RO"] = "ro-RO"
-      map["ru"] = "ru-RU"
-      map["ru-RU"] = "ru-RU"
-      map["sk"] = "sk-SK"
-      map["sk-SK"] = "sk-SK"
-      // clash with \textsl
-      // map.put("sl", "sl-SI");
-      map["sl-SI"] = "sl-SI"
-      map["sv"] = "sv"
-      map["ta"] = "ta-IN"
-      map["ta-IN"] = "ta-IN"
-      map["tl"] = "tl-PH"
-      map["tl-PH"] = "tl-PH"
-      map["uk"] = "uk-UA"
-      map["uk-UA"] = "uk-UA"
-      map["zh"] = "zh-CN"
-      map["zh-CN"] = "zh-CN"
-      map["arabic"] = "ar"
-      map["asturian"] = "ast-ES"
-      map["belarusian"] = "be-BY"
-      map["brazil"] = "pt-BR"
-      map["brazilian"] = "pt-BR"
-      map["catalan"] = "ca-ES"
-      map["danish"] = "da-DK"
-      map["austrian"] = "de-AT"
-      map["naustrian"] = "de-AT"
-      map["german"] = "de-DE"
-      map["ngerman"] = "de-DE"
-      map["nswissgerman"] = "de-CH"
-      map["swissgerman"] = "de-CH"
-      map["greek"] = "el-GR"
-      map["british"] = "en-GB"
-      map["UKenglish"] = "en-GB"
-      map["american"] = "en-US"
-      map["english"] = "en-US"
-      map["USenglish"] = "en-US"
-      map["esperanto"] = "eo"
-      map["estonian"] = "es"
-      map["farsi"] = "fa"
-      map["french"] = "fr"
-      map["irish"] = "ga-IE"
-      map["galician"] = "gl-ES"
-      map["italian"] = "it"
-      map["japanese"] = "ja-JP"
-      map["khmer"] = "km-KH"
-      map["dutch"] = "nl"
-      map["polish"] = "pl-PL"
-      map["portuges"] = "pt-PT"
-      map["portuguese"] = "pt-PT"
-      map["romanian"] = "ro-RO"
-      map["russian"] = "ru-RU"
-      map["slovak"] = "sk-SK"
-      map["slovene"] = "sl-SI"
-      map["swedish"] = "sv"
-      map["tamil"] = "ta-IN"
-      map["ukrainian"] = "uk-UA"
-      map["chinese"] = "zh-CN"
+        map["ar"] = "ar"
+        map["ast"] = "ast-ES"
+        map["ast-ES"] = "ast-ES"
+        map["be"] = "be-BY"
+        map["be-BY"] = "be-BY"
+        map["br"] = "br-FR"
+        map["br-FR"] = "br-FR"
+        map["ca"] = "ca-ES"
+        map["ca-ES"] = "ca-ES"
+        map["ca-ES-valencia"] = "ca-ES-valencia"
+        map["da"] = "da-DK"
+        map["da-DK"] = "da-DK"
+        map["de"] = "de"
+        map["de-AT"] = "de-AT"
+        map["de-CH"] = "de-CH"
+        map["de-DE"] = "de-DE"
+        map["de-DE-x-simple-language"] = "de-DE-x-simple-language"
+        map["el"] = "el-GR"
+        map["el-GR"] = "el-GR"
+        map["en"] = "en"
+        map["en-AU"] = "en-AU"
+        map["en-CA"] = "en-CA"
+        map["en-GB"] = "en-GB"
+        map["en-NZ"] = "en-NZ"
+        map["en-US"] = "en-US"
+        map["en-ZA"] = "en-ZA"
+        map["eo"] = "eo"
+        map["es"] = "es"
+        map["fa"] = "fa"
+        map["fr"] = "fr"
+        map["ga"] = "ga-IE"
+        map["ga-IE"] = "ga-IE"
+        map["gl"] = "gl-ES"
+        map["gl-ES"] = "gl-ES"
+        // clash with \textit
+        // map.put("it", "it");
+        map["ja"] = "ja-JP"
+        map["ja-JP"] = "ja-JP"
+        map["km"] = "km-KH"
+        map["km-KH"] = "km-KH"
+        map["nl"] = "nl"
+        map["pl"] = "pl-PL"
+        map["pl-PL"] = "pl-PL"
+        map["pt"] = "pt"
+        map["pt-AO"] = "pt-AO"
+        map["pt-BR"] = "pt-BR"
+        map["pt-MZ"] = "pt-MZ"
+        map["pt-PT"] = "pt-PT"
+        map["ro"] = "ro-RO"
+        map["ro-RO"] = "ro-RO"
+        map["ru"] = "ru-RU"
+        map["ru-RU"] = "ru-RU"
+        map["sk"] = "sk-SK"
+        map["sk-SK"] = "sk-SK"
+        // clash with \textsl
+        // map.put("sl", "sl-SI");
+        map["sl-SI"] = "sl-SI"
+        map["sv"] = "sv"
+        map["ta"] = "ta-IN"
+        map["ta-IN"] = "ta-IN"
+        map["tl"] = "tl-PH"
+        map["tl-PH"] = "tl-PH"
+        map["uk"] = "uk-UA"
+        map["uk-UA"] = "uk-UA"
+        map["zh"] = "zh-CN"
+        map["zh-CN"] = "zh-CN"
+        map["arabic"] = "ar"
+        map["asturian"] = "ast-ES"
+        map["belarusian"] = "be-BY"
+        map["brazil"] = "pt-BR"
+        map["brazilian"] = "pt-BR"
+        map["catalan"] = "ca-ES"
+        map["danish"] = "da-DK"
+        map["austrian"] = "de-AT"
+        map["naustrian"] = "de-AT"
+        map["german"] = "de-DE"
+        map["ngerman"] = "de-DE"
+        map["nswissgerman"] = "de-CH"
+        map["swissgerman"] = "de-CH"
+        map["greek"] = "el-GR"
+        map["british"] = "en-GB"
+        map["UKenglish"] = "en-GB"
+        map["american"] = "en-US"
+        map["english"] = "en-US"
+        map["USenglish"] = "en-US"
+        map["esperanto"] = "eo"
+        map["estonian"] = "es"
+        map["farsi"] = "fa"
+        map["french"] = "fr"
+        map["irish"] = "ga-IE"
+        map["galician"] = "gl-ES"
+        map["italian"] = "it"
+        map["japanese"] = "ja-JP"
+        map["khmer"] = "km-KH"
+        map["dutch"] = "nl"
+        map["polish"] = "pl-PL"
+        map["portuges"] = "pt-PT"
+        map["portuguese"] = "pt-PT"
+        map["romanian"] = "ro-RO"
+        map["russian"] = "ru-RU"
+        map["slovak"] = "sk-SK"
+        map["slovene"] = "sl-SI"
+        map["swedish"] = "sv"
+        map["tamil"] = "ta-IN"
+        map["ukrainian"] = "uk-UA"
+        map["chinese"] = "zh-CN"
 
-      map
-    }
+        map
+      }
 
     private val USE_PACKAGE_COMMAND_SIGNATURE = LatexCommandSignature("\\usepackage[]{}")
-    private val USE_PACKAGE_COMMAND_SIGNATURE_MATCHER = LatexCommandSignatureMatcher(
-      listOf(USE_PACKAGE_COMMAND_SIGNATURE),
-    )
+    private val USE_PACKAGE_COMMAND_SIGNATURE_MATCHER =
+      LatexCommandSignatureMatcher(
+        listOf(USE_PACKAGE_COMMAND_SIGNATURE),
+      )
 
     private val BABEL_SWITCH_COMMAND_SIGNATURE = LatexCommandSignature("\\selectlanguage{}")
-    private val BABEL_SWITCH_COMMAND_SIGNATURE_MATCHER = LatexCommandSignatureMatcher(
-      listOf(BABEL_SWITCH_COMMAND_SIGNATURE),
-    )
+    private val BABEL_SWITCH_COMMAND_SIGNATURE_MATCHER =
+      LatexCommandSignatureMatcher(
+        listOf(BABEL_SWITCH_COMMAND_SIGNATURE),
+      )
 
-    private val BABEL_INLINE_COMMAND_SIGNATURE_MAP = run {
-      val map = HashMap<LatexCommandSignature, String>()
+    private val BABEL_INLINE_COMMAND_SIGNATURE_MAP =
+      run {
+        val map = HashMap<LatexCommandSignature, String>()
 
-      map[LatexCommandSignature("\\foreignlanguage{}{}")] = ""
-      map[LatexCommandSignature("\\foreignlanguage[]{}{}")] = ""
+        map[LatexCommandSignature("\\foreignlanguage{}{}")] = ""
+        map[LatexCommandSignature("\\foreignlanguage[]{}{}")] = ""
 
-      for ((key: String, value: String) in BABEL_LANGUAGE_MAP) {
-        val languageTag: String = convertBabelLanguageToLanguageTag(key)
-        map[LatexCommandSignature("\\text$languageTag{}")] = value
-      }
-
-      map
-    }
-
-    private val BABEL_INLINE_COMMAND_SIGNATURE_MATCHER = LatexCommandSignatureMatcher(
-      BABEL_INLINE_COMMAND_SIGNATURE_MAP.keys.toList(),
-    )
-
-    private val BABEL_ENVIRONMENT_COMMAND_SIGNATURE_MAP: Map<LatexCommandSignature, String> = run {
-      val map = HashMap<LatexCommandSignature, String>()
-
-      map[LatexCommandSignature("\\begin{otherlanguage}{}")] = ""
-      map[LatexCommandSignature("\\begin{otherlanguage*}{}")] = ""
-      map[LatexCommandSignature("\\begin{otherlanguage*}[]{}")] = ""
-      map[LatexCommandSignature("\\end{otherlanguage}")] = ""
-      map[LatexCommandSignature("\\end{otherlanguage*}")] = ""
-
-      for ((languageTag0: String, value: String) in BABEL_LANGUAGE_MAP) {
-        val languageTag1 = convertBabelLanguageToLanguageTag(languageTag0)
-        for (i in 0 .. 1) {
-          val languageTag = if (i == 0) languageTag0 else languageTag1
-          if ((i == 1) && (languageTag0.length == languageTag1.length)) continue
-
-          map[LatexCommandSignature("\\begin{$languageTag}")] = value
-          map[LatexCommandSignature("\\begin{$languageTag}[]")] = value
-          map[LatexCommandSignature("\\end{$languageTag}")] = value
+        for ((key: String, value: String) in BABEL_LANGUAGE_MAP) {
+          val languageTag: String = convertBabelLanguageToLanguageTag(key)
+          map[LatexCommandSignature("\\text$languageTag{}")] = value
         }
+
+        map
       }
 
-      map
-    }
+    private val BABEL_INLINE_COMMAND_SIGNATURE_MATCHER =
+      LatexCommandSignatureMatcher(
+        BABEL_INLINE_COMMAND_SIGNATURE_MAP.keys.toList(),
+      )
 
-    private val BABEL_ENVIRONMENT_COMMAND_SIGNATURE_MATCHER = LatexCommandSignatureMatcher(
-      BABEL_ENVIRONMENT_COMMAND_SIGNATURE_MAP.keys.toList(),
-    )
+    private val BABEL_ENVIRONMENT_COMMAND_SIGNATURE_MAP: Map<LatexCommandSignature, String> =
+      run {
+        val map = HashMap<LatexCommandSignature, String>()
+
+        map[LatexCommandSignature("\\begin{otherlanguage}{}")] = ""
+        map[LatexCommandSignature("\\begin{otherlanguage*}{}")] = ""
+        map[LatexCommandSignature("\\begin{otherlanguage*}[]{}")] = ""
+        map[LatexCommandSignature("\\end{otherlanguage}")] = ""
+        map[LatexCommandSignature("\\end{otherlanguage*}")] = ""
+
+        for ((languageTag0: String, value: String) in BABEL_LANGUAGE_MAP) {
+          val languageTag1 = convertBabelLanguageToLanguageTag(languageTag0)
+          for (i in 0..1) {
+            val languageTag = if (i == 0) languageTag0 else languageTag1
+            if ((i == 1) && (languageTag0.length == languageTag1.length)) continue
+
+            map[LatexCommandSignature("\\begin{$languageTag}")] = value
+            map[LatexCommandSignature("\\begin{$languageTag}[]")] = value
+            map[LatexCommandSignature("\\end{$languageTag}")] = value
+          }
+        }
+
+        map
+      }
+
+    private val BABEL_ENVIRONMENT_COMMAND_SIGNATURE_MATCHER =
+      LatexCommandSignatureMatcher(
+        BABEL_ENVIRONMENT_COMMAND_SIGNATURE_MAP.keys.toList(),
+      )
 
     private fun getIgnoreCommandPrototypes(settings: Settings): Set<String> {
       val ignoreCommandPrototypes = HashSet<String>()
@@ -535,8 +550,7 @@ class LatexFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguageI
       return ignoreCommandPrototypes
     }
 
-    fun convertBabelLanguageToLanguageTag(language: String): String {
-      return language.replace(LANGUAGE_TAG_REPLACEMENT_REGEX, "")
-    }
+    fun convertBabelLanguageToLanguageTag(language: String): String =
+      language.replace(LANGUAGE_TAG_REPLACEMENT_REGEX, "")
   }
 }

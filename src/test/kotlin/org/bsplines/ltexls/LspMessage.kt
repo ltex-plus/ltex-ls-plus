@@ -53,11 +53,12 @@ class LspMessage(
   fun sendToServer(outputStream: OutputStream) {
     val bodyStr: String = body.toString()
     val bodyBytes: ByteArray = bodyStr.toByteArray(StandardCharsets.UTF_8)
-    val headerStr = """
-    Content-Length: ${bodyBytes.size}
+    val headerStr =
+      """
+      Content-Length: ${bodyBytes.size}
 
 
-    """.trimIndent()
+      """.trimIndent()
     val headerBytes: ByteArray = headerStr.toByteArray(StandardCharsets.US_ASCII)
 
     org.bsplines.ltexls.tools.Logging.LOGGER.fine(
@@ -86,11 +87,11 @@ class LspMessage(
       assertNotNull(matchResult)
       val headerName: String = (
         matchResult.groups[1]?.value
-        ?: throw AssertionError("could not find header name in '$headerLine'")
+          ?: throw AssertionError("could not find header name in '$headerLine'")
       )
       val headerValue: String = (
         matchResult.groups[2]?.value
-        ?: throw AssertionError("could not find header value in '$headerLine'")
+          ?: throw AssertionError("could not find header value in '$headerLine'")
       )
 
       if (headerName == "Content-Length") contentLength = headerValue.toInt()
@@ -120,18 +121,20 @@ class LspMessage(
 
   companion object {
     private val EMPTY_LINE_REGEX = Regex("\r\n\r\n|\n\n")
-    private val LOG_REGEX = Regex(
-      "\\[[^]]+] (\\S+) (\\S+) '([^' ]+)(?: - \\(([^)]+)\\))?'.*\\R(?:Params|Result):",
-    )
+    private val LOG_REGEX =
+      Regex(
+        "\\[[^]]+] (\\S+) (\\S+) '([^' ]+)(?: - \\(([^)]+)\\))?'.*\\R(?:Params|Result):",
+      )
     private val HEADER_REGEX = Regex("(\\S+): (.*)\r\n")
 
     fun fromLogFile(
-      logFilePath: Path = Paths.get(
-        "src",
-        "test",
-        "resources",
-        "LtexLanguageServerTestLog.txt",
-      ),
+      logFilePath: Path =
+        Paths.get(
+          "src",
+          "test",
+          "resources",
+          "LtexLanguageServerTestLog.txt",
+        ),
     ): List<LspMessage> {
       var log: String? = FileIo.readFile(logFilePath)
       assertNotNull(log)
@@ -154,21 +157,23 @@ class LspMessage(
       val sourceStr: String? = matchResult.groups[1]?.value
       assertNotNull(sourceStr)
 
-      val source: Source = when (sourceStr) {
-        "Sending" -> Source.Client
-        "Received" -> Source.Server
-        else -> fail()
-      }
+      val source: Source =
+        when (sourceStr) {
+          "Sending" -> Source.Client
+          "Received" -> Source.Server
+          else -> fail()
+        }
 
       val typeStr: String? = matchResult.groups[2]?.value
       assertNotNull(typeStr)
 
-      val type: Type = when (typeStr) {
-        "notification" -> Type.Notification
-        "request" -> Type.Request
-        "response" -> Type.Response
-        else -> fail()
-      }
+      val type: Type =
+        when (typeStr) {
+          "notification" -> Type.Notification
+          "request" -> Type.Request
+          "response" -> Type.Response
+          else -> fail()
+        }
 
       val method: String? = matchResult.groups[3]?.value
       assertNotNull(method)
@@ -194,7 +199,10 @@ class LspMessage(
       }
     }
 
-    private fun read(inputStream: InputStream, numberOfBytes: Int): ByteArray {
+    private fun read(
+      inputStream: InputStream,
+      numberOfBytes: Int,
+    ): ByteArray {
       val buffer = ByteArray(numberOfBytes)
       var offset = 0
 
@@ -207,14 +215,17 @@ class LspMessage(
       return buffer
     }
 
-    private fun readLine(inputStream: InputStream, bufferSize: Int): ByteArray {
+    private fun readLine(
+      inputStream: InputStream,
+      bufferSize: Int,
+    ): ByteArray {
       val buffer = ByteArray(bufferSize)
       var offset = 0
 
       while (
-        (offset < 2)
-        || (buffer[offset - 2] != 13.toByte())
-        || (buffer[offset - 1] != 10.toByte())
+        (offset < 2) ||
+        (buffer[offset - 2] != 13.toByte()) ||
+        (buffer[offset - 1] != 10.toByte())
       ) {
         val numberOfBytesRead: Int = inputStream.read(buffer, offset, 1)
         assertTrue(numberOfBytesRead >= 1)

@@ -13,7 +13,9 @@ import com.vladsch.flexmark.util.ast.Block
 import com.vladsch.flexmark.util.ast.BlockContent
 import com.vladsch.flexmark.util.sequence.BasedSequence
 
-class LtexMarkdownDisplayMath : Block, ParagraphContainer {
+class LtexMarkdownDisplayMath :
+  Block,
+  ParagraphContainer {
   var openingMarker: BasedSequence = BasedSequence.NULL
   var openingTrailing: BasedSequence = BasedSequence.NULL
   var closingMarker: BasedSequence = BasedSequence.NULL
@@ -30,14 +32,13 @@ class LtexMarkdownDisplayMath : Block, ParagraphContainer {
   @Suppress("unused")
   constructor(blockContent: BlockContent) : super(blockContent)
 
-  override fun getSegments(): Array<BasedSequence> {
-    return arrayOf(
+  override fun getSegments(): Array<BasedSequence> =
+    arrayOf(
       this.openingMarker,
       this.openingTrailing,
       this.closingMarker,
       this.closingTrailing,
     )
-  }
 
   override fun getAstExtra(out: StringBuilder) {
     segmentSpanChars(out, this.openingMarker, "open")
@@ -46,11 +47,9 @@ class LtexMarkdownDisplayMath : Block, ParagraphContainer {
     segmentSpanChars(out, this.closingTrailing, "closeTrail")
   }
 
-  override fun isParagraphEndWrappingDisabled(node: Paragraph): Boolean {
-    return (node === lastChild) || (node.next is LtexMarkdownDisplayMath)
-  }
+  override fun isParagraphEndWrappingDisabled(node: Paragraph): Boolean =
+    (node === lastChild) || (node.next is LtexMarkdownDisplayMath)
 
-  override fun isParagraphStartWrappingDisabled(node: Paragraph): Boolean {
-    return (node === firstChild) || (node.previous is LtexMarkdownDisplayMath)
-  }
+  override fun isParagraphStartWrappingDisabled(node: Paragraph): Boolean =
+    (node === firstChild) || (node.previous is LtexMarkdownDisplayMath)
 }

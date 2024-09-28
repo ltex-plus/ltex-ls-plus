@@ -75,8 +75,8 @@ class LtexMarkdownDisplayMathTest {
     node.getAstExtra(stringBuilder)
 
     assertEquals(
-      " open:[0, 2, \"$$\"] openTrail:[0, 3, \"abc\"] "
-          + "close:[0, 2, \"$$\"] closeTrail:[0, 3, \"def\"]",
+      " open:[0, 2, \"$$\"] openTrail:[0, 3, \"abc\"] " +
+        "close:[0, 2, \"$$\"] closeTrail:[0, 3, \"def\"]",
       stringBuilder.toString(),
     )
   }

@@ -18,9 +18,10 @@ class DelayedDiagnosticsPublisherRunnable(
   val document: LtexTextDocumentItem,
 ) : Runnable {
   override fun run() {
-    var sleepDuration: Duration = SHOW_CARET_DIAGNOSTICS_DURATION.minus(
-      Duration.between(this.document.lastCaretChangeInstant, Instant.now()),
-    )
+    var sleepDuration: Duration =
+      SHOW_CARET_DIAGNOSTICS_DURATION.minus(
+        Duration.between(this.document.lastCaretChangeInstant, Instant.now()),
+      )
     if (sleepDuration.isNegative) sleepDuration = Duration.ZERO
     sleepDuration = sleepDuration.plusMillis(SLEEP_DURATION_DELTA_MILLISECONDS)
 

@@ -30,19 +30,19 @@ class SettingsManager {
       Logging.setLogLevel(value.logLevel)
 
       val settingsDifferencesRelevantForLanguageTool: Set<SettingsDifference> =
-          value.getDifferencesRelevantForLanguageTool(oldSettings)
+        value.getDifferencesRelevantForLanguageTool(oldSettings)
 
       val languageToolInterface: LanguageToolInterface? =
-      if (settingsDifferencesRelevantForLanguageTool.isEmpty()) {
-        this.languageToolInterfaceMap[newLanguage]
-      } else {
-        if (Logging.LOGGER.isLoggable(Level.FINE)) {
-          logDifferentSettings(newLanguage, settingsDifferencesRelevantForLanguageTool)
-        }
+        if (settingsDifferencesRelevantForLanguageTool.isEmpty()) {
+          this.languageToolInterfaceMap[newLanguage]
+        } else {
+          if (Logging.LOGGER.isLoggable(Level.FINE)) {
+            logDifferentSettings(newLanguage, settingsDifferencesRelevantForLanguageTool)
+          }
 
-        reinitializeLanguageToolInterface()
-        this.languageToolInterface
-      }
+          reinitializeLanguageToolInterface()
+          this.languageToolInterface
+        }
 
       languageToolInterface?.dictionary = value.dictionary
       languageToolInterface?.disabledRules = value.disabledRules
@@ -72,20 +72,20 @@ class SettingsManager {
 
   private fun reinitializeLanguageToolInterface() {
     val languageToolInterface: LanguageToolInterface =
-    if (this.settings.languageToolHttpServerUri.isEmpty()) {
-      LanguageToolJavaInterface(
-        this.settings.languageShortCode,
-        this.settings.motherTongueShortCode,
-        this.settings.sentenceCacheSize,
-        this.settings.dictionary,
-      )
-    } else {
-      LanguageToolHttpInterface(
-        this.settings.languageToolHttpServerUri,
-        this.settings.languageShortCode,
-        this.settings.motherTongueShortCode,
-      )
-    }
+      if (this.settings.languageToolHttpServerUri.isEmpty()) {
+        LanguageToolJavaInterface(
+          this.settings.languageShortCode,
+          this.settings.motherTongueShortCode,
+          this.settings.sentenceCacheSize,
+          this.settings.dictionary,
+        )
+      } else {
+        LanguageToolHttpInterface(
+          this.settings.languageToolHttpServerUri,
+          this.settings.languageShortCode,
+          this.settings.motherTongueShortCode,
+        )
+      }
 
     if (!languageToolInterface.isInitialized()) {
       this.languageToolInterface = null

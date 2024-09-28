@@ -99,16 +99,16 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
       "\u00e5\u0131\u0237\u0142\u00f8\u00df",
     )
     assertPlainText(
-      "\\`A\\'A\\^A\\~A\\\"A\\=A\\.A"
-      + "\\H{O}\\b{B}\\c{C}\\d{A}\\k{A}\\r{A}\\u{A}\\v{C}",
-      "\u00c0\u00c1\u00c2\u00c3\u00c4\u0100\u0226"
-      + "\u0150\u1e06\u00c7\u1ea0\u0104\u00c5\u0102\u010c",
+      "\\`A\\'A\\^A\\~A\\\"A\\=A\\.A" +
+        "\\H{O}\\b{B}\\c{C}\\d{A}\\k{A}\\r{A}\\u{A}\\v{C}",
+      "\u00c0\u00c1\u00c2\u00c3\u00c4\u0100\u0226" +
+        "\u0150\u1e06\u00c7\u1ea0\u0104\u00c5\u0102\u010c",
     )
     assertPlainText(
-      "\\`a\\'a\\^a\\~a\\\"a\\=a\\.a"
-          + "\\H{o}\\b{b}\\c{c}\\d{a}\\k{a}\\r{a}\\u{a}\\v{c}",
-      "\u00e0\u00e1\u00e2\u00e3\u00e4\u0101\u0227"
-          + "\u0151\u1e07\u00e7\u1ea1\u0105\u00e5\u0103\u010d",
+      "\\`a\\'a\\^a\\~a\\\"a\\=a\\.a" +
+        "\\H{o}\\b{b}\\c{c}\\d{a}\\k{a}\\r{a}\\u{a}\\v{c}",
+      "\u00e0\u00e1\u00e2\u00e3\u00e4\u0101\u0227" +
+        "\u0151\u1e07\u00e7\u1ea1\u0105\u00e5\u0103\u010d",
     )
     assertPlainText(
       "Nih\\'o\u014b\\=go \\u{y} {\\v Z}{\\'a}k",
@@ -143,9 +143,9 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
       \textcites(a)(b)[c][]{test1}[][d]{test2}[e][f]{test3} proves another error.
 
       """.trimIndent(),
-      "This is a test: Dummy0, Dummy1, Dummy2. "
-      + "Dummies shows that this should be plural. "
-      + "Dummies proves another error. ",
+      "This is a test: Dummy0, Dummy1, Dummy2. " +
+        "Dummies shows that this should be plural. " +
+        "Dummies proves another error. ",
     )
     assertPlainText(
       "\\cites{test}",
@@ -162,8 +162,8 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
       This is a test, \iec an actual test \ie{} test.
 
       """.trimIndent(),
-      "This is a test, e.g., an actual test e.g. test. "
-      + "This is a test, i.e., an actual test i.e. test. ",
+      "This is a test, e.g., an actual test e.g. test. " +
+        "This is a test, i.e., an actual test i.e. test. ",
     )
     assertPlainText(
       """
@@ -407,9 +407,9 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
       This is not a ${"$"}b$, ${"$"}C$, $\ella$, $\test a$, $\mathcal{b}$.
 
       """.trimIndent(),
-      "This is an Ina0, Ina1, Ina2, Ina3, Ina4, Ina5, Ina6, "
-      + "Ina7, Ina8, Ina9, Ina10, Ina11, Ina12, Ina13. "
-      + "This is not a Dummy14, Dummy15, Dummy16, Dummy17, Dummy18. ",
+      "This is an Ina0, Ina1, Ina2, Ina3, Ina4, Ina5, Ina6, " +
+        "Ina7, Ina8, Ina9, Ina10, Ina11, Ina12, Ina13. " +
+        "This is not a Dummy14, Dummy15, Dummy16, Dummy17, Dummy18. ",
     )
 
     assertOriginalTextPositions(
@@ -527,9 +527,9 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
   ) {
     val annotatedText: AnnotatedText = buildAnnotatedText(code, settings)
     val originalTextStartPos: Int =
-        annotatedText.getOriginalTextPositionFor(plainTextStartPos, false)
+      annotatedText.getOriginalTextPositionFor(plainTextStartPos, false)
     val originalTextEndPos: Int =
-        annotatedText.getOriginalTextPositionFor(plainTextEndPos, true)
+      annotatedText.getOriginalTextPositionFor(plainTextEndPos, true)
     assertTrue(originalTextStartPos < originalTextEndPos)
   }
 
@@ -540,17 +540,19 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
     settings: Settings = Settings(),
   ) {
     val invertedAnnotatedText: AnnotatedText =
-        AnnotatedTextFragment.invertAnnotatedText(buildAnnotatedText(code, settings))
-    val plainStartPos: Int = AnnotatedTextFragment.getOriginalTextPosition(
-      invertedAnnotatedText,
-      originalTextStartPos,
-      false,
-    )
-    val plainEndPos: Int = AnnotatedTextFragment.getOriginalTextPosition(
-      invertedAnnotatedText,
-      originalTextEndPos,
-      true,
-    )
+      AnnotatedTextFragment.invertAnnotatedText(buildAnnotatedText(code, settings))
+    val plainStartPos: Int =
+      AnnotatedTextFragment.getOriginalTextPosition(
+        invertedAnnotatedText,
+        originalTextStartPos,
+        false,
+      )
+    val plainEndPos: Int =
+      AnnotatedTextFragment.getOriginalTextPosition(
+        invertedAnnotatedText,
+        originalTextEndPos,
+        true,
+      )
     assertTrue(plainStartPos < plainEndPos)
   }
 }

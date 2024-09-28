@@ -35,23 +35,27 @@ class SettingsTest {
     assertEquals(setOf("dictionary"), settings.dictionary)
     settings2 = compareSettings(settings, settings2, false)
 
-    settings = settings.copy(
-      _allDisabledRules = settings.getModifiedDisabledRules(setOf("disabledRules")),
-    )
+    settings =
+      settings.copy(
+        _allDisabledRules = settings.getModifiedDisabledRules(setOf("disabledRules")),
+      )
     assertEquals(setOf("disabledRules"), settings.disabledRules)
     settings2 = compareSettings(settings, settings2, false)
 
-    settings = settings.copy(
-      _allEnabledRules = settings.getModifiedEnabledRules(setOf("enabledRules")),
-    )
+    settings =
+      settings.copy(
+        _allEnabledRules = settings.getModifiedEnabledRules(setOf("enabledRules")),
+      )
     assertEquals(setOf("enabledRules"), settings.enabledRules)
     settings2 = compareSettings(settings, settings2, true)
 
-    settings = settings.copy(
-      _allHiddenFalsePositives = settings.getModifiedHiddenFalsePositives(
-        setOf(HiddenFalsePositive("ruleId", "sentenceString")),
-      ),
-    )
+    settings =
+      settings.copy(
+        _allHiddenFalsePositives =
+          settings.getModifiedHiddenFalsePositives(
+            setOf(HiddenFalsePositive("ruleId", "sentenceString")),
+          ),
+      )
     assertEquals(
       setOf(HiddenFalsePositive("ruleId", "sentenceString")),
       settings.hiddenFalsePositives,

@@ -13,15 +13,16 @@ import kotlin.test.assertEquals
 class LatexPackageOptionsParserTest {
   @Test
   fun testParse() {
-    val options = LatexPackageOptionsParser.parse(
-      """
-        option1\,=value1,
-      option2 = \value2 ,% option3 = value3,
-      option4 =% value4,
-      {This is\} a \textbf{test}, option5 = value5.},
+    val options =
+      LatexPackageOptionsParser.parse(
+        """
+          option1\,=value1,
+        option2 = \value2 ,% option3 = value3,
+        option4 =% value4,
+        {This is\} a \textbf{test}, option5 = value5.},
 
-      """.trimIndent(),
-    )
+        """.trimIndent(),
+      )
 
     assertEquals(4, options.size)
 

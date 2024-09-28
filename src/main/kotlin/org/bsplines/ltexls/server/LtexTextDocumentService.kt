@@ -41,13 +41,15 @@ class LtexTextDocumentService(
     params: CompletionParams,
   ): CompletableFuture<Either<List<CompletionItem>, CompletionList>> {
     return if (this.languageServer.settingsManager.settings.completionEnabled) {
-      val uri: String = params.textDocument?.uri ?: return CompletableFuture.completedFuture(
-        Either.forLeft(emptyList()),
-      )
-      val document: LtexTextDocumentItem = getDocument(uri) ?: run {
-        Logging.LOGGER.warning(I18n.format("couldNotFindDocumentWithUri", uri))
-        return CompletableFuture.completedFuture(Either.forLeft(emptyList()))
-      }
+      val uri: String =
+        params.textDocument?.uri ?: return CompletableFuture.completedFuture(
+          Either.forLeft(emptyList()),
+        )
+      val document: LtexTextDocumentItem =
+        getDocument(uri) ?: run {
+          Logging.LOGGER.warning(I18n.format("couldNotFindDocumentWithUri", uri))
+          return CompletableFuture.completedFuture(Either.forLeft(emptyList()))
+        }
 
       CompletableFuture.completedFuture(
         Either.forRight(
@@ -170,20 +172,22 @@ class LtexTextDocumentService(
     }
 
     val uri: String = params.textDocument.uri
-    val document: LtexTextDocumentItem = getDocument(uri) ?: run {
-      Logging.LOGGER.warning(I18n.format("couldNotFindDocumentWithUri", uri))
-      return CompletableFuture.completedFuture(emptyList())
-    }
+    val document: LtexTextDocumentItem =
+      getDocument(uri) ?: run {
+        Logging.LOGGER.warning(I18n.format("couldNotFindDocumentWithUri", uri))
+        return CompletableFuture.completedFuture(emptyList())
+      }
 
-    return CompletableFutures.computeAsync(this.languageServer.singleThreadExecutorService) {
-      lspCancelChecker: CancelChecker ->
+    return CompletableFutures.computeAsync(
+      this.languageServer.singleThreadExecutorService,
+    ) { lspCancelChecker: CancelChecker ->
       document.lspCancelChecker = lspCancelChecker
 
       try {
         val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
-            document.checkWithCache()
+          document.checkWithCache()
         val codeActions: List<Either<Command, CodeAction>> =
-            this.languageServer.codeActionProvider.generate(params, document, checkingResult)
+          this.languageServer.codeActionProvider.generate(params, document, checkingResult)
         document.raiseExceptionIfCanceled()
         codeActions
       } catch (e: ExecutionException) {
@@ -198,12 +202,11 @@ class LtexTextDocumentService(
     }
   }
 
-  private fun getDocument(uri: String): LtexTextDocumentItem? {
-    return this.documents[uri] ?: run {
+  private fun getDocument(uri: String): LtexTextDocumentItem? =
+    this.documents[uri] ?: run {
       Logging.LOGGER.warning(I18n.format("couldNotFindDocumentWithUri", uri))
       null
     }
-  }
 
   fun executeFunctionForEachDocument(function: (LtexTextDocumentItem) -> Unit) {
     this.documents.values.forEach(function)

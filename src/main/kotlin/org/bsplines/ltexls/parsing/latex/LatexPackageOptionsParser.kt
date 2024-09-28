@@ -11,7 +11,11 @@ object LatexPackageOptionsParser {
   private val WHITESPACE_REGEX = Regex("^[ \n\r\t]+(%.*?($|(\r?\n[ \n\r\t]*)))?")
   private val COMMENT_REGEX = Regex("^%.*?($|(\r?\n[ \n\r\t]*))")
 
-  private fun matchFromPosition(regex: Regex, string: String, pos: Int): String {
+  private fun matchFromPosition(
+    regex: Regex,
+    string: String,
+    pos: Int,
+  ): String {
     val matchResult: MatchResult? = regex.find(string.substring(pos))
     return matchResult?.value ?: ""
   }

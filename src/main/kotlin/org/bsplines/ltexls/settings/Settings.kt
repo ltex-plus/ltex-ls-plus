@@ -159,7 +159,7 @@ data class Settings(
     hiddenFalsePositives: Set<HiddenFalsePositive>,
   ): Map<String, Set<HiddenFalsePositive>> {
     val allHiddenFalsePositives =
-        HashMap<String, Set<HiddenFalsePositive>>(this._allHiddenFalsePositives ?: emptyMap())
+      HashMap<String, Set<HiddenFalsePositive>>(this._allHiddenFalsePositives ?: emptyMap())
     allHiddenFalsePositives[this.languageShortCode] = hiddenFalsePositives
     return allHiddenFalsePositives
   }
@@ -172,21 +172,22 @@ data class Settings(
 
   @Suppress("TooManyFunctions")
   companion object {
-    val DEFAULT_ENABLED = setOf(
-      "bibtex",
-      "latex",
-      "git-commit",
-      "html",
-      "markdown",
-      "org",
-      "quarto",
-      "rmd",
-      "restructuredtext",
-      "rsweave",
-    )
+    val DEFAULT_ENABLED =
+      setOf(
+        "bibtex",
+        "latex",
+        "git-commit",
+        "html",
+        "markdown",
+        "org",
+        "quarto",
+        "rmd",
+        "restructuredtext",
+        "rsweave",
+      )
     private const val DEFAULT_SENTENCE_CACHE_SIZE = 2000L
     private val DEFAULT_DIAGNOSTIC_SEVERITY: Map<String, DiagnosticSeverity> =
-        mapOf(Pair("default", DiagnosticSeverity.Information))
+      mapOf(Pair("default", DiagnosticSeverity.Information))
 
     @Suppress("LongMethod")
     fun fromJson(
@@ -197,103 +198,115 @@ data class Settings(
 
       val enabled: Set<String>? = getEnabledFromJson(jsonSettings)
       val languageShortCode: String? = getSettingFromJsonAsString(jsonSettings, "language")
-      val allDictionaries: Map<String, Set<String>>? = mergeMapOfListsIntoMapOfSets(
-        convertJsonObjectToMapOfLists(
-          getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "dictionary"),
-        ),
-      )
-      val allDisabledRules: Map<String, Set<String>>? = mergeMapOfListsIntoMapOfSets(
-        convertJsonObjectToMapOfLists(
-          getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "disabledRules"),
-        ),
-      )
-      val allEnabledRules: Map<String, Set<String>>? = mergeMapOfListsIntoMapOfSets(
-        convertJsonObjectToMapOfLists(
-          getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "enabledRules"),
-        ),
-      )
+      val allDictionaries: Map<String, Set<String>>? =
+        mergeMapOfListsIntoMapOfSets(
+          convertJsonObjectToMapOfLists(
+            getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "dictionary"),
+          ),
+        )
+      val allDisabledRules: Map<String, Set<String>>? =
+        mergeMapOfListsIntoMapOfSets(
+          convertJsonObjectToMapOfLists(
+            getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "disabledRules"),
+          ),
+        )
+      val allEnabledRules: Map<String, Set<String>>? =
+        mergeMapOfListsIntoMapOfSets(
+          convertJsonObjectToMapOfLists(
+            getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "enabledRules"),
+          ),
+        )
       val allHiddenFalsePositives: Map<String, Set<HiddenFalsePositive>>? =
-          getAllHiddenFalsePositivesFromJson(jsonWorkspaceSpecificSettings2)
-      val bibtexFields: Map<String, Boolean>? = convertJsonObjectToMapOfBooleans(
-        getSettingFromJsonAsJsonObject(jsonSettings, "bibtex.fields"),
-      )
-      val latexCommands: Map<String, String>? = convertJsonObjectToMapOfStrings(
-        getSettingFromJsonAsJsonObject(jsonSettings, "latex.commands"),
-      )
-      val latexEnvironments: Map<String, String>? = convertJsonObjectToMapOfStrings(
-        getSettingFromJsonAsJsonObject(jsonSettings, "latex.environments"),
-      )
-      val markdownNodes: Map<String, String>? = convertJsonObjectToMapOfStrings(
-        getSettingFromJsonAsJsonObject(jsonSettings, "markdown.nodes"),
-      )
+        getAllHiddenFalsePositivesFromJson(jsonWorkspaceSpecificSettings2)
+      val bibtexFields: Map<String, Boolean>? =
+        convertJsonObjectToMapOfBooleans(
+          getSettingFromJsonAsJsonObject(jsonSettings, "bibtex.fields"),
+        )
+      val latexCommands: Map<String, String>? =
+        convertJsonObjectToMapOfStrings(
+          getSettingFromJsonAsJsonObject(jsonSettings, "latex.commands"),
+        )
+      val latexEnvironments: Map<String, String>? =
+        convertJsonObjectToMapOfStrings(
+          getSettingFromJsonAsJsonObject(jsonSettings, "latex.environments"),
+        )
+      val markdownNodes: Map<String, String>? =
+        convertJsonObjectToMapOfStrings(
+          getSettingFromJsonAsJsonObject(jsonSettings, "markdown.nodes"),
+        )
       val enablePickyRules: Boolean? =
-          getSettingFromJsonAsBoolean(jsonSettings, "additionalRules.enablePickyRules")
+        getSettingFromJsonAsBoolean(jsonSettings, "additionalRules.enablePickyRules")
       val motherTongueShortCode: String? =
-          getSettingFromJsonAsString(jsonSettings, "additionalRules.motherTongue")
+        getSettingFromJsonAsString(jsonSettings, "additionalRules.motherTongue")
       val languageModelRulesDirectory: String? =
-          getSettingFromJsonAsString(jsonSettings, "additionalRules.languageModel")
+        getSettingFromJsonAsString(jsonSettings, "additionalRules.languageModel")
 
-      val languageToolHttpServerUri: String? = getSettingFromJsonAsString(
-        jsonSettings,
-        "languageToolHttpServerUri",
-      ).let {
-        if (it?.isNotEmpty() == true) {
-          it
-        } else {
-          // deprecated in 14.1.0
-          getSettingFromJsonAsString(jsonSettings, "ltex-ls.languageToolHttpServerUri")
+      val languageToolHttpServerUri: String? =
+        getSettingFromJsonAsString(
+          jsonSettings,
+          "languageToolHttpServerUri",
+        ).let {
+          if (it?.isNotEmpty() == true) {
+            it
+          } else {
+            // deprecated in 14.1.0
+            getSettingFromJsonAsString(jsonSettings, "ltex-ls.languageToolHttpServerUri")
+          }
         }
-      }
 
-      val languageToolOrgUsername: String? = getSettingFromJsonAsString(
-        jsonSettings,
-        "languageToolOrg.username",
-      ).let {
-        if (it?.isNotEmpty() == true) {
-          it
-        } else {
-          // deprecated in 14.1.0
-          getSettingFromJsonAsString(jsonSettings, "ltex-ls.languageToolOrgUsername")
+      val languageToolOrgUsername: String? =
+        getSettingFromJsonAsString(
+          jsonSettings,
+          "languageToolOrg.username",
+        ).let {
+          if (it?.isNotEmpty() == true) {
+            it
+          } else {
+            // deprecated in 14.1.0
+            getSettingFromJsonAsString(jsonSettings, "ltex-ls.languageToolOrgUsername")
+          }
         }
-      }
 
-      val languageToolOrgApiKey: String? = getSettingFromJsonAsString(
-        jsonSettings,
-        "languageToolOrg.apiKey",
-      ).let {
-        if (it?.isNotEmpty() == true) {
-          it
-        } else {
-          // deprecated in 14.1.0
-          getSettingFromJsonAsString(jsonSettings, "ltex-ls.languageToolOrgApiKey")
+      val languageToolOrgApiKey: String? =
+        getSettingFromJsonAsString(
+          jsonSettings,
+          "languageToolOrg.apiKey",
+        ).let {
+          if (it?.isNotEmpty() == true) {
+            it
+          } else {
+            // deprecated in 14.1.0
+            getSettingFromJsonAsString(jsonSettings, "ltex-ls.languageToolOrgApiKey")
+          }
         }
-      }
 
-      val logLevel: Level? = getSettingFromJsonAsEnum(
-        jsonSettings,
-        "ltex-ls.logLevel",
-        arrayOf(
-          Level.SEVERE,
-          Level.WARNING,
-          Level.INFO,
-          Level.CONFIG,
-          Level.FINE,
-          Level.FINER,
-          Level.FINEST,
-        ),
-      )
+      val logLevel: Level? =
+        getSettingFromJsonAsEnum(
+          jsonSettings,
+          "ltex-ls.logLevel",
+          arrayOf(
+            Level.SEVERE,
+            Level.WARNING,
+            Level.INFO,
+            Level.CONFIG,
+            Level.FINE,
+            Level.FINER,
+            Level.FINEST,
+          ),
+        )
       val sentenceCacheSize: Long? = getSettingFromJsonAsLong(jsonSettings, "sentenceCacheSize")
       val completionEnabled: Boolean? =
-          getSettingFromJsonAsBoolean(jsonSettings, "completionEnabled")
+        getSettingFromJsonAsBoolean(jsonSettings, "completionEnabled")
       val diagnosticSeverity: Map<String, DiagnosticSeverity>? =
-          getDiagnosticSeverityFromJson(jsonSettings)
-      val checkFrequency: CheckFrequency? = getSettingFromJsonAsEnum(
-        jsonSettings,
-        "checkFrequency",
-        CheckFrequency::class.java.enumConstants,
-      )
+        getDiagnosticSeverityFromJson(jsonSettings)
+      val checkFrequency: CheckFrequency? =
+        getSettingFromJsonAsEnum(
+          jsonSettings,
+          "checkFrequency",
+          CheckFrequency::class.java.enumConstants,
+        )
       val clearDiagnosticsWhenClosingFile: Boolean? =
-          getSettingFromJsonAsBoolean(jsonSettings, "clearDiagnosticsWhenClosingFile")
+        getSettingFromJsonAsBoolean(jsonSettings, "clearDiagnosticsWhenClosingFile")
 
       return Settings(
         enabled,
@@ -345,25 +358,25 @@ data class Settings(
       jsonWorkspaceSpecificSettings: JsonElement,
     ): Map<String, Set<HiddenFalsePositive>>? {
       val hiddenFalsePositiveJsonStringMap: Map<String, Set<String>>? =
-      mergeMapOfListsIntoMapOfSets(
-        convertJsonObjectToMapOfLists(
-          getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings, "hiddenFalsePositives"),
-        ),
-      )
+        mergeMapOfListsIntoMapOfSets(
+          convertJsonObjectToMapOfLists(
+            getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings, "hiddenFalsePositives"),
+          ),
+        )
 
       return if (hiddenFalsePositiveJsonStringMap != null) {
         val allHiddenFalsePositives = HashMap<String, HashSet<HiddenFalsePositive>>()
 
         for (
-          (curLanguage: String, hiddenFalsePositiveJsonStrings: Set<String>)
-          in hiddenFalsePositiveJsonStringMap
+        (curLanguage: String, hiddenFalsePositiveJsonStrings: Set<String>)
+        in hiddenFalsePositiveJsonStringMap
         ) {
           val curHiddenFalsePositives: HashSet<HiddenFalsePositive> =
-              allHiddenFalsePositives[curLanguage] ?: run {
-            val set = HashSet<HiddenFalsePositive>()
-            allHiddenFalsePositives[curLanguage] = set
-            set
-          }
+            allHiddenFalsePositives[curLanguage] ?: run {
+              val set = HashSet<HiddenFalsePositive>()
+              allHiddenFalsePositives[curLanguage] = set
+              set
+            }
 
           for (hiddenFalsePositiveJsonString: String in hiddenFalsePositiveJsonStrings) {
             curHiddenFalsePositives.add(
@@ -382,7 +395,7 @@ data class Settings(
       jsonSettings: JsonElement,
     ): Map<String, DiagnosticSeverity>? {
       val jsonElement: JsonElement? =
-          getSettingFromJsonAsJsonElement(jsonSettings, "diagnosticSeverity")
+        getSettingFromJsonAsJsonElement(jsonSettings, "diagnosticSeverity")
 
       return if (jsonElement == null) {
         null
@@ -395,10 +408,11 @@ data class Settings(
         val jsonPrimitive: JsonPrimitive = jsonElement.asJsonPrimitive
 
         if (jsonPrimitive.isString) {
-          val enumValue: DiagnosticSeverity? = convertStringToEnum(
-            jsonPrimitive.asString,
-            DiagnosticSeverity::class.java.enumConstants,
-          )
+          val enumValue: DiagnosticSeverity? =
+            convertStringToEnum(
+              jsonPrimitive.asString,
+              DiagnosticSeverity::class.java.enumConstants,
+            )
           if (enumValue != null) mapOf(Pair("default", enumValue)) else null
         } else {
           null
@@ -425,17 +439,18 @@ data class Settings(
       var curJsonSettings: JsonElement? = jsonSettings
 
       for (component: String in name.split(".")) {
-        curJsonSettings = if ((curJsonSettings != null) && curJsonSettings.isJsonObject) {
-          val curJsonSettingsObject: JsonObject = curJsonSettings.asJsonObject
+        curJsonSettings =
+          if ((curJsonSettings != null) && curJsonSettings.isJsonObject) {
+            val curJsonSettingsObject: JsonObject = curJsonSettings.asJsonObject
 
-          if (curJsonSettingsObject.has(component)) {
-            curJsonSettingsObject.get(component)
+            if (curJsonSettingsObject.has(component)) {
+              curJsonSettingsObject.get(component)
+            } else {
+              null
+            }
           } else {
             null
           }
-        } else {
-          null
-        }
 
         if (curJsonSettings == null) break
       }
@@ -481,7 +496,10 @@ data class Settings(
       }
     }
 
-    private fun getSettingFromJsonAsBoolean(jsonSettings: JsonElement, name: String): Boolean? {
+    private fun getSettingFromJsonAsBoolean(
+      jsonSettings: JsonElement,
+      name: String,
+    ): Boolean? {
       val jsonPrimitive: JsonPrimitive? = getSettingFromJsonAsJsonPrimitive(jsonSettings, name)
 
       return if ((jsonPrimitive != null) && jsonPrimitive.isBoolean) {
@@ -491,7 +509,10 @@ data class Settings(
       }
     }
 
-    private fun getSettingFromJsonAsLong(jsonSettings: JsonElement, name: String): Long? {
+    private fun getSettingFromJsonAsLong(
+      jsonSettings: JsonElement,
+      name: String,
+    ): Long? {
       val jsonPrimitive: JsonPrimitive? = getSettingFromJsonAsJsonPrimitive(jsonSettings, name)
 
       return if ((jsonPrimitive != null) && jsonPrimitive.isNumber) {
@@ -501,7 +522,10 @@ data class Settings(
       }
     }
 
-    private fun getSettingFromJsonAsString(jsonSettings: JsonElement, name: String): String? {
+    private fun getSettingFromJsonAsString(
+      jsonSettings: JsonElement,
+      name: String,
+    ): String? {
       val jsonPrimitive: JsonPrimitive? = getSettingFromJsonAsJsonPrimitive(jsonSettings, name)
 
       return if ((jsonPrimitive != null) && jsonPrimitive.isString) {
@@ -595,8 +619,11 @@ data class Settings(
       return map
     }
 
-    private fun <T> convertJsonElementToEnum(jsonElement: JsonElement, enumValues: Array<T>): T? {
-      return if (jsonElement.isJsonPrimitive) {
+    private fun <T> convertJsonElementToEnum(
+      jsonElement: JsonElement,
+      enumValues: Array<T>,
+    ): T? =
+      if (jsonElement.isJsonPrimitive) {
         val jsonPrimitive: JsonPrimitive = jsonElement.asJsonPrimitive
 
         if (jsonPrimitive.isString) {
@@ -607,9 +634,11 @@ data class Settings(
       } else {
         null
       }
-    }
 
-    private fun <T> convertStringToEnum(enumString: String, enumValues: Array<T>): T? {
+    private fun <T> convertStringToEnum(
+      enumString: String,
+      enumValues: Array<T>,
+    ): T? {
       for (enumValue: T in enumValues) {
         if (enumValue.toString().equals(enumString, ignoreCase = true)) return enumValue
       }

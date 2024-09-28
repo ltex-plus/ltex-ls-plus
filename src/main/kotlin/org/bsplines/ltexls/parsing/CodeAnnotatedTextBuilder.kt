@@ -33,8 +33,8 @@ abstract class CodeAnnotatedTextBuilder(
 
   companion object {
     @Suppress("ComplexMethod")
-    fun create(codeLanguageId: String): CodeAnnotatedTextBuilder {
-      return when (codeLanguageId) {
+    fun create(codeLanguageId: String): CodeAnnotatedTextBuilder =
+      when (codeLanguageId) {
         "bib",
         "bibtex",
         -> LatexAnnotatedTextBuilder(codeLanguageId)
@@ -68,6 +68,5 @@ abstract class CodeAnnotatedTextBuilder(
           }
         }
       }
-    }
   }
 }

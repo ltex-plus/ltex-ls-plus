@@ -26,20 +26,21 @@ object FileIo {
     }
   }
 
-  fun readFile(filePath: Path): String? {
-    return try {
+  fun readFile(filePath: Path): String? =
+    try {
       readFileWithException(filePath)
     } catch (e: IOException) {
       Logging.LOGGER.warning(I18n.format("couldNotReadFile", e, filePath.toString()))
       null
     }
-  }
 
-  fun readFileWithException(filePath: Path): String {
-    return String(Files.readAllBytes(filePath), StandardCharsets.UTF_8)
-  }
+  fun readFileWithException(filePath: Path): String =
+    String(Files.readAllBytes(filePath), StandardCharsets.UTF_8)
 
-  fun writeFile(filePath: Path, text: String) {
+  fun writeFile(
+    filePath: Path,
+    text: String,
+  ) {
     try {
       writeFileWithException(filePath, text)
     } catch (e: IOException) {
@@ -47,7 +48,10 @@ object FileIo {
     }
   }
 
-  fun writeFileWithException(filePath: Path, text: String) {
+  fun writeFileWithException(
+    filePath: Path,
+    text: String,
+  ) {
     Files.write(
       filePath,
       text.toByteArray(StandardCharsets.UTF_8),
@@ -65,8 +69,8 @@ object FileIo {
     return if (fileName.endsWith(".bib")) {
       "bibtex"
     } else if (
-      fileName.endsWith(".c")
-      || fileName.endsWith(".h")
+      fileName.endsWith(".c") ||
+      fileName.endsWith(".h")
     ) {
       "c"
     } else if (fileName.endsWith(".clj")) {
@@ -74,12 +78,12 @@ object FileIo {
     } else if (fileName.endsWith(".coffee")) {
       "coffeescript"
     } else if (
-      fileName.endsWith(".cc")
-      || fileName.endsWith(".cpp")
-      || fileName.endsWith(".cxx")
-      || fileName.endsWith(".hh")
-      || fileName.endsWith(".hpp")
-      || fileName.endsWith(".inl")
+      fileName.endsWith(".cc") ||
+      fileName.endsWith(".cpp") ||
+      fileName.endsWith(".cxx") ||
+      fileName.endsWith(".hh") ||
+      fileName.endsWith(".hpp") ||
+      fileName.endsWith(".inl")
     ) {
       "cpp"
     } else if (fileName.endsWith(".cs")) {
@@ -103,10 +107,10 @@ object FileIo {
     } else if (fileName.endsWith(".hs")) {
       "haskell"
     } else if (
-      fileName.endsWith(".htm")
-      || fileName.endsWith(".html")
-      || fileName.endsWith(".xht")
-      || fileName.endsWith(".xhtml")
+      fileName.endsWith(".htm") ||
+      fileName.endsWith(".html") ||
+      fileName.endsWith(".xht") ||
+      fileName.endsWith(".xhtml")
     ) {
       "html"
     } else if (fileName.endsWith(".java")) {
@@ -148,13 +152,13 @@ object FileIo {
     } else if (fileName.endsWith(".rst")) {
       "restructuredtext"
     } else if (
-      fileName.endsWith(".Rmd")
-      || fileName.endsWith(".rmd")
+      fileName.endsWith(".Rmd") ||
+      fileName.endsWith(".rmd")
     ) {
       "rmd"
     } else if (
-      fileName.endsWith(".Rnw")
-      || fileName.endsWith(".rnw")
+      fileName.endsWith(".Rnw") ||
+      fileName.endsWith(".rnw")
     ) {
       "rsweave"
     } else if (fileName.endsWith(".rb")) {

@@ -41,7 +41,10 @@ class HtmlAnnotatedTextBuilder(
     return this
   }
 
-  override fun addMarkup(markup: String?, interpretAs: String?): HtmlAnnotatedTextBuilder {
+  override fun addMarkup(
+    markup: String?,
+    interpretAs: String?,
+  ): HtmlAnnotatedTextBuilder {
     super.addMarkup(markup, interpretAs)
     if (interpretAs?.isNotEmpty() == true) textAdded(interpretAs)
     return this
@@ -49,10 +52,11 @@ class HtmlAnnotatedTextBuilder(
 
   private fun textAdded(text: String) {
     if (text.isEmpty()) return
-    this.lastSpace = when (text[text.length - 1]) {
-      ' ', '\n', '\r' -> " "
-      else -> ""
-    }
+    this.lastSpace =
+      when (text[text.length - 1]) {
+        ' ', '\n', '\r' -> " "
+        else -> ""
+      }
   }
 
   @Suppress("SwallowedException")
@@ -62,7 +66,7 @@ class HtmlAnnotatedTextBuilder(
 
     try {
       val xmlStreamReader: XMLStreamReader =
-          this.xmlInputFactory.createXMLStreamReader(StringReader(code))
+        this.xmlInputFactory.createXMLStreamReader(StringReader(code))
 
       while (xmlStreamReader.hasNext()) {
         processXmlStreamReaderEvent(xmlStreamReader)
@@ -83,10 +87,10 @@ class HtmlAnnotatedTextBuilder(
     var interpretAs = ""
 
     Logging.LOGGER.finest(
-      "Position " + this.pos + " ("
-      + xmlStreamReader.location.lineNumber
-      + "," + xmlStreamReader.location.columnNumber + "): Event type = "
-      + eventType + ", skippedCode = '" + skippedCode + "'",
+      "Position " + this.pos + " (" +
+        xmlStreamReader.location.lineNumber +
+        "," + xmlStreamReader.location.columnNumber + "): Event type = " +
+        eventType + ", skippedCode = '" + skippedCode + "'",
     )
 
     if (this.nextText.isNotEmpty()) {
@@ -121,7 +125,7 @@ class HtmlAnnotatedTextBuilder(
       }
       XMLStreamReader.CHARACTERS -> {
         val elementName: String =
-            if (this.elementNameStack.isEmpty()) "" else this.elementNameStack.last()
+          if (this.elementNameStack.isEmpty()) "" else this.elementNameStack.last()
         val text: String = xmlStreamReader.text
         Logging.LOGGER.finest("CHARACTERS: text = '$text'")
         if ((elementName != "script") && (elementName != "style")) this.nextText = text

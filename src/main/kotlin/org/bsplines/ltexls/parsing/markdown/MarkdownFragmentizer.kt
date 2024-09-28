@@ -12,10 +12,15 @@ import org.bsplines.ltexls.parsing.CodeFragmentizer
 import org.bsplines.ltexls.parsing.RegexCodeFragmentizer
 import org.bsplines.ltexls.settings.Settings
 
-class MarkdownFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguageId) {
+class MarkdownFragmentizer(
+  codeLanguageId: String,
+) : CodeFragmentizer(codeLanguageId) {
   private val commentFragmentizer = RegexCodeFragmentizer(codeLanguageId, COMMENT_REGEX)
 
-  override fun fragmentize(code: String, originalSettings: Settings): List<CodeFragment> {
+  override fun fragmentize(
+    code: String,
+    originalSettings: Settings,
+  ): List<CodeFragment> {
     var fragments: List<CodeFragment> = fragmentizeYamlFrontMatter(code, originalSettings)
     fragments = commentFragmentizer.fragmentize(fragments)
 
@@ -27,39 +32,42 @@ class MarkdownFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLangua
     originalSettings: Settings,
   ): List<CodeFragment> {
     val matchResult: MatchResult? = YAML_FRONT_MATTER_REGEX.find(code)
-    val settings: Settings = run {
-      var firstGroupValue = true
-      var languageShortCode = ""
+    val settings: Settings =
+      run {
+        var firstGroupValue = true
+        var languageShortCode = ""
 
-      for (groupValue: String in matchResult?.groupValues ?: emptyList()) {
-        if (firstGroupValue) {
-          firstGroupValue = false
-        } else if (groupValue.isNotEmpty()) {
-          languageShortCode = groupValue
-          break
+        for (groupValue: String in matchResult?.groupValues ?: emptyList()) {
+          if (firstGroupValue) {
+            firstGroupValue = false
+          } else if (groupValue.isNotEmpty()) {
+            languageShortCode = groupValue
+            break
+          }
+        }
+
+        if (languageShortCode.isNotEmpty()) {
+          originalSettings.copy(_languageShortCode = languageShortCode)
+        } else {
+          originalSettings
         }
       }
-
-      if (languageShortCode.isNotEmpty()) {
-        originalSettings.copy(_languageShortCode = languageShortCode)
-      } else {
-        originalSettings
-      }
-    }
 
     return listOf(CodeFragment(codeLanguageId, code, 0, settings))
   }
 
   companion object {
-    private val YAML_FRONT_MATTER_REGEX = Regex(
-      "\\A---[ \t]*$(?s).*?(?-s)^lang:[ \t]+(?:\"(.+)\"|'(.+)'|(.+))$(?s).*?(?-s)^---[ \t]*$",
-      RegexOption.MULTILINE,
-    )
+    private val YAML_FRONT_MATTER_REGEX =
+      Regex(
+        "\\A---[ \t]*$(?s).*?(?-s)^lang:[ \t]+(?:\"(.+)\"|'(.+)'|(.+))$(?s).*?(?-s)^---[ \t]*$",
+        RegexOption.MULTILINE,
+      )
 
-    private val COMMENT_REGEX = Regex(
-      "^[ \t]*\\[[^]]+]:[ \t]*<>[ \t]*\"[ \t]*(?i)ltex(?-i):(.*?)\"[ \t]*$|"
-      + "^[ \t]*<!--[ \t]*(?i)ltex(?-i):(.*?)[ \t]*-->[ \t]*$",
-      RegexOption.MULTILINE,
-    )
+    private val COMMENT_REGEX =
+      Regex(
+        "^[ \t]*\\[[^]]+]:[ \t]*<>[ \t]*\"[ \t]*(?i)ltex(?-i):(.*?)\"[ \t]*$|" +
+          "^[ \t]*<!--[ \t]*(?i)ltex(?-i):(.*?)[ \t]*-->[ \t]*$",
+        RegexOption.MULTILINE,
+      )
   }
 }

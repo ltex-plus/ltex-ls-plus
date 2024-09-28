@@ -37,6 +37,7 @@ class DocumentChecker(
   val settingsManager: SettingsManager,
 ) {
   private var simpleLanguageIdentifier: SimpleLanguageIdentifier
+
   init {
     // workaround bugs like https://github.com/languagetool-org/languagetool/issues/3181,
     // in which LT prints to stdout instead of stderr (this messes up the LSP communication
@@ -55,6 +56,7 @@ class DocumentChecker(
     simpleLanguageIdentifier = SimpleLanguageIdentifier()
     System.setOut(stdout)
   }
+
   var lastCheckedDocument: LtexTextDocumentItem? = null
     private set
 
@@ -66,10 +68,11 @@ class DocumentChecker(
     var code: String = document.text
 
     if (range != null) {
-      code = code.substring(
-        document.convertPosition(range.start),
-        document.convertPosition(range.end),
-      )
+      code =
+        code.substring(
+          document.convertPosition(range.start),
+          document.convertPosition(range.end),
+        )
     }
 
     return codeFragmentizer.fragmentize(code, this.settingsManager.settings)
@@ -83,13 +86,14 @@ class DocumentChecker(
     val annotatedTextFragments = ArrayList<AnnotatedTextFragment>()
 
     for (codeFragment: CodeFragment in codeFragments) {
-      val builder: CodeAnnotatedTextBuilder = if (
-        hasRange && ProgramCommentRegexs.isSupportedCodeLanguageId(codeFragment.codeLanguageId)
-      ) {
-        PlaintextAnnotatedTextBuilder(codeFragment.codeLanguageId)
-      } else {
-        CodeAnnotatedTextBuilder.create(codeFragment.codeLanguageId)
-      }
+      val builder: CodeAnnotatedTextBuilder =
+        if (
+          hasRange && ProgramCommentRegexs.isSupportedCodeLanguageId(codeFragment.codeLanguageId)
+        ) {
+          PlaintextAnnotatedTextBuilder(codeFragment.codeLanguageId)
+        } else {
+          CodeAnnotatedTextBuilder.create(codeFragment.codeLanguageId)
+        }
 
       builder.setSettings(codeFragment.settings)
       builder.addCode(codeFragment.code)
@@ -122,9 +126,10 @@ class DocumentChecker(
     var settings: Settings = codeFragment.settings
 
     if (settings.languageShortCode == "auto") {
-      val cleanText: String = this.simpleLanguageIdentifier.cleanAndShortenText(
-        annotatedTextFragment.annotatedText.plainText,
-      )
+      val cleanText: String =
+        this.simpleLanguageIdentifier.cleanAndShortenText(
+          annotatedTextFragment.annotatedText.plainText,
+        )
       val detectedLanguage: DetectedLanguage? =
         this.simpleLanguageIdentifier.detectLanguage(cleanText, emptyList(), emptyList())
       val languageShortCode: String =
@@ -136,12 +141,12 @@ class DocumentChecker(
     this.settingsManager.settings = settings
 
     val languageToolInterface: LanguageToolInterface =
-        this.settingsManager.languageToolInterface ?: run {
-          Logging.LOGGER.warning(
-            I18n.format("skippingTextCheckAsLanguageToolHasNotBeenInitialized"),
-          )
-          return emptyList()
-        }
+      this.settingsManager.languageToolInterface ?: run {
+        Logging.LOGGER.warning(
+          I18n.format("skippingTextCheckAsLanguageToolHasNotBeenInitialized"),
+        )
+        return emptyList()
+      }
 
     val codeLanguageId: String = codeFragment.codeLanguageId
 
@@ -155,13 +160,14 @@ class DocumentChecker(
     logTextToBeChecked(annotatedTextFragment.annotatedText, settings)
 
     val beforeCheckingInstant: Instant = Instant.now()
-    val matches: ArrayList<LanguageToolRuleMatch> = try {
-      ArrayList(languageToolInterface.check(annotatedTextFragment))
-    } catch (e: RuntimeException) {
-      Tools.rethrowCancellationException(e)
-      Logging.LOGGER.severe(I18n.format("languageToolFailed", e))
-      return emptyList()
-    }
+    val matches: ArrayList<LanguageToolRuleMatch> =
+      try {
+        ArrayList(languageToolInterface.check(annotatedTextFragment))
+      } catch (e: RuntimeException) {
+        Tools.rethrowCancellationException(e)
+        Logging.LOGGER.severe(I18n.format("languageToolFailed", e))
+        return emptyList()
+      }
 
     if (Logging.LOGGER.isLoggable(Level.FINER)) {
       Logging.LOGGER.finer(
@@ -187,9 +193,9 @@ class DocumentChecker(
       result.add(
         match.copy(
           fromPos =
-          match.fromPos + annotatedTextFragment.codeFragment.fromPos + (rangeStartPos ?: 0),
+            match.fromPos + annotatedTextFragment.codeFragment.fromPos + (rangeStartPos ?: 0),
           toPos =
-          match.toPos + annotatedTextFragment.codeFragment.fromPos + (rangeStartPos ?: 0),
+            match.toPos + annotatedTextFragment.codeFragment.fromPos + (rangeStartPos ?: 0),
         ),
       )
     }
@@ -197,7 +203,10 @@ class DocumentChecker(
     return result
   }
 
-  private fun logTextToBeChecked(annotatedText: AnnotatedText, settings: Settings) {
+  private fun logTextToBeChecked(
+    annotatedText: AnnotatedText,
+    settings: Settings,
+  ) {
     if (Logging.LOGGER.isLoggable(Level.FINER)) {
       Logging.LOGGER.finer(
         I18n.format(
@@ -295,9 +304,9 @@ class DocumentChecker(
     try {
       val codeFragments: List<CodeFragment> = fragmentizeDocument(document, range)
       val annotatedTextFragments: List<AnnotatedTextFragment> =
-          buildAnnotatedTextFragments(codeFragments, document, (range != null))
+        buildAnnotatedTextFragments(codeFragments, document, (range != null))
       val matches: List<LanguageToolRuleMatch> =
-          checkAnnotatedTextFragments(annotatedTextFragments, rangeStartPos)
+        checkAnnotatedTextFragments(annotatedTextFragments, rangeStartPos)
       return Pair(matches, annotatedTextFragments)
     } finally {
       this.settingsManager.settings = originalSettings
@@ -311,13 +320,12 @@ class DocumentChecker(
       codeLanguageId: String,
       settings: Settings,
       rangeStartPos: Int?,
-    ): Boolean {
-      return (
-        (rangeStartPos == null)
-        && !settings.enabled.contains(codeLanguageId)
-        && (codeLanguageId != "nop")
-        && (codeLanguageId != "plaintext")
+    ): Boolean =
+      (
+        (rangeStartPos == null) &&
+          !settings.enabled.contains(codeLanguageId) &&
+          (codeLanguageId != "nop") &&
+          (codeLanguageId != "plaintext")
       )
-    }
   }
 }

@@ -8,39 +8,40 @@
 package org.bsplines.ltexls.parsing.bibtex
 
 object BibtexFragmentizerDefaults {
-  val DEFAULT_BIBTEX_FIELDS: Map<String, Boolean> = run {
-    val map = HashMap<String, Boolean>()
+  val DEFAULT_BIBTEX_FIELDS: Map<String, Boolean> =
+    run {
+      val map = HashMap<String, Boolean>()
 
-    map["author"] = false
-    map["category"] = false
-    map["date"] = false
-    map["doi"] = false
-    map["edition"] = false
-    map["editor"] = false
-    map["eid"] = false
-    map["file"] = false
-    map["isbn"] = false
-    map["keywords"] = false
-    map["month"] = false
-    map["note"] = false
-    map["number"] = false
-    map["options"] = false
-    map["origlanguage"] = false
-    map["owner"] = false
-    map["pages"] = false
-    map["parent"] = false
-    map["publisher"] = false
-    map["pubstate"] = false
-    map["see"] = false
-    map["seealso"] = false
-    map["shorthand"] = false
-    map["timestamp"] = false
-    map["translator"] = false
-    map["url"] = false
-    map["version"] = false
-    map["volume"] = false
-    map["year"] = false
+      map["author"] = false
+      map["category"] = false
+      map["date"] = false
+      map["doi"] = false
+      map["edition"] = false
+      map["editor"] = false
+      map["eid"] = false
+      map["file"] = false
+      map["isbn"] = false
+      map["keywords"] = false
+      map["month"] = false
+      map["note"] = false
+      map["number"] = false
+      map["options"] = false
+      map["origlanguage"] = false
+      map["owner"] = false
+      map["pages"] = false
+      map["parent"] = false
+      map["publisher"] = false
+      map["pubstate"] = false
+      map["see"] = false
+      map["seealso"] = false
+      map["shorthand"] = false
+      map["timestamp"] = false
+      map["translator"] = false
+      map["url"] = false
+      map["version"] = false
+      map["volume"] = false
+      map["year"] = false
 
-    map
-  }
+      map
+    }
 }

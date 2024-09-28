@@ -39,17 +39,18 @@ class LanguageToolJavaInterface(
   dictionary: Set<String>,
 ) : LanguageToolInterface() {
   private val resultCache =
-      ResultCache(sentenceCacheSize, RESULT_CACHE_EXPIRE_AFTER_MINUTES, TimeUnit.MINUTES)
+    ResultCache(sentenceCacheSize, RESULT_CACHE_EXPIRE_AFTER_MINUTES, TimeUnit.MINUTES)
   private val languageTool: JLanguageTool?
 
   init {
     if (Languages.isLanguageSupported(languageShortCode)) {
       val language: Language = Languages.getLanguageForShortCode(languageShortCode)
-      val motherTongue: Language? = if (motherTongueShortCode.isNotEmpty()) {
-        Languages.getLanguageForShortCode(motherTongueShortCode)
-      } else {
-        null
-      }
+      val motherTongue: Language? =
+        if (motherTongueShortCode.isNotEmpty()) {
+          Languages.getLanguageForShortCode(motherTongueShortCode)
+        } else {
+          null
+        }
       val userConfig = UserConfig(dictionary.toList())
 
       this.languageTool = JLanguageTool(language, motherTongue, this.resultCache, userConfig)
@@ -59,9 +60,7 @@ class LanguageToolJavaInterface(
     }
   }
 
-  override fun isInitialized(): Boolean {
-    return (this.languageTool != null)
-  }
+  override fun isInitialized(): Boolean = (this.languageTool != null)
 
   @Suppress("INACCESSIBLE_TYPE")
   override fun checkInternal(
@@ -78,11 +77,11 @@ class LanguageToolJavaInterface(
 
     val ruleMatchListener: RuleMatchListener? = null
     val ruleLevel: JLanguageTool.Level =
-    if (annotatedTextFragment.codeFragment.settings.enablePickyRules) {
-      JLanguageTool.Level.PICKY
-    } else {
-      JLanguageTool.Level.DEFAULT
-    }
+      if (annotatedTextFragment.codeFragment.settings.enablePickyRules) {
+        JLanguageTool.Level.PICKY
+      } else {
+        JLanguageTool.Level.DEFAULT
+      }
 
     annotatedTextFragment.document.raiseExceptionIfCanceled()
     languageTool.setCheckCancelledCallback(
@@ -92,39 +91,40 @@ class LanguageToolJavaInterface(
       },
     )
 
-    val matches: List<RuleMatch> = try {
-      // workaround bugs like https://github.com/languagetool-org/languagetool/issues/3181,
-      // in which LT prints to stdout instead of stderr (this messes up the LSP communication
-      // and results in a deadlock) => temporarily discard output to stdout
-      val stdout: PrintStream = System.out
-      System.setOut(
-        PrintStream(
-          object : OutputStream() {
-            override fun write(b: Int) {
-            }
-          },
-          false,
-          "utf-8",
-        ),
-      )
-
+    val matches: List<RuleMatch> =
       try {
-        languageTool.check(
-          annotatedTextFragment.annotatedText,
-          true,
-          JLanguageTool.ParagraphHandling.NORMAL,
-          ruleMatchListener,
-          JLanguageTool.Mode.ALL,
-          ruleLevel,
+        // workaround bugs like https://github.com/languagetool-org/languagetool/issues/3181,
+        // in which LT prints to stdout instead of stderr (this messes up the LSP communication
+        // and results in a deadlock) => temporarily discard output to stdout
+        val stdout: PrintStream = System.out
+        System.setOut(
+          PrintStream(
+            object : OutputStream() {
+              override fun write(b: Int) {
+              }
+            },
+            false,
+            "utf-8",
+          ),
         )
-      } finally {
-        System.setOut(stdout)
+
+        try {
+          languageTool.check(
+            annotatedTextFragment.annotatedText,
+            true,
+            JLanguageTool.ParagraphHandling.NORMAL,
+            ruleMatchListener,
+            JLanguageTool.Mode.ALL,
+            ruleLevel,
+          )
+        } finally {
+          System.setOut(stdout)
+        }
+      } catch (e: IOException) {
+        Tools.rethrowCancellationException(e)
+        Logging.LOGGER.severe(I18n.format("languageToolFailed", e))
+        return emptyList()
       }
-    } catch (e: IOException) {
-      Tools.rethrowCancellationException(e)
-      Logging.LOGGER.severe(I18n.format("languageToolFailed", e))
-      return emptyList()
-    }
 
     annotatedTextFragment.document.raiseExceptionIfCanceled()
     val result = ArrayList<LanguageToolRuleMatch>()
@@ -164,12 +164,12 @@ class LanguageToolJavaInterface(
 
     // from JLanguageTool.activateDefaultFalseFriendRules (which is private)
     val falseFriendRulePath: String =
-        JLanguageTool.getDataBroker().rulesDir + "/" + JLanguageTool.FALSE_FRIEND_FILE
+      JLanguageTool.getDataBroker().rulesDir + "/" + JLanguageTool.FALSE_FRIEND_FILE
     var exception: Exception? = null
 
     try {
       val falseFriendRules: List<AbstractPatternRule> =
-          languageTool.loadFalseFriendRules(falseFriendRulePath)
+        languageTool.loadFalseFriendRules(falseFriendRulePath)
       for (rule: Rule in falseFriendRules) languageTool.addRule(rule)
     } catch (e: IOException) {
       exception = e
@@ -212,13 +212,9 @@ class LanguageToolJavaInterface(
 
     languageTool.addRule(
       object : Rule() {
-        override fun getId(): String {
-          return "bspline"
-        }
+        override fun getId(): String = "bspline"
 
-        override fun getDescription(): String {
-          return "Unknown basis function"
-        }
+        override fun getDescription(): String = "Unknown basis function"
 
         override fun match(sentence: AnalyzedSentence): Array<RuleMatch> {
           val matches = ArrayList<RuleMatch>()
@@ -244,13 +240,9 @@ class LanguageToolJavaInterface(
 
     languageTool.addRule(
       object : Rule() {
-        override fun getId(): String {
-          return "ungendered"
-        }
+        override fun getId(): String = "ungendered"
 
-        override fun getDescription(): String {
-          return "Ungendered variant"
-        }
+        override fun getDescription(): String = "Ungendered variant"
 
         override fun match(sentence: AnalyzedSentence): Array<RuleMatch> {
           val matches = ArrayList<RuleMatch>()
@@ -259,8 +251,8 @@ class LanguageToolJavaInterface(
             val tokenString: String = token.token
 
             if (
-              (tokenString.length >= 2)
-              && tokenString.substring(tokenString.length - 2).equals("er", ignoreCase = true)
+              (tokenString.length >= 2) &&
+              tokenString.substring(tokenString.length - 2).equals("er", ignoreCase = true)
             ) {
               matches.add(
                 RuleMatch(
@@ -268,8 +260,8 @@ class LanguageToolJavaInterface(
                   sentence,
                   token.startPos,
                   token.endPos,
-                  "Ungendered variant detected. "
-                  + "Did you mean <suggestion>$tokenString*in</suggestion>?",
+                  "Ungendered variant detected. " +
+                    "Did you mean <suggestion>$tokenString*in</suggestion>?",
                 ),
               )
             }
@@ -299,7 +291,10 @@ class LanguageToolJavaInterface(
       return builder.toString()
     }
 
-    private fun appendObjectToBuilder(obj: Any?, builder: StringBuilder) {
+    private fun appendObjectToBuilder(
+      obj: Any?,
+      builder: StringBuilder,
+    ) {
       if (obj != null) {
         builder.append("\"")
         builder.append(StringEscapeUtils.escapeJava(obj.toString()))

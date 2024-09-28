@@ -13,11 +13,12 @@ import kotlin.test.assertEquals
 class LatexPackageOptionTest {
   @Test
   fun testProperties() {
-    val packageOption = LatexPackageOption(
-      "\\usepackage[foo=bar]{foobar}",
-      LatexPackageOption.KeyValueInfo(12, 15, "abc"),
-      LatexPackageOption.KeyValueInfo(16, 19, "def"),
-    )
+    val packageOption =
+      LatexPackageOption(
+        "\\usepackage[foo=bar]{foobar}",
+        LatexPackageOption.KeyValueInfo(12, 15, "abc"),
+        LatexPackageOption.KeyValueInfo(16, 19, "def"),
+      )
 
     assertEquals("foo", packageOption.key)
     assertEquals(12, packageOption.keyInfo.fromPos)

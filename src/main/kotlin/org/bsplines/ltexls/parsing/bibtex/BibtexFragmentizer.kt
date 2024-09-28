@@ -18,13 +18,19 @@ import org.bsplines.ltexls.parsing.latex.LatexPackageOption
 import org.bsplines.ltexls.parsing.latex.LatexPackageOptionsParser
 import org.bsplines.ltexls.settings.Settings
 
-class BibtexFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguageId) {
+class BibtexFragmentizer(
+  codeLanguageId: String,
+) : CodeFragmentizer(codeLanguageId) {
   private val latexFragmentizer = LatexFragmentizer(codeLanguageId)
 
-  override fun fragmentize(code: String, originalSettings: Settings): List<CodeFragment> {
-    var fragments: List<CodeFragment> = listOf(
-      CodeFragment(codeLanguageId, code, 0, originalSettings),
-    )
+  override fun fragmentize(
+    code: String,
+    originalSettings: Settings,
+  ): List<CodeFragment> {
+    var fragments: List<CodeFragment> =
+      listOf(
+        CodeFragment(codeLanguageId, code, 0, originalSettings),
+      )
 
     fragments = latexFragmentizer.fragmentize(fragments)
     fragments = fragmentizeBibtexFields(fragments)
@@ -39,9 +45,13 @@ class BibtexFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguage
       val newFragmentDisabledRules = HashSet(oldFragmentSettings.disabledRules)
       newFragmentDisabledRules.add("UPPERCASE_SENTENCE_START")
 
-      val newFragmentSettings: Settings = oldFragmentSettings.copy(
-        _allDisabledRules = oldFragmentSettings.getModifiedDisabledRules(newFragmentDisabledRules),
-      )
+      val newFragmentSettings: Settings =
+        oldFragmentSettings.copy(
+          _allDisabledRules =
+            oldFragmentSettings.getModifiedDisabledRules(
+              newFragmentDisabledRules,
+            ),
+        )
 
       BIBTEX_ENTRY_COMMAND_SIGNATURE_MATCHER.startMatching(oldFragmentCode, emptySet())
 
@@ -49,7 +59,7 @@ class BibtexFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguage
 
       while (true) {
         val match: LatexCommandSignatureMatch =
-            BIBTEX_ENTRY_COMMAND_SIGNATURE_MATCHER.findNextMatch() ?: break
+          BIBTEX_ENTRY_COMMAND_SIGNATURE_MATCHER.findNextMatch() ?: break
 
         if (bibtexFields == null) {
           bibtexFields = HashMap(BibtexFragmentizerDefaults.DEFAULT_BIBTEX_FIELDS)
@@ -58,9 +68,9 @@ class BibtexFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguage
 
         val argumentContents: String = match.getArgumentContents(match.getArgumentsSize() - 1)
         val argumentContentsFromPos: Int =
-            match.getArgumentContentsFromPos(match.getArgumentsSize() - 1)
+          match.getArgumentContentsFromPos(match.getArgumentsSize() - 1)
         val keyValuePairs: List<LatexPackageOption> =
-            LatexPackageOptionsParser.parse(argumentContents)
+          LatexPackageOptionsParser.parse(argumentContents)
 
         processKeyValuePairs(
           newFragments,
@@ -90,8 +100,8 @@ class BibtexFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguage
       val inBibtexFields: Boolean? = bibtexFields[fieldName]
 
       if (
-        (keyValuePair.valueInfo.fromPos == -1)
-        || ((inBibtexFields != null) && !inBibtexFields)
+        (keyValuePair.valueInfo.fromPos == -1) ||
+        ((inBibtexFields != null) && !inBibtexFields)
       ) {
         continue
       }
@@ -108,16 +118,18 @@ class BibtexFragmentizer(codeLanguageId: String) : CodeFragmentizer(codeLanguage
   }
 
   companion object {
-    private val BIBTEX_ENTRY_COMMAND_SIGNATURE = LatexCommandSignature(
-      "@[A-Za-z]+{}",
-      LatexCommandSignature.Action.Ignore,
-      DummyGenerator.getInstance(),
-      false,
-    )
+    private val BIBTEX_ENTRY_COMMAND_SIGNATURE =
+      LatexCommandSignature(
+        "@[A-Za-z]+{}",
+        LatexCommandSignature.Action.Ignore,
+        DummyGenerator.getInstance(),
+        false,
+      )
 
-    private val BIBTEX_ENTRY_COMMAND_SIGNATURE_MATCHER = LatexCommandSignatureMatcher(
-      listOf(BIBTEX_ENTRY_COMMAND_SIGNATURE),
-      false,
-    )
+    private val BIBTEX_ENTRY_COMMAND_SIGNATURE_MATCHER =
+      LatexCommandSignatureMatcher(
+        listOf(BIBTEX_ENTRY_COMMAND_SIGNATURE),
+        false,
+      )
   }
 }

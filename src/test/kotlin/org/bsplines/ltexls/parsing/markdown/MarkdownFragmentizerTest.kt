@@ -18,23 +18,24 @@ class MarkdownFragmentizerTest {
   fun testYamlFrontMatter() {
     val fragmentizer: CodeFragmentizer = CodeFragmentizer.create("markdown")
 
-    var codeFragments: List<CodeFragment> = fragmentizer.fragmentize(
-      """
-      ---
-      foo: bar
-      lang: "de-DE"
-      abc: def
-      ---
+    var codeFragments: List<CodeFragment> =
+      fragmentizer.fragmentize(
+        """
+        ---
+        foo: bar
+        lang: "de-DE"
+        abc: def
+        ---
 
-      Sentence 1
+        Sentence 1
 
-      <!-- LTeX: language=fr -->
+        <!-- LTeX: language=fr -->
 
-      Sentence 2
+        Sentence 2
 
-      """.trimIndent(),
-      Settings(),
-    )
+        """.trimIndent(),
+        Settings(),
+      )
     assertEquals(3, codeFragments.size)
     assertEquals("markdown", codeFragments[0].codeLanguageId)
     assertEquals("de-DE", codeFragments[0].settings.languageShortCode)
@@ -43,33 +44,35 @@ class MarkdownFragmentizerTest {
     assertEquals("markdown", codeFragments[2].codeLanguageId)
     assertEquals("fr", codeFragments[2].settings.languageShortCode)
 
-    codeFragments = fragmentizer.fragmentize(
-      """
-      ---
-      lang: 'de-DE'
-      abc: def
-      ---
+    codeFragments =
+      fragmentizer.fragmentize(
+        """
+        ---
+        lang: 'de-DE'
+        abc: def
+        ---
 
-      This is a test.
+        This is a test.
 
-      """.trimIndent(),
-      Settings(),
-    )
+        """.trimIndent(),
+        Settings(),
+      )
     assertEquals(1, codeFragments.size)
     assertEquals("de-DE", codeFragments[0].settings.languageShortCode)
 
-    codeFragments = fragmentizer.fragmentize(
-      """
-      ---
-      lang: de-DE
-      abc: def
-      ---
+    codeFragments =
+      fragmentizer.fragmentize(
+        """
+        ---
+        lang: de-DE
+        abc: def
+        ---
 
-      This is a test.
+        This is a test.
 
-      """.trimIndent(),
-      Settings(),
-    )
+        """.trimIndent(),
+        Settings(),
+      )
     assertEquals(1, codeFragments.size)
     assertEquals("de-DE", codeFragments[0].settings.languageShortCode)
   }
@@ -110,18 +113,19 @@ class MarkdownFragmentizerTest {
 
   @Test
   fun testMarkdownVariants() {
-    val markdownSample = """
-    Sentence 1
+    val markdownSample =
+      """
+      Sentence 1
 
-      <!--       ltex: language=de-DE-->
+        <!--       ltex: language=de-DE-->
 
-    Sentence 2
+      Sentence 2
 
-    <!--			ltex:				language=en-US		-->
+      <!--			ltex:				language=en-US		-->
 
-    Sentence 3
+      Sentence 3
 
-    """.trimIndent()
+      """.trimIndent()
 
     assertFragmentizer("quarto", markdownSample)
     assertFragmentizer("rmd", markdownSample)
@@ -141,7 +145,10 @@ class MarkdownFragmentizerTest {
   }
 
   companion object {
-    private fun assertFragmentizer(codeLanguageId: String, code: String) {
+    private fun assertFragmentizer(
+      codeLanguageId: String,
+      code: String,
+    ) {
       val fragmentizer: CodeFragmentizer = CodeFragmentizer.create(codeLanguageId)
       val codeFragments: List<CodeFragment> = fragmentizer.fragmentize(code, Settings())
       assertEquals(5, codeFragments.size)

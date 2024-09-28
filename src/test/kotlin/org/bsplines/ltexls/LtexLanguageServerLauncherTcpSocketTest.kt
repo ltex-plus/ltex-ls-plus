@@ -32,9 +32,10 @@ class LtexLanguageServerLauncherTcpSocketTest {
     override fun run() {
       try {
         Tools.RANDOM_NUMBER_GENERATOR.setSeed(42)
-        val exitCode: Int = LtexLanguageServerLauncher.mainWithoutExit(
-          arrayOf("--server-type=tcpSocket", "--host=$HOST", "--port=$PORT"),
-        )
+        val exitCode: Int =
+          LtexLanguageServerLauncher.mainWithoutExit(
+            arrayOf("--server-type=tcpSocket", "--host=$HOST", "--port=$PORT"),
+          )
 
         assertEquals(0, exitCode)
       } catch (e: InterruptedException) {

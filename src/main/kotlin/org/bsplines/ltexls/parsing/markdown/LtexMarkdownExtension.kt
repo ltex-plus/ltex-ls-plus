@@ -32,8 +32,6 @@ class LtexMarkdownExtension private constructor() : ParserExtension {
     val DISPLAY_MATH_PARSER = DataKey("DISPLAY_MATH_PARSER", true)
     val INLINE_MATH_PARSER = DataKey("INLINE_MATH_PARSER", true)
 
-    fun create(): LtexMarkdownExtension {
-      return LtexMarkdownExtension()
-    }
+    fun create(): LtexMarkdownExtension = LtexMarkdownExtension()
   }
 }

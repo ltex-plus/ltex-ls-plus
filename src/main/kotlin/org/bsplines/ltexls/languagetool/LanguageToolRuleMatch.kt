@@ -25,16 +25,16 @@ data class LanguageToolRuleMatch(
   val type: RuleMatch.Type,
   val languageShortCode: String,
 ) {
-  fun isIntersectingWithRange(range: Range, document: LtexTextDocumentItem): Boolean {
-    return Tools.areRangesIntersecting(
+  fun isIntersectingWithRange(
+    range: Range,
+    document: LtexTextDocumentItem,
+  ): Boolean =
+    Tools.areRangesIntersecting(
       Range(document.convertPosition(this.fromPos), document.convertPosition(this.toPos)),
       range,
     )
-  }
 
-  fun isUnknownWordRule(): Boolean {
-    return isUnknownWordRule(this.ruleId)
-  }
+  fun isUnknownWordRule(): Boolean = isUnknownWordRule(this.ruleId)
 
   companion object {
     private val TWO_OR_MORE_SPACES_REGEX = Regex("[ \n]{2,}")
@@ -42,8 +42,8 @@ data class LanguageToolRuleMatch(
     fun fromLanguageTool(
       match: RuleMatch,
       annotatedTextFragment: AnnotatedTextFragment,
-    ): LanguageToolRuleMatch {
-      return fromLanguageTool(
+    ): LanguageToolRuleMatch =
+      fromLanguageTool(
         match.rule?.id,
         match.sentence?.text,
         match.fromPos,
@@ -53,7 +53,6 @@ data class LanguageToolRuleMatch(
         match.type,
         annotatedTextFragment,
       )
-    }
 
     fun fromLanguageTool(
       jsonMatch: JsonObject,
@@ -67,7 +66,11 @@ data class LanguageToolRuleMatch(
       }
 
       return fromLanguageTool(
-        jsonMatch.get("rule").asJsonObject.get("id").asString,
+        jsonMatch
+          .get("rule")
+          .asJsonObject
+          .get("id")
+          .asString,
         jsonMatch.get("sentence").asString,
         fromPos,
         fromPos + jsonMatch.get("length").asInt,
@@ -112,18 +115,18 @@ data class LanguageToolRuleMatch(
       )
     }
 
-    fun isUnknownWordRule(ruleId: String?): Boolean {
-      return (
-        (ruleId != null) && (
-          ruleId.startsWith("MORFOLOGIK_")
-          || ruleId.startsWith("HUNSPELL_")
-          || ruleId.endsWith("_SPELLER_RULE")
-          || ruleId.endsWith("_SPELLING_RULE")
-          || (ruleId == "MUZSKY_ROD_NEZIV_A")
-          || (ruleId == "ZENSKY_ROD_A")
-          || (ruleId == "STREDNY_ROD_A")
-        )
+    fun isUnknownWordRule(ruleId: String?): Boolean =
+      (
+        (ruleId != null) &&
+          (
+            ruleId.startsWith("MORFOLOGIK_") ||
+              ruleId.startsWith("HUNSPELL_") ||
+              ruleId.endsWith("_SPELLER_RULE") ||
+              ruleId.endsWith("_SPELLING_RULE") ||
+              (ruleId == "MUZSKY_ROD_NEZIV_A") ||
+              (ruleId == "ZENSKY_ROD_A") ||
+              (ruleId == "STREDNY_ROD_A")
+          )
       )
-    }
   }
 }

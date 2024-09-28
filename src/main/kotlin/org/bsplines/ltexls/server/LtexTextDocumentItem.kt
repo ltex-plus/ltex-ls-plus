@@ -58,7 +58,7 @@ class LtexTextDocumentItem(
   }
 
   constructor(languageServer: LtexLanguageServer, document: TextDocumentItem) :
-      this(languageServer, document.uri, document.languageId, document.version, document.text)
+    this(languageServer, document.uri, document.languageId, document.version, document.text)
 
   private fun reinitializeLineStartPosList(text: String) {
     this.lineStartPosList.clear()
@@ -116,11 +116,12 @@ class LtexTextDocumentItem(
       line >= this.lineStartPosList.size -> text.length
       else -> {
         val lineStart: Int = this.lineStartPosList[line]
-        val nextLineStart: Int = if (line < this.lineStartPosList.size - 1) {
-          this.lineStartPosList[line + 1]
-        } else {
-          text.length
-        }
+        val nextLineStart: Int =
+          if (line < this.lineStartPosList.size - 1) {
+            this.lineStartPosList[line + 1]
+          } else {
+            text.length
+          }
         val lineLength: Int = nextLineStart - lineStart
 
         when {
@@ -189,11 +190,12 @@ class LtexTextDocumentItem(
 
     if (changeRange != null) {
       fromPos = convertPosition(changeRange.start)
-      toPos = if (changeRange.end != changeRange.start) {
-        convertPosition(changeRange.end)
-      } else {
-        fromPos
-      }
+      toPos =
+        if (changeRange.end != changeRange.start) {
+          convertPosition(changeRange.end)
+        } else {
+          fromPos
+        }
       newText = oldText.substring(0, fromPos) + changeText + oldText.substring(toPos)
     } else {
       fromPos = -1
@@ -208,7 +210,7 @@ class LtexTextDocumentItem(
 
     if (changeRange != null) {
       this.caretPosition =
-          guessCaretPositionInIncrementalUpdate(changeRange, changeText, fromPos, toPos)
+        guessCaretPositionInIncrementalUpdate(changeRange, changeText, fromPos, toPos)
     } else {
       this.caretPosition = guessCaretPositionInFullUpdate(oldText)
     }
@@ -221,22 +223,21 @@ class LtexTextDocumentItem(
     changeText: String,
     fromPos: Int,
     toPos: Int,
-  ): Position? {
-    return when {
+  ): Position? =
+    when {
       fromPos == toPos -> convertPosition(toPos + changeText.length)
       changeText.isEmpty() -> Position(changeRange.start.line, changeRange.start.character)
       else -> null
     }
-  }
 
   private fun guessCaretPositionInFullUpdate(oldText: String): Position? {
     val newText: String = text
     var numberOfEqualCharsAtStart = 0
 
     while (
-      (numberOfEqualCharsAtStart < oldText.length)
-      && (numberOfEqualCharsAtStart < newText.length)
-      && (oldText[numberOfEqualCharsAtStart] == newText[numberOfEqualCharsAtStart])
+      (numberOfEqualCharsAtStart < oldText.length) &&
+      (numberOfEqualCharsAtStart < newText.length) &&
+      (oldText[numberOfEqualCharsAtStart] == newText[numberOfEqualCharsAtStart])
     ) {
       numberOfEqualCharsAtStart++
     }
@@ -244,11 +245,11 @@ class LtexTextDocumentItem(
     var numberOfEqualCharsAtEnd = 0
 
     while (
-      (numberOfEqualCharsAtEnd < oldText.length - numberOfEqualCharsAtStart)
-      && (numberOfEqualCharsAtEnd < newText.length - numberOfEqualCharsAtStart)
-      && (
+      (numberOfEqualCharsAtEnd < oldText.length - numberOfEqualCharsAtStart) &&
+      (numberOfEqualCharsAtEnd < newText.length - numberOfEqualCharsAtStart) &&
+      (
         oldText[oldText.length - numberOfEqualCharsAtEnd - 1]
-        == newText[newText.length - numberOfEqualCharsAtEnd - 1]
+          == newText[newText.length - numberOfEqualCharsAtEnd - 1]
       )
     ) {
       numberOfEqualCharsAtEnd++
@@ -266,15 +267,16 @@ class LtexTextDocumentItem(
   }
 
   @Suppress("unused")
-  fun checkAndPublishDiagnosticsWithCache(range: Range? = null): Boolean {
-    return checkAndPublishDiagnostics(range, true)
-  }
+  fun checkAndPublishDiagnosticsWithCache(range: Range? = null): Boolean =
+    checkAndPublishDiagnostics(range, true)
 
-  fun checkAndPublishDiagnosticsWithoutCache(range: Range? = null): Boolean {
-    return checkAndPublishDiagnostics(range, false)
-  }
+  fun checkAndPublishDiagnosticsWithoutCache(range: Range? = null): Boolean =
+    checkAndPublishDiagnostics(range, false)
 
-  private fun checkAndPublishDiagnostics(range: Range?, useCache: Boolean): Boolean {
+  private fun checkAndPublishDiagnostics(
+    range: Range?,
+    useCache: Boolean,
+  ): Boolean {
     val languageClient: LtexLanguageClient? = this.languageServer.languageClient
     checkAndGetDiagnostics(range, useCache)
 
@@ -292,14 +294,17 @@ class LtexTextDocumentItem(
     return true
   }
 
-  private fun checkAndGetDiagnostics(range: Range?, useCache: Boolean): List<Diagnostic> {
+  private fun checkAndGetDiagnostics(
+    range: Range?,
+    useCache: Boolean,
+  ): List<Diagnostic> {
     if (useCache) {
       val diagnostics: List<Diagnostic>? = this.diagnosticsCache
       if (diagnostics != null) return diagnostics.toList()
     }
 
     val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
-        check(range, useCache)
+      check(range, useCache)
 
     val matches: List<LanguageToolRuleMatch> = checkingResult.first
     val diagnostics = ArrayList<Diagnostic>()
@@ -317,10 +322,11 @@ class LtexTextDocumentItem(
     val caretPosition: Position = this.caretPosition ?: return diagnosticsCache.toList()
     val diagnosticsNotAtCaret = ArrayList<Diagnostic>()
     val character: Int = caretPosition.character
-    val beforeCaretPosition = Position(
-      caretPosition.line,
-      (if (character >= 1) (character - 1) else 0),
-    )
+    val beforeCaretPosition =
+      Position(
+        caretPosition.line,
+        (if (character >= 1) (character - 1) else 0),
+      )
     val caretRange = Range(beforeCaretPosition, this.caretPosition)
 
     for (diagnostic: Diagnostic in diagnosticsCache) {
@@ -334,16 +340,12 @@ class LtexTextDocumentItem(
 
   fun checkWithCache(
     range: Range? = null,
-  ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> {
-    return check(range, true)
-  }
+  ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> = check(range, true)
 
   @Suppress("unused")
   fun checkWithoutCache(
     range: Range? = null,
-  ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> {
-    return check(range, false)
-  }
+  ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> = check(range, false)
 
   @Suppress("LongMethod")
   private fun check(
@@ -352,15 +354,16 @@ class LtexTextDocumentItem(
   ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> {
     if (useCache) {
       val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>>? =
-          this.checkingResult
+        this.checkingResult
 
       if (checkingResult != null) {
         return Pair(checkingResult.first.toList(), checkingResult.second.toList())
       }
     }
 
-    val languageClient: LtexLanguageClient = this.languageServer.languageClient ?:
-        return Pair(emptyList(), emptyList())
+    val languageClient: LtexLanguageClient =
+      this.languageServer.languageClient
+        ?: return Pair(emptyList(), emptyList())
     var progressToken: Either<String, Int>? = null
 
     try {
@@ -394,30 +397,30 @@ class LtexTextDocumentItem(
 
       this.raiseExceptionIfCanceled()
       val configurationResult: List<Any> =
-          languageClient.configuration(configurationParams).get()
+        languageClient.configuration(configurationParams).get()
 
       this.raiseExceptionIfCanceled()
       val workspaceSpecificConfigurationResult: List<Any?> =
-      if (this.languageServer.clientSupportsWorkspaceSpecificConfiguration) {
-        languageClient.ltexWorkspaceSpecificConfiguration(configurationParams).get()
-      } else {
-        listOf(null)
-      }
+        if (this.languageServer.clientSupportsWorkspaceSpecificConfiguration) {
+          languageClient.ltexWorkspaceSpecificConfiguration(configurationParams).get()
+        } else {
+          listOf(null)
+        }
 
       this.raiseExceptionIfCanceled()
       val jsonConfiguration: JsonElement = configurationResult[0] as JsonElement
 
       val workspaceSpecificConfiguration: Any? = workspaceSpecificConfigurationResult[0]
       val jsonWorkspaceSpecificConfiguration: JsonElement? =
-          workspaceSpecificConfiguration as JsonElement?
+        workspaceSpecificConfiguration as JsonElement?
 
       this.raiseExceptionIfCanceled()
       this.languageServer.settingsManager.settings =
-          Settings.fromJson(jsonConfiguration, jsonWorkspaceSpecificConfiguration)
+        Settings.fromJson(jsonConfiguration, jsonWorkspaceSpecificConfiguration)
 
       this.raiseExceptionIfCanceled()
       val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
-          this.languageServer.documentChecker.check(this, range)
+        this.languageServer.documentChecker.check(this, range)
       this.checkingResult = checkingResult
 
       return checkingResult

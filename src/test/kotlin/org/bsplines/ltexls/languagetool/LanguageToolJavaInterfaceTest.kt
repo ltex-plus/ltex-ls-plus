@@ -28,12 +28,13 @@ class LanguageToolJavaInterfaceTest {
     val settings = Settings(_allDictionaries = mapOf(Pair("en-US", setOf("BsPlInEs"))))
     val settingsManager = SettingsManager(settings)
     val documentChecker = DocumentChecker(settingsManager)
-    val document: LtexTextDocumentItem = DocumentCheckerTest.createDocument(
-      "latex",
-      "Hat functions is for a beginner.\n",
-    )
+    val document: LtexTextDocumentItem =
+      DocumentCheckerTest.createDocument(
+        "latex",
+        "Hat functions is for a beginner.\n",
+      )
     val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
-        documentChecker.check(document)
+      documentChecker.check(document)
     assertEquals(3, checkingResult.first.size)
   }
 
@@ -48,12 +49,15 @@ class LanguageToolJavaInterfaceTest {
   }
 
   companion object {
-    private fun checkDocument(settings: Settings, code: String): List<LanguageToolRuleMatch> {
+    private fun checkDocument(
+      settings: Settings,
+      code: String,
+    ): List<LanguageToolRuleMatch> {
       val settingsManager = SettingsManager(settings)
       val documentChecker = DocumentChecker(settingsManager)
       val document: LtexTextDocumentItem = DocumentCheckerTest.createDocument("latex", code)
       val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
-          documentChecker.check(document)
+        documentChecker.check(document)
       return checkingResult.first
     }
 
@@ -70,11 +74,15 @@ class LanguageToolJavaInterfaceTest {
       assertEquals(newNumberOfMatches, matches.size)
     }
 
-    fun assertMatches(settings: Settings, checkMotherTongue: Boolean) {
-      val matches: List<LanguageToolRuleMatch> = checkDocument(
-        settings,
-        "This is an \\textbf{test.}\n% LTeX: language=de-DE\nDies ist eine \\textbf{Test.}\n",
-      )
+    fun assertMatches(
+      settings: Settings,
+      checkMotherTongue: Boolean,
+    ) {
+      val matches: List<LanguageToolRuleMatch> =
+        checkDocument(
+          settings,
+          "This is an \\textbf{test.}\n% LTeX: language=de-DE\nDies ist eine \\textbf{Test.}\n",
+        )
       DocumentCheckerTest.assertMatches(matches, 8, 10, 58, 75)
 
       assertMatchesCompare(

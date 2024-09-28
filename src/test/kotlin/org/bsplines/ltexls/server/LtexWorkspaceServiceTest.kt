@@ -73,7 +73,10 @@ class LtexWorkspaceServiceTest {
   }
 
   companion object {
-    private fun assertCheckDocumentResult(uri: String, expected: Boolean) {
+    private fun assertCheckDocumentResult(
+      uri: String,
+      expected: Boolean,
+    ) {
       val server = LtexLanguageServer()
       val service = LtexWorkspaceService(server)
 
