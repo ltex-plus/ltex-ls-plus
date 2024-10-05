@@ -22,7 +22,7 @@
 
 ## Guidelines About Versioning
 
-- **Semantic versioning** is used for vscode-ltex and ltex-ls. The two versions are independent of each other.
+- **Semantic versioning** is used for vscode-ltex-plus and ltex-ls-plus. The two versions are independent of each other.
   - For bug fixes, the patch version is increased.
   - For new features, the minor version is increased.
   - For breaking changes, the major version is increased.
