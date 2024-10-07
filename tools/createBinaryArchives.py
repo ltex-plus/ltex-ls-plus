@@ -101,8 +101,8 @@ def downloadJava(tmpDirPath: pathlib.Path, ltexLsDirPath: pathlib.Path,
   # See https://github.com/adoptium/adoptium-support/issues/616
   if platform == "windows" and arch == "aarch64":
     print("Temurin JDK for Windows on ARM is currently available as beta version only.")    
-    relativeJavaDirPathString = "jdk-21+25"
-    javaUrl = "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-2023-06-08-06-49-beta/OpenJDK-jdk_aarch64_windows_hotspot_2023-06-08-06-49.zip"
+    relativeJavaDirPathString = "jdk-21.0.5+9"
+    javaUrl = "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B9-ea-beta/OpenJDK21U-jdk_aarch64_windows_hotspot_21.0.5_9-ea.zip"
 
   javaArchivePath = ltexLsDirPath.joinpath(javaArchiveName)
   print(f"Downloading JDK from '{javaUrl}' to '{javaArchivePath}'...")
