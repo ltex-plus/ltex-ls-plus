@@ -17,21 +17,40 @@ class HtmlFragmentizerTest {
   @Test
   fun test() {
     val fragmentizer: CodeFragmentizer = CodeFragmentizer.create("html")
-    val code = """Sentence 1
+    val code = """<!DOCTYPE html>
+    <head>
+    <title>Test</title>
+    </head>
+    <body>
+    <h1>Sentence 1</h>
 
       <!-- ltex: language=de-DE-->
 
-    Sentence 2
+    <p> !--Sentence 2</p>
 
     <!--			ltex:				language=en-US		-->
 
-    Sentence 3
+    <p>Sentence 3
+    </p>
+    </body>
     """
     val codeFragments: List<CodeFragment> = fragmentizer.fragmentize(code, Settings())
-    assertEquals(1, codeFragments.size)
+    assertEquals(5, codeFragments.size)
+
     assertEquals("html", codeFragments[0].codeLanguageId)
-    assertEquals(code, codeFragments[0].code)
-    assertEquals(0, codeFragments[0].fromPos)
     assertEquals("en-US", codeFragments[0].settings.languageShortCode)
+    assertEquals(0, codeFragments[0].fromPos)
+
+    assertEquals("nop", codeFragments[1].codeLanguageId)
+    assertEquals("de-DE", codeFragments[1].settings.languageShortCode)
+
+    assertEquals("html", codeFragments[2].codeLanguageId)
+    assertEquals("de-DE", codeFragments[2].settings.languageShortCode)
+
+    assertEquals("nop", codeFragments[3].codeLanguageId)
+    assertEquals("en-US", codeFragments[3].settings.languageShortCode)
+
+    assertEquals("html", codeFragments[4].codeLanguageId)
+    assertEquals("en-US", codeFragments[4].settings.languageShortCode)
   }
 }
