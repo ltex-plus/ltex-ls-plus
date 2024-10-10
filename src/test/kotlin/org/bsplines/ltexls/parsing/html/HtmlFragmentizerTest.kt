@@ -15,23 +15,100 @@ import kotlin.test.assertEquals
 
 class HtmlFragmentizerTest {
   @Test
-  fun test() {
+  fun testValid() {
+    val code =
+      """
+      <!DOCTYPE html>
+      text0
+      <!-- LTeX:language=de-DE -->
+      text
+      <!-- just a comment -->
+      <!-- > -->
+      text"
+      <img href="h\"alfjaflajfal<fjfalj>\"">Hallo</img>
+      "text"<br><br>a<br>
+      <!----><!---->a<!---->
+      """.trimIndent()
     val fragmentizer: CodeFragmentizer = CodeFragmentizer.create("html")
-    val code = """Sentence 1
-
-      <!-- ltex: language=de-DE-->
-
-    Sentence 2
-
-    <!--			ltex:				language=en-US		-->
-
-    Sentence 3
-    """
     val codeFragments: List<CodeFragment> = fragmentizer.fragmentize(code, Settings())
+
+    var i = 0
+    assertEquals("en-US", codeFragments[0].settings.languageShortCode)
+    assertEquals("nop", codeFragments[i++].codeLanguageId) // <!DOC..
+    assertEquals("html", codeFragments[i++].codeLanguageId) // \ntext0\n
+    assertEquals("nop", codeFragments[i].codeLanguageId) // de-DE
+    assertEquals("de-DE", codeFragments[i++].settings.languageShortCode)
+    assertEquals("html", codeFragments[i].codeLanguageId) // \ntext\n
+    assertEquals("de-DE", codeFragments[i++].settings.languageShortCode)
+    assertEquals("nop", codeFragments[i++].codeLanguageId) // <!-- just a..
+    assertEquals("html", codeFragments[i++].codeLanguageId) // \n
+    assertEquals("nop", codeFragments[i++].codeLanguageId) // <!-- > -->
+    assertEquals("html", codeFragments[i++].codeLanguageId) // \ntext"\n
+    assertEquals("nop", codeFragments[i++].codeLanguageId) // <img..
+    assertEquals("html", codeFragments[i++].codeLanguageId) // Hallo
+    assertEquals("nop", codeFragments[i++].codeLanguageId) // </img>
+    assertEquals("html", codeFragments[i++].codeLanguageId) // \n"text"
+    assertEquals("nop", codeFragments[i++].codeLanguageId) // <br>
+    assertEquals("nop", codeFragments[i++].codeLanguageId) // <br>
+    assertEquals("html", codeFragments[i++].codeLanguageId) // a
+    assertEquals("nop", codeFragments[i++].codeLanguageId) // <br>
+    assertEquals("html", codeFragments[i++].codeLanguageId) // \n
+    assertEquals("nop", codeFragments[i++].codeLanguageId) // <!---->
+    assertEquals("nop", codeFragments[i++].codeLanguageId) // <!---->
+    assertEquals("html", codeFragments[i++].codeLanguageId) // a
+    assertEquals("nop", codeFragments[i++].codeLanguageId) // <!---->
+    assertEquals(i, codeFragments.size)
+  }
+
+  @Test
+  fun testUnclosedTag() {
+    val code =
+      """
+      text
+      <unclosed-tag
+      text
+      """.trimIndent()
+    testUnclosed(code)
+  }
+
+  @Test
+  fun testUnclosedQuote() {
+    val code =
+      """
+      text
+      <tag=">
+      text
+      """.trimIndent()
+    testUnclosed(code)
+  }
+
+  @Test
+  fun testUnclosedEscapedQuote() {
+    val code =
+      """
+      text
+      <tag="hallo\"welt\"
+      text
+      """.trimIndent()
+    testUnclosed(code)
+  }
+
+  @Test
+  fun testUnclosedComment() {
+    val code =
+      """
+      text
+      <!--unclosed comment--
+      text
+      """.trimIndent()
+    testUnclosed(code)
+  }
+
+  fun testUnclosed(code: String) {
+    val fragmentizer: CodeFragmentizer = CodeFragmentizer.create("html")
+    val codeFragments: List<CodeFragment> = fragmentizer.fragmentize(code, Settings())
+
     assertEquals(1, codeFragments.size)
     assertEquals("html", codeFragments[0].codeLanguageId)
-    assertEquals(code, codeFragments[0].code)
-    assertEquals(0, codeFragments[0].fromPos)
-    assertEquals("en-US", codeFragments[0].settings.languageShortCode)
   }
 }

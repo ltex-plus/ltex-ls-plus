@@ -62,7 +62,6 @@ class MarkdownFragmentizer(
         "\\A---[ \t]*$(?s).*?(?-s)^lang:[ \t]+(?:\"(.+)\"|'(.+)'|(.+))$(?s).*?(?-s)^---[ \t]*$",
         RegexOption.MULTILINE,
       )
-
     private val COMMENT_REGEX =
       Regex(
         "^[ \t]*\\[[^]]+]:[ \t]*<>[ \t]*\"[ \t]*(?i)ltex(?-i):(.*?)\"[ \t]*$|" +
