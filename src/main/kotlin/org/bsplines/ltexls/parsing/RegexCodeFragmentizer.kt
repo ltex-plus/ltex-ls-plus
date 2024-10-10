@@ -44,26 +44,7 @@ open class RegexCodeFragmentizer(
         continue
       }
 
-      val settingsMap: Map<String, String> = parseSettings(settingsLine)
-
-      for ((settingKey: String, settingValue: String) in settingsMap) {
-        when {
-          settingKey.equals("enabled", ignoreCase = true) -> {
-            curSettings =
-              curSettings.copy(
-                _enabled = (if (settingValue == "true") Settings.DEFAULT_ENABLED else emptySet()),
-              )
-          }
-          settingKey.equals("language", ignoreCase = true) -> {
-            curSettings = curSettings.copy(_languageShortCode = settingValue)
-          }
-          else -> {
-            Logging.LOGGER.warning(
-              I18n.format("ignoringUnknownInlineSetting", settingKey, settingValue),
-            )
-          }
-        }
-      }
+      curSettings = SettingsParser.createUpdatedSettings(settingsLine, curSettings)
 
       lastPos = curPos
       curPos = matchResult.range.last + 1
@@ -77,28 +58,5 @@ open class RegexCodeFragmentizer(
     )
 
     return codeFragments
-  }
-
-  companion object {
-    private val SPLIT_SETTINGS_REGEX = Regex("[ \t]+")
-
-    private fun parseSettings(settingsLine: String): Map<String, String> {
-      val settingsMap = HashMap<String, String>()
-
-      for (settingsChange: String in settingsLine.trim().split(SPLIT_SETTINGS_REGEX)) {
-        val settingKeyLength: Int = settingsChange.indexOf('=')
-
-        if (settingKeyLength == -1) {
-          Logging.LOGGER.warning(I18n.format("ignoringMalformedInlineSetting", settingsChange))
-          continue
-        }
-
-        val settingKey: String = settingsChange.substring(0, settingKeyLength).trim()
-        val settingValue: String = settingsChange.substring(settingKeyLength + 1).trim()
-        settingsMap[settingKey] = settingValue
-      }
-
-      return settingsMap
-    }
   }
 }

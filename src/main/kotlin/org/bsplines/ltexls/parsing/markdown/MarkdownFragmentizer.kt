@@ -10,7 +10,6 @@ package org.bsplines.ltexls.parsing.markdown
 import org.bsplines.ltexls.parsing.CodeFragment
 import org.bsplines.ltexls.parsing.CodeFragmentizer
 import org.bsplines.ltexls.parsing.RegexCodeFragmentizer
-import org.bsplines.ltexls.parsing.html.HtmlFragmentizer
 import org.bsplines.ltexls.settings.Settings
 
 class MarkdownFragmentizer(
@@ -66,7 +65,7 @@ class MarkdownFragmentizer(
     private val COMMENT_REGEX =
       Regex(
         "^[ \t]*\\[[^]]+]:[ \t]*<>[ \t]*\"[ \t]*(?i)ltex(?-i):(.*?)\"[ \t]*$|" +
-          HtmlFragmentizer.COMMENT_PATTERN,
+          "^[ \t]*<!--[ \t]*(?i)ltex(?-i):(.*?)[ \t]*-->[ \t]*$",
         RegexOption.MULTILINE,
       )
   }
