@@ -12,6 +12,11 @@
     <author>Julian Valentin, Daniel Spitzer and LTeX+ Development Community</author>
   </properties>
   <body>
+    <release version="18.2.0" date="upcoming">
+      <action type="add" issue="#32" due-to="Jonas Wischeropp (@JonasWischeropp)">
+        Add support for magic comments in (X)HTML files.
+      </action>
+    </release>
     <release version="18.1.0" date="2024-09-28">
       <action type="update">
         Update LanguageTool from 6.0 to 6.5. See [LT release notes of 6.1, 6.2, 6.3, 6.4 and 6.5](https://github.com/languagetool-org/languagetool/blob/master/languagetool-standalone/CHANGES.md).
