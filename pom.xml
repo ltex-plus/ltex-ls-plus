@@ -37,7 +37,7 @@
   </licenses>
   <properties>
     <java.version>21</java.version>
-    <kotlin.version>2.0.20</kotlin.version>
+    <kotlin.version>2.0.21</kotlin.version>
     <kotlin.compiler.languageVersion>1.8</kotlin.compiler.languageVersion>
     <kotlin.compiler.jvmTarget>${java.version}</kotlin.compiler.jvmTarget>
     <kotlin.compiler.incremental>false</kotlin.compiler.incremental>
