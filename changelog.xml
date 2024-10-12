@@ -16,6 +16,9 @@
       <action type="add" issue="#32" due-to="Jonas Wischeropp (@JonasWischeropp)">
         Add support for magic comments in (X)HTML files.
       </action>
+      <action type="fix" issue="valentjn/ltex-ls#228,valentjn/ltex-ls#215,ltex-plus/vscode-ltex-plus#49" due-to="Tim Ruffing (@real-or-random)">
+        Shorten JSON sent to HTTP server in order to HTTP 413 errors.
+      </action>
     </release>
     <release version="18.1.0" date="2024-09-28">
       <action type="update">
