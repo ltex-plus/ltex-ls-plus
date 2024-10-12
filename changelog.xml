@@ -14,9 +14,9 @@
   <body>
     <release version="18.2.0" date="upcoming">
       <action type="update">
-        Update to most recent Adoptium JDK for Windows aarch64.
+        Update to [most recent Adoptium Java runtimes](https://github.com/adoptium/temurin21-binaries/releases/jdk-21.0.5%2B9-ea-beta/) for Windows aarch64.
       </action>
-      <action type="change">
+      <action type="update">
         Use repository [ltex-plus/languagetool-build](https://github.com/ltex-plus/languagetool-build) for building ltex-ls-plus
       </action>
       <action type="add" issue="ltex-ls-plus#32" due-to="Jonas Wischeropp (@JonasWischeropp)">
