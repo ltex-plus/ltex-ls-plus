@@ -62,7 +62,10 @@ abstract class CodeAnnotatedTextBuilder(
     return this
   }
 
-  override fun addMarkup(markup: String?, interpretAs: String?): CodeAnnotatedTextBuilder {
+  override fun addMarkup(
+    markup: String?,
+    interpretAs: String?,
+  ): CodeAnnotatedTextBuilder {
     if (interpretAs?.isNotEmpty() == true) {
       if (curType == TextPart.Type.TEXT) {
         finalizeCurrentPart()

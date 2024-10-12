@@ -522,9 +522,10 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
 
   @Test
   fun testMerging() {
-    val annotatedText = buildAnnotatedText(
-      """\hskip\textbf{SomeBoldText}% followed by a comment""",
-    )
+    val annotatedText =
+      buildAnnotatedText(
+        """\hskip\textbf{SomeBoldText}% followed by a comment""",
+      )
     val parts = annotatedText.getParts()
     assertEquals(5, parts.size)
     assertEquals(TextPart.Type.MARKUP, parts[0].type)
@@ -536,9 +537,10 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
 
   @Test
   fun testSimpleWhitespace() {
-    val annotatedText = buildAnnotatedText(
-      "This is a test\nOver multiple\n\nLines.",
-    )
+    val annotatedText =
+      buildAnnotatedText(
+        "This is a test\nOver multiple\n\nLines.",
+      )
     val parts = annotatedText.getParts()
     assertEquals(1, parts.size)
     assertEquals(TextPart.Type.TEXT, parts[0].type)
