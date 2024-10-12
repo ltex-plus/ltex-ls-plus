@@ -43,7 +43,7 @@
     <kotlin.compiler.incremental>false</kotlin.compiler.incremental>
     <main.class>org.bsplines.ltexls.LtexLanguageServerLauncher</main.class>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <junit.jupiter.version>5.11.0</junit.jupiter.version>
+    <junit.jupiter.version>5.11.2</junit.jupiter.version>
     <languagetool.version>6.5</languagetool.version>
   </properties>
   <dependencies>
