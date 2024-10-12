@@ -11,8 +11,23 @@ on:
   workflow_dispatch:
 
 jobs:
+  check_latest_commit:
+    runs-on: "ubuntu-latest"
+    name: "Check latest commit"
+    outputs:
+      NEW_COMMIT: ${{ steps.check_latest_commit.outputs.NEW_COMMIT }}
+    steps:
+      - name: "Checkout Repository"
+        uses: "actions/checkout@v4"
+
+      - id: "check_latest_commit"
+        name: "Check if there were any commits in the last 48 hours"
+        run: echo 'NEW_COMMIT='$(test -n "$(git log --format=%H --since='48 hours ago')" && echo 'true' || echo 'false') >> $GITHUB_OUTPUT
+
   deploy:
     name: "Nightly - Deploy Job"
+    needs: check_latest_commit
+    if: ${{ needs.check_latest_commit.outputs.NEW_COMMIT == 'true' || github.event_name == 'schedule' }}
     runs-on: "ubuntu-latest"
 
     steps:
