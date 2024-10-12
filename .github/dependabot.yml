@@ -16,3 +16,14 @@ updates:
       - "spitzerd"
     labels:
       - "pr-dependabot 🤖"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+    open-pull-requests-limit: 10
+    assignees:
+      - "spitzerd"
+    labels:
+      - "pr-dependabot 🤖"
