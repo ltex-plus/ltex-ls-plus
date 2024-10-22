@@ -63,7 +63,7 @@ def main() -> None:
   },
   "defaultValues": {
     "--hide-commands": true,
-    "--server-command-line": "./ltex-ls"
+    "--server-command-line": "./ltex-ls-plus"
   }
 }
 """.lstrip()
