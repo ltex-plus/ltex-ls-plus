@@ -12,6 +12,14 @@
     <author>Julian Valentin, Daniel Spitzer and LTeX+ Development Community</author>
   </properties>
   <body>
+    <release version="18.3.0" date="upcoming">
+      <action type="add">
+        Add Dockerfile.
+      </action>
+      <action type="fix" issue="#40">
+        Bundled ltex-cli-plus did not start due to a wrong setting .lsp-cli.json.
+      </action>
+    </release>
     <release version="18.2.0" date="2024-10-19">
       <action type="update">
         Update to [most recent Adoptium Java runtimes](https://github.com/adoptium/temurin21-binaries/releases/jdk-21.0.5%2B9-ea-beta/) for Windows aarch64.
