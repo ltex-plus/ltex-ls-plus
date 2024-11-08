@@ -68,13 +68,36 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
   @Test
   fun testMarkup() {
     assertPlainText(
-      """
-      This is math$ A = pi r^2 $
-      in Typst.
+      """      
       This is *bold* text.
+      This is _emphasis_ text.
 
       """.trimIndent(),
-      "This is math A = pi r^2 \nin Typst.\nThis is bold text.\n",
+      "This is bold text.\nThis is emphasis text.\n",
+    )
+  }
+
+  @Test
+  fun testMathMode() {
+    assertPlainText(
+      """
+      This is the math mode $ A = pi r^2 $
+      in Typst.
+      This is also math $ "exercice" 3 + 4$ in Typst.
+      This is the multi line math mode
+      $
+        A = pi r^2
+      $
+      in Typst.
+      """.trimIndent(),
+      """
+      This is the math mode 
+      in Typst.
+      This is also math "exercice" in Typst.
+      This is the multi line math mode
+      
+      in Typst.
+      """.trimIndent(),
     )
   }
 

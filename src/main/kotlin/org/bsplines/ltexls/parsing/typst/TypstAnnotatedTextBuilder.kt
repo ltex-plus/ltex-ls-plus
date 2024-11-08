@@ -12,9 +12,13 @@ import org.bsplines.ltexls.parsing.CharacterBasedCodeAnnotatedTextBuilder
 class TypstAnnotatedTextBuilder(
   codeLanguageId: String,
 ) : CharacterBasedCodeAnnotatedTextBuilder(codeLanguageId) {
+  private var mathMode = false
+  private var mathModeString = false
+
   @Suppress("ReturnCount", "ComplexMethod")
   override fun processCharacter() {
     if (processEscapeCharacter()) return
+    if (processMathBlock()) return
 
     if (this.isStartOfLine) {
       if (addMarkupInternal(LIST_REGEX)) return
@@ -58,6 +62,31 @@ class TypstAnnotatedTextBuilder(
       }
     }
     return false
+  }
+
+  private fun processMathBlock(): Boolean {
+    if (this.curString == "$") {
+      // Start or end of math mode
+      mathMode = !mathMode
+      addMarkup(this.curString)
+      return true
+    } else if (mathMode) {
+      if (this.curString == "\"") {
+        // Start or end of String within math mode
+        mathModeString = !mathModeString
+        addText(this.curString)
+        return true
+      }
+      if (mathModeString) {
+        // String within math mode to be spell checked
+        addText(this.curString)
+      } else {
+        addMarkup(this.curString)
+      }
+      return true
+    } else {
+      return false
+    }
   }
 
   companion object {
