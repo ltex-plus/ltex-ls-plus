@@ -14,11 +14,23 @@ class TypstAnnotatedTextBuilder(
 ) : CharacterBasedCodeAnnotatedTextBuilder(codeLanguageId) {
   private var mathMode = false
   private var mathModeString = false
+  private var codeMode = false
+  private var codeModeString = false
+  private var codeModeBracketsCounter = 0
 
   @Suppress("ReturnCount", "ComplexMethod")
   override fun processCharacter() {
     if (processEscapeCharacter()) return
     if (processMathBlock()) return
+    if (codeMode) {
+      processCodeMode()
+      return
+    }
+    if (addMarkupInternal(CODE_REGEX)) {
+      codeModeBracketsCounter++
+      codeMode = true
+      return
+    }
 
     if (this.isStartOfLine) {
       if (addMarkupInternal(LIST_REGEX)) return
@@ -31,9 +43,8 @@ class TypstAnnotatedTextBuilder(
     if (addMarkupInternal(MARKUP_REGEX)) return
     if (addMarkupInternal(LET_REGEX)) return
     if (addMarkupInternal(IMPORT_REGEX, "\n")) return
-    if (addMarkupInternal(SHOW_REGEX, "\n(")) return
-    if (addMarkupInternal(CODE_REGEX, "\n(")) return
-    if (addMarkupInternal(CLOSING_PARENTHESIS_REGEX, ")\n")) return
+
+    if (addMarkupInternal(SQUARE_BRACKETS_REGEX)) return
 
     addText(this.curString)
   }
@@ -85,11 +96,39 @@ class TypstAnnotatedTextBuilder(
       }
       return true
     } else {
+      // No math mode
       return false
     }
   }
 
+  private fun processCodeMode() {
+    when (this.curString) {
+      "(" -> {
+        codeModeBracketsCounter++
+        addMarkup(this.curString)
+      }
+      ")" -> {
+        codeModeBracketsCounter--
+        addMarkup(this.curString)
+        // Last closing parenthesis?
+        if (codeModeBracketsCounter == 0) codeMode = false
+      } "\"" -> {
+        codeModeString = !codeModeString
+        addMarkup(this.curString, "\n")
+      } else -> {
+        if (codeModeString) {
+          // String within code mode to be spell checked
+          addText(this.curString)
+        } else {
+          addMarkup(this.curString)
+        }
+      }
+    }
+  }
+
   companion object {
+    private val CODE_REGEX = Regex("^#.*\\(")
+
     private val LIST_REGEX = Regex("^\\s*[+|\\-|\\/]\\s")
     private val LEADING_WHITESPACE_REGEX = Regex("^\\s*")
     private val HEADING_REGEX = Regex("^=+\\s")
@@ -97,10 +136,8 @@ class TypstAnnotatedTextBuilder(
     private val LINE_COMMENT_REGEX = Regex("^\\/\\/.*(\r?\n|$)")
     private val MULTILINELINE_COMMENT_REGEX = Regex("^\\/\\*(.|\r?\n)*\\*\\/")
     private val MARKUP_REGEX = Regex("^(\\$|\\*|\\_)")
-    private val LET_REGEX = Regex("^#let\\s*[-a-z]*\\s*\\w*\\s*\\=")
-    private val IMPORT_REGEX = Regex("^\\s*(#import|include).*\r?\n")
-    private val SHOW_REGEX = Regex("^#show:\\s\\w*.with\\(\\s*\r?\n")
-    private val CODE_REGEX = Regex("^#\\w*\\(\\s*\r?\n?")
-    private val CLOSING_PARENTHESIS_REGEX = Regex("^,?\r?\n\\s*\\)(\r?\n|$)")
+    private val LET_REGEX = Regex("^#let.*=")
+    private val IMPORT_REGEX = Regex("^(#import|#include).*\r?\n")
+    private val SQUARE_BRACKETS_REGEX = Regex("^(\\[\r?\n|\\](\r?\n|$))")
   }
 }

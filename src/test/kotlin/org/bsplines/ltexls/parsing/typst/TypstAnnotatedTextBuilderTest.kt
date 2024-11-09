@@ -135,7 +135,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       More text
 
       """.trimIndent(),
-      "\n(author: name)\nMore text\n",
+      "\nMore text\n",
     )
   }
 
@@ -149,7 +149,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       )
 
       """.trimIndent(),
-      "Text\n\n(title: \"Paper12\")\n",
+      "Text\n\nPaper12\n\n",
     )
   }
 
