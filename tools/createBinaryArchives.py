@@ -67,8 +67,8 @@ def createBinaryArchive(platform: str, arch: str) -> None:
           + binScript[regexMatch.end():])
       with open(binScriptPath, "w") as file: file.write(binScript)
 
-    print("Setting script name in .lsp-cli.json...")
-    lspCliJsonPath = ltexLsDirPath.joinpath("bin", ".lsp-cli.json")
+    print("Setting script name in .lsp-cli-plus.json...")
+    lspCliJsonPath = ltexLsDirPath.joinpath("bin", ".lsp-cli-plus.json")
     with open(lspCliJsonPath, "r") as file: lspCliJson = json.load(file)
     lspCliJson["defaultValues"]["--server-command-line"] = (
         "ltex-ls-plus.bat" if platform == "windows" else "./ltex-ls-plus")

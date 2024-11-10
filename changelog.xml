@@ -22,6 +22,9 @@
       <action type="fix" issue="#40">
         Bundled ltex-cli-plus did not start due to a wrong setting .lsp-cli.json.
       </action>
+      <action type="update">
+        Update ltex-cli from https://github.com/valentjn/lsp-cli to https://github.com/ltex-plus/lsp-cli-plus
+      </action>
     </release>
     <release version="18.2.0" date="2024-10-19">
       <action type="update">
