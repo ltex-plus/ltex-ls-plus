@@ -19,6 +19,7 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
   protected var curChar = '\u0000'
   protected var curString = ""
   protected var isStartOfLine = false
+  protected var characterProcessed = false
 
   protected var dummyGenerator = DummyGenerator.getInstance()
   protected var dummyCounter = 0
@@ -36,6 +37,7 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
     if (text?.isNotEmpty() == true) {
       super.addText(text)
       this.pos += text.length
+      characterProcessed = true
     }
 
     return this
@@ -45,6 +47,7 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
     if (markup?.isNotEmpty() == true) {
       super.addMarkup(markup)
       this.pos += markup.length
+      characterProcessed = true
     }
 
     return this
@@ -57,6 +60,7 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
     if (interpretAs?.isNotEmpty() == true) {
       super.addMarkup((markup ?: ""), interpretAs)
       this.pos += (markup?.length ?: 0)
+      characterProcessed = true
     } else {
       addMarkup(markup)
     }
@@ -73,6 +77,7 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
       this.curChar = this.code[this.pos]
       this.curString = this.curChar.toString()
       this.isStartOfLine = ((this.pos == 0) || this.code[this.pos - 1] == '\n')
+      characterProcessed = false
       processCharacter()
 
       if (this.pos <= lastPos) {

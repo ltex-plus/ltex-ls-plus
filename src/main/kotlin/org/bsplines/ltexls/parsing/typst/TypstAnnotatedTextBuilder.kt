@@ -18,75 +18,74 @@ class TypstAnnotatedTextBuilder(
   private var codeModeString = false
   private var codeModeBracketsCounter = 0
 
-  @Suppress("ReturnCount", "ComplexMethod")
   override fun processCharacter() {
-    if (processEscapeCharacter()) return
-    if (processMathBlock()) return
-    if (codeMode) {
-      processCodeMode()
-      return
-    }
-    if (addMarkupInternal(CODE_REGEX)) {
-      codeModeBracketsCounter++
-      codeMode = true
-      return
-    }
+    processEscapeCharacter()
+    processMathBlock()
+    processCodeMode()
 
     if (this.isStartOfLine) {
-      if (addMarkupInternal(LIST_REGEX)) return
-      if (addMarkupInternal(LEADING_WHITESPACE_REGEX)) return
-      if (addMarkupInternal(HEADING_REGEX)) return
+      addMarkupInternal(LIST_REGEX)
+      addMarkupInternal(LEADING_WHITESPACE_REGEX)
+      addMarkupInternal(HEADING_REGEX)
     }
 
-    if (addMarkupInternal(LINE_COMMENT_REGEX, "\n")) return
-    if (addMarkupInternal(MULTILINELINE_COMMENT_REGEX, "\n")) return
-    if (addMarkupInternal(MARKUP_REGEX)) return
-    if (addMarkupInternal(LET_REGEX)) return
-    if (addMarkupInternal(IMPORT_REGEX, "\n")) return
-
-    if (addMarkupInternal(SQUARE_BRACKETS_REGEX)) return
+    addMarkupInternal(CODE_REGEX, "", true)
+    addMarkupInternal(LINE_COMMENT_REGEX, "\n")
+    addMarkupInternal(MULTILINELINE_COMMENT_REGEX, "\n")
+    addMarkupInternal(MARKUP_REGEX)
+    addMarkupInternal(LET_REGEX)
+    addMarkupInternal(IMPORT_REGEX, "\n")
+    addMarkupInternal(SQUARE_BRACKETS_REGEX)
 
     addText(this.curString)
+  }
+
+  override fun addText(text: String?): CharacterBasedCodeAnnotatedTextBuilder {
+    if (characterProcessed) return this
+    return super.addText(text)
   }
 
   private fun addMarkupInternal(
     regex: Regex,
     interpretAs: String = "",
-  ): Boolean {
+    startofCodeBlock: Boolean = false,
+  ) {
+    if (characterProcessed) return
     var matchResult: MatchResult?
     matchResult = matchFromPosition(regex)
     if (matchResult != null) {
       addMarkup(matchResult.value, interpretAs)
-      return true
+      if (startofCodeBlock) {
+        codeModeBracketsCounter++
+        codeMode = true
+      }
     }
-    return false
   }
 
-  private fun processEscapeCharacter(): Boolean {
+  private fun processEscapeCharacter() {
+    if (characterProcessed) return
     // Check for backslash escape character
     if (this.curString == "\\") {
       addMarkup(this.curString)
       // Add subsequent char as text if available
       if (this.code.length > this.pos) {
+        characterProcessed = false
         addText(this.code[this.pos].toString())
-        return true
       }
     }
-    return false
   }
 
-  private fun processMathBlock(): Boolean {
+  private fun processMathBlock() {
+    if (characterProcessed) return
     if (this.curString == "$") {
       // Start or end of math mode
       mathMode = !mathMode
       addMarkup(this.curString)
-      return true
     } else if (mathMode) {
       if (this.curString == "\"") {
         // Start or end of String within math mode
         mathModeString = !mathModeString
         addText(this.curString)
-        return true
       }
       if (mathModeString) {
         // String within math mode to be spell checked
@@ -94,14 +93,11 @@ class TypstAnnotatedTextBuilder(
       } else {
         addMarkup(this.curString)
       }
-      return true
-    } else {
-      // No math mode
-      return false
     }
   }
 
   private fun processCodeMode() {
+    if (!codeMode || characterProcessed) return
     when (this.curString) {
       "(" -> {
         codeModeBracketsCounter++

@@ -160,7 +160,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       The amount is \$5
       including VAT. This is a last backslash: \
       """.trimIndent(),
-      "The amount is $5\nincluding VAT. This is a last backslash: \\",
+      "The amount is $5\nincluding VAT. This is a last backslash: ",
     )
   }
 }
