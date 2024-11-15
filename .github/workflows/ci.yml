@@ -187,7 +187,7 @@ jobs:
         run: "python -u tools/createBinaryArchives.py"
 
       - name: "Create GitHub Release"
-        uses: "softprops/action-gh-release@v2.0.9"
+        uses: "softprops/action-gh-release@v2.1.0"
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: "${{ env.LTEX_LS_IS_PRERELEASE }}"
