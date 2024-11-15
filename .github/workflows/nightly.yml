@@ -78,7 +78,7 @@ jobs:
         run: "git tag -f nightly && git push -f origin nightly"
 
       - name: "Create GitHub Release"
-        uses: "softprops/action-gh-release@v2.0.9"
+        uses: "softprops/action-gh-release@v2.1.0"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         with:
