@@ -81,22 +81,24 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
   fun testMathMode() {
     assertPlainText(
       """
-      This is the math mode $ A = pi r^2 $
-      in Typst.
+      This is the math mode $ A = pi r^2 $ in Typst.
       This is also math $ "exercice" 3 + 4$ in Typst.
       This is the multi line math mode
       $
         A = pi r^2
       $
       in Typst.
+      This is the end at time $\t$.
+      At time $ t_"end" "maybe" $ I go home.
       """.trimIndent(),
       """
-      This is the math mode 
-      in Typst.
-      This is also math "exercice" in Typst.
+      This is the math mode Dummy44 in Typst.
+      This is also math exercice in Typst.
       This is the multi line math mode
       
       in Typst.
+      This is the end at time Dummy332.
+      At time end maybe I go home.
       """.trimIndent(),
     )
   }
@@ -130,7 +132,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
     assertPlainText(
       """
       #show: resume.with(
-          author: name,
+        author: name,
       )
       More text
 
@@ -147,9 +149,11 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       #work(
         title: "Paper12",
       )
-
+      Some text is #text("bold", weight: 800).
+      #image("some_text_with_typos.svg")
+      This is an image.
       """.trimIndent(),
-      "Text\n\nPaper12\n\n",
+      "Text\nPaper12\nSome text is bold.\nDummy146\nThis is an image.",
     )
   }
 
@@ -161,6 +165,18 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       including VAT. This is a last backslash: \
       """.trimIndent(),
       "The amount is $5\nincluding VAT. This is a last backslash: ",
+    )
+  }
+
+  @Test
+  fun testLabel() {
+    assertPlainText(
+      """
+      This is a @link to a label.
+      = Heading 1 <link>
+      More text.
+      """.trimIndent(),
+      "This is a Dummy19 to a label.\nHeading 1 \nMore text.",
     )
   }
 }
