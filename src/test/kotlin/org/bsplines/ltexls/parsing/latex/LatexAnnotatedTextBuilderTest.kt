@@ -158,6 +158,11 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
       Settings(_languageShortCode = "de-DE"),
     )
     assertPlainText(
+      "\\cites{test}",
+      "Dumma-0",
+      Settings(_languageShortCode = "sv"),
+    )
+    assertPlainText(
       """
       This is a test, \egc an actual test \eg{} test.
       This is a test, \iec an actual test \ie{} test.
@@ -400,6 +405,11 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
       "C'est un test: \$E = mc^2$.\n",
       "C'est un test: Jimmy-0. ",
       Settings(_languageShortCode = "fr"),
+    )
+    assertPlainText(
+      "Detta är ett test: \$E = mc^2$.\n",
+      "Detta är ett test: Dummy-0. ",
+      Settings(_languageShortCode = "sv"),
     )
     assertPlainText(
       """

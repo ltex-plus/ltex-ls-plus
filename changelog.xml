@@ -17,13 +17,16 @@
         Add support for Typst (LSP language IDs `typst`)
       </action>
       <action type="add">
-        Add Dockerfile.
+        Add Dockerfile
       </action>
       <action type="fix" issue="#40">
-        Bundled ltex-cli-plus did not start due to a wrong setting .lsp-cli.json.
+        Bundled ltex-cli-plus did not start due to a wrong setting .lsp-cli.json
       </action>
       <action type="update">
         Update ltex-cli from https://github.com/valentjn/lsp-cli to https://github.com/ltex-plus/lsp-cli-plus
+      </action>
+      <action type="fix" issue="ltex-plus/vscode-ltex-plus#89">
+        Fix spelling errors for Swedish dummies
       </action>
     </release>
     <release version="18.2.0" date="2024-10-19">

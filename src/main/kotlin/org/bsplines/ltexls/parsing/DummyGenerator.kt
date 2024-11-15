@@ -18,6 +18,8 @@ class DummyGenerator private constructor(
   ): String =
     when {
       language.equals("fr", ignoreCase = true) -> "Jimmy-$number"
+      this.plural && language.equals("sv", ignoreCase = true) -> "Dumma-$number"
+      language.equals("sv", ignoreCase = true) -> "Dummy-$number"
       this.plural && language.startsWith("de", ignoreCase = true) -> "Dummys"
       this.plural -> "Dummies"
       vowel || this.vowel -> "Ina$number"
