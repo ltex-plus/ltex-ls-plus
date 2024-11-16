@@ -66,6 +66,7 @@ abstract class CodeFragmentizer(
         "tex",
         -> LatexFragmentizer(codeLanguageId)
         "markdown",
+        "mdx",
         "quarto",
         "rmd",
         -> MarkdownFragmentizer(codeLanguageId)

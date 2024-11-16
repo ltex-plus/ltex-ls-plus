@@ -119,6 +119,7 @@ abstract class CodeAnnotatedTextBuilder(
         "tex",
         -> LatexAnnotatedTextBuilder(codeLanguageId)
         "markdown",
+        "mdx",
         "quarto",
         "rmd",
         -> MarkdownAnnotatedTextBuilder(codeLanguageId)

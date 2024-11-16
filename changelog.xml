@@ -14,7 +14,10 @@
   <body>
     <release version="18.3.0" date="upcoming">
       <action type="add" issue="ltex-ls-plus#39,ltex-plus/vscode-ltex-plus#49">
-        Add support for Typst (LSP language IDs `typst`)
+        Add support for Typst (LSP language ID `typst`)
+      </action>
+      <action type="add" issue="ltex-plus/vscode-ltex-plus#88">
+        Add support for MDX (LSP language ID `mdx`)
       </action>
       <action type="add">
         Add Dockerfile

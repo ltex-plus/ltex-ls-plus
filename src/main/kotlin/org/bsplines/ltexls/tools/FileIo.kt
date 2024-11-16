@@ -131,6 +131,8 @@ object FileIo {
       "markdown"
     } else if (fileName.endsWith(".m")) {
       "matlab"
+    } else if (fileName.endsWith(".mdx")) {
+      "mdx"
     } else if (fileName.endsWith(".org")) {
       "org"
     } else if (fileName.endsWith(".pl")) {

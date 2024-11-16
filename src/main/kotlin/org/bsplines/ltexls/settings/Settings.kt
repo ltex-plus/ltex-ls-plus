@@ -179,6 +179,7 @@ data class Settings(
         "git-commit",
         "html",
         "markdown",
+        "mdx",
         "org",
         "quarto",
         "rmd",
