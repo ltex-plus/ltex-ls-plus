@@ -92,12 +92,12 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       At time $ t_"end" "maybe" $ I go home.
       """.trimIndent(),
       """
-      This is the math mode Dummy44 in Typst.
+      This is the math mode Dummy66 in Typst.
       This is also math exercice in Typst.
       This is the multi line math mode
       
       in Typst.
-      This is the end at time Dummy332.
+      This is the end at time Dummy498.
       At time end maybe I go home.
       """.trimIndent(),
     )
@@ -108,10 +108,20 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
     assertPlainText(
       """
       #let val = "Joe"
-      More text
+      #let alertBox(body, fill: red) = {
+        set align(left)  
+        set text(white)
+        rect(
+          fill: fill,
+          radius: 2pt,
+          inset: 4pt,
+          [*Warning:\ #body*],
+        )
+      }
+      More text.
 
       """.trimIndent(),
-      " \"Joe\"\nMore text\n",
+      "\"Joe\"\n\nMore text.\n",
     )
   }
 
@@ -152,8 +162,10 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       Some text is #text("bold", weight: 800).
       #image("some_text_with_typos.svg")
       This is an image.
+      #function[ABC][AB][A]
+      More text.
       """.trimIndent(),
-      "Text\nPaper12\nSome text is bold.\nDummy146\nThis is an image.",
+      "Text\nPaper12\nSome text is bold.\nDummy213\nThis is an image.\nDummy280\nMore text.",
     )
   }
 
@@ -176,7 +188,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       = Heading 1 <link>
       More text.
       """.trimIndent(),
-      "This is a Dummy19 to a label.\nHeading 1 \nMore text.",
+      "This is a Dummy29 to a label.\nHeading 1 \nMore text.",
     )
   }
 }
