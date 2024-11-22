@@ -22,7 +22,7 @@ class TypstAnnotatedTextBuilder(
 
   override fun processCharacter() {
     processEscapeCharacter()
-    addMarkupInternal(NO_TEXT_INLINE_MATH_REGEX, generateDummy())
+    addMarkupInternal(NO_TEXT_INLINE_MATH_REGEX, "", true)
     processMathBlock()
     processCodeMode()
 
@@ -33,15 +33,17 @@ class TypstAnnotatedTextBuilder(
     }
 
     addMarkupInternal(LET_CURLY_BRACKETS_REGEX)
+    addMarkupInternal(LET_CODE_REGEX, "", false, true)
     addMarkupInternal(LET_REGEX)
-    addMarkupInternal(CODE_REGEX, "", true)
-    addMarkupInternal(CODE_SQUARE_BRACKETS_REGEX, generateDummy())
+    addMarkupInternal(CODE_REGEX, "", false, true)
+    addMarkupInternal(CODE_SQUARE_BRACKETS_REGEX, "", true)
     addMarkupInternal(LINE_COMMENT_REGEX, "\n")
     addMarkupInternal(MULTILINELINE_COMMENT_REGEX, "\n")
     addMarkupInternal(MARKUP_REGEX)
     addMarkupInternal(IMPORT_REGEX, "\n")
-    addMarkupInternal(LABEL_REGEX, " " + generateDummy())
+    addMarkupInternal(LABEL_REGEX, " ", true)
     addMarkupInternal(LABEL_REF_REGEX)
+    addMarkupInternal(VARIABLE_REGEX, "", true)
 
     addText(this.curString)
   }
@@ -54,13 +56,18 @@ class TypstAnnotatedTextBuilder(
   private fun addMarkupInternal(
     regex: Regex,
     interpretAs: String = "",
+    generateDummy: Boolean = false,
     startofCodeBlock: Boolean = false,
   ) {
     if (characterProcessed) return
     var matchResult: MatchResult?
+    var interpretAsString = interpretAs
     matchResult = matchFromPosition(regex)
     if (matchResult != null) {
-      addMarkup(matchResult.value, interpretAs)
+      if (generateDummy) {
+        interpretAsString += generateDummy()
+      }
+      addMarkup(matchResult.value, interpretAsString)
       if (startofCodeBlock) {
         codeModeBracketsCounter++
         codeModeStringCounter = 0
@@ -150,6 +157,7 @@ class TypstAnnotatedTextBuilder(
     private val LEADING_WHITESPACE_REGEX = Regex("^\\s*")
     private val HEADING_REGEX = Regex("^=+\\s")
     private val LET_CURLY_BRACKETS_REGEX = Regex("^#let.*=\\s*\\{(.|\r?\n)*?\\}")
+    private val LET_CODE_REGEX = Regex("^#let.*?=\\s*?\\w*?\\(")
     private val LET_REGEX = Regex("^#let.*=\\s*")
     private val CODE_REGEX = Regex("^#.*\\(")
     private val CODE_SQUARE_BRACKETS_REGEX = Regex("^#.*\\[(.|\r?\n)*?\\]")
@@ -159,6 +167,7 @@ class TypstAnnotatedTextBuilder(
     private val IMPORT_REGEX = Regex("^(#import|#include).*\r?\n")
     private val LABEL_REGEX = Regex("^\\s@[^\\s]*")
     private val LABEL_REF_REGEX = Regex("^<[^\\s]*>")
-    private val FILENAME_REGEX = Regex("^.+\\.\\w{1,3}")
+    private val VARIABLE_REGEX = Regex("^#\\S+")
+    private val FILENAME_REGEX = Regex("^.+\\.\\w{1,4}")
   }
 }

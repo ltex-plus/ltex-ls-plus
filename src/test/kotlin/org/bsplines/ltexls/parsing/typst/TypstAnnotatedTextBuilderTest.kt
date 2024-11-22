@@ -92,12 +92,12 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       At time $ t_"end" "maybe" $ I go home.
       """.trimIndent(),
       """
-      This is the math mode Dummy66 in Typst.
+      This is the math mode Dummy0 in Typst.
       This is also math exercice in Typst.
       This is the multi line math mode
       
       in Typst.
-      This is the end at time Dummy498.
+      This is the end at time Dummy1.
       At time end maybe I go home.
       """.trimIndent(),
     )
@@ -108,6 +108,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
     assertPlainText(
       """
       #let val = "Joe"
+      #let json = json("test.json")
       #let alertBox(body, fill: red) = {
         set align(left)  
         set text(white)
@@ -118,10 +119,10 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
           [*Warning:\ #body*],
         )
       }
-      More text.
+      #val is the best.
 
       """.trimIndent(),
-      "\"Joe\"\n\nMore text.\n",
+      "\"Joe\"\nDummy0\n\nDummy1 is the best.\n",
     )
   }
 
@@ -165,7 +166,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       #function[ABC][AB][A]
       More text.
       """.trimIndent(),
-      "Text\nPaper12\nSome text is bold.\nDummy213\nThis is an image.\nDummy280\nMore text.",
+      "Text\nPaper12\nSome text is bold.\nDummy11\nThis is an image.\nDummy12\nMore text.",
     )
   }
 
@@ -188,7 +189,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       = Heading 1 <link>
       More text.
       """.trimIndent(),
-      "This is a Dummy29 to a label.\nHeading 1 \nMore text.",
+      "This is a Dummy0 to a label.\nHeading 1 \nMore text.",
     )
   }
 }
