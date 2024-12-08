@@ -12,6 +12,17 @@
     <author>Julian Valentin, Daniel Spitzer and LTeX+ Development Community</author>
   </properties>
   <body>
+    <release version="18.4.0" date="upcoming">
+      <action type="add" issue="valentjn/ltex-ls#268" due-to="Benoît Pasquier">
+        Add support for apacite commands 
+      </action>
+      <action type="add" issue="valentjn/ltex-ls#266" due-to="Loïc Reynier">
+        Add support for \cpageref, \labelcref and variants
+      </action>
+      <action type="fix" issue="valentjn/ltex-ls#238,valentjn/ltex-ls#224" due-to="Andrii Savytskyi">
+        Improved comment parsing and Rust support
+      </action>
+    </release>
     <release version="18.3.0" date="2024-11-27">
       <action type="add" issue="ltex-ls-plus#39,ltex-plus/vscode-ltex-plus#49">
         Add support for Typst (LSP language ID `typst`)
