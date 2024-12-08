@@ -34,6 +34,7 @@ abstract class CodeAnnotatedTextBuilder(
   protected var curType: TextPart.Type? = null
 
   abstract fun addCode(code: String): CodeAnnotatedTextBuilder
+
   open fun addComment(
     code: Array<String>,
     markups: Array<Triple<String, Int, Int>>,

@@ -82,11 +82,12 @@ class ProgramAnnotatedTextBuilder(
     for (matchResult: MatchResult in lineContentsRegex.findAll(comment)) {
       val matchGroup: MatchGroup = matchResult.groups[1] ?: continue
 
-      markups += Triple(
-        comment.substring(curPos, matchGroup.range.first),
-        curPos,
-        matchGroup.range.first,
-      )
+      markups +=
+        Triple(
+          comment.substring(curPos, matchGroup.range.first),
+          curPos,
+          matchGroup.range.first,
+        )
 
       curPos = matchGroup.range.last + 1
 
