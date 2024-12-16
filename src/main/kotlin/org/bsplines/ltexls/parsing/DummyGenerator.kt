@@ -20,6 +20,8 @@ class DummyGenerator private constructor(
       language.equals("fr", ignoreCase = true) -> "Jimmy-$number"
       this.plural && language.equals("sv", ignoreCase = true) -> "Dumma-$number"
       language.equals("sv", ignoreCase = true) -> "Dummy-$number"
+      this.plural && language.startsWith("es", ignoreCase = true) -> "Maniquíes-$number"
+      language.startsWith("es", ignoreCase = true) -> "Maniquí-$number"
       this.plural && language.startsWith("de", ignoreCase = true) -> "Dummys"
       this.plural -> "Dummies"
       vowel || this.vowel -> "Ina$number"
