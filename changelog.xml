@@ -12,7 +12,7 @@
     <author>Julian Valentin, Daniel Spitzer and LTeX+ Development Community</author>
   </properties>
   <body>
-    <release version="18.4.0" date="upcoming">
+    <release version="18.4.0" date="2024-12-23">
       <action type="add" issue="valentjn/ltex-ls#268" due-to="Benoît Pasquier">
         Add support for apacite commands 
       </action>
@@ -21,6 +21,9 @@
       </action>
       <action type="fix" issue="valentjn/ltex-ls#238,valentjn/ltex-ls#224" due-to="Andrii Savytskyi">
         Improved comment parsing and Rust support
+      </action>
+      <action type="fix" issue="ltex-plus/vscode-ltex-plus#105">
+        Fix spelling errors for Spanish dummies
       </action>
     </release>
     <release version="18.3.0" date="2024-11-27">
