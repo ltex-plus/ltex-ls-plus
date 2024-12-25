@@ -12,6 +12,8 @@
     <author>Julian Valentin, Daniel Spitzer and LTeX+ Development Community</author>
   </properties>
   <body>
+    <release version="18.5.0" date="upcoming">
+    </release>
     <release version="18.4.0" date="2024-12-23">
       <action type="add" issue="valentjn/ltex-ls#268" due-to="Benoît Pasquier">
         Add support for apacite commands 
@@ -67,7 +69,7 @@
     </release>
     <release version="18.0.0" date="2024-09-17">
       <action type="update">
-        Update from Java 11 to 21. Be aware: Starting from LTeX LS+ 18.0.0, Java 21 or higher is required!
+        Update from Java 11 to 21. Be aware: Starting from LTeX+ LS 18.0.0, Java 21 or higher is required!
       </action>
       <action type="add">
         Add arm64/aarch64 Java runtimes for Linux (e.g. Raspberry Pi), macOS (Apple M1 SoC and its successors) and Windows on ARM.
@@ -75,12 +77,12 @@
     </release>
     <release version="17.0.1" date="2024-08-29">
       <action type="fix">
-        Silence output to stdout caused by LanguageTool. This issue caused a crash of LTeX LS+ on Linux systems. It's a similar issue to https://github.com/valentjn/vscode-ltex/issues/68
+        Silence output to stdout caused by LanguageTool. This issue caused a crash of LTeX+ LS on Linux systems. It's a similar issue to https://github.com/valentjn/vscode-ltex/issues/68
       </action>
     </release>
     <release version="17.0.0" date="2024-08-24">
       <action type="update">
-        Rename to LTeX LS+
+        Rename to LTeX+ LS
       </action>
       <action type="update">
         Update bundled Java runtime to 11.0.24+8
