@@ -42,7 +42,7 @@ jobs:
       - name: "Set up Python"
         uses: "actions/setup-python@v5"
         with:
-          python-version: "3.10"
+          python-version: "3.13"
 
       - name: "Create Completion Lists"
         run: "python -u tools/createCompletionLists.py"
@@ -67,7 +67,7 @@ jobs:
       - name: "Set up Python"
         uses: "actions/setup-python@v5"
         with:
-          python-version: "3.10"
+          python-version: "3.13"
 
       - name: "Create Completion Lists"
         run: "python -u tools/createCompletionLists.py"
@@ -86,10 +86,10 @@ jobs:
       - name: "Set up Python"
         uses: "actions/setup-python@v5"
         with:
-          python-version: "3.10"
+          python-version: "3.13"
 
       - name: "Install Python Dependencies"
-        run: "python -u -m pip install --upgrade pip && pip install xmlschema==1.6.4"
+        run: "python -u -m pip install --upgrade pip && pip install xmlschema"
 
       - name: "Validate .assembly.xml"
         run: "python -u -c 'import xmlschema; xmlschema.XMLSchema(\"schemas/assembly-2.1.0.xsd\").validate(\".assembly.xml\")'"
@@ -121,7 +121,7 @@ jobs:
   #     - name: "Set up Python"
   #       uses: "actions/setup-python@v5"
   #       with:
-  #         python-version: "3.10"
+  #         python-version: "3.13"
 
   #     - name: "Create Completion Lists"
   #       run: "python -u tools/createCompletionLists.py"
@@ -157,10 +157,10 @@ jobs:
       - name: "Set up Python"
         uses: "actions/setup-python@v5"
         with:
-          python-version: "3.10"
+          python-version: "3.13"
 
       - name: "Install Python Dependencies"
-        run: "python -u -m pip install --upgrade pip && pip install semver==2.13.0"
+        run: "python -u -m pip install --upgrade pip && pip install semver"
 
       - name: "Set LTEX_LS_VERSION"
         run: "echo \"LTEX_LS_VERSION=$(python -u -c \"import re; print(re.search(r'<version>(.*?)</version>', open('pom.xml', 'r').read()).group(1), end='')\")\" >> $GITHUB_ENV"

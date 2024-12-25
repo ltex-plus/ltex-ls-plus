@@ -43,10 +43,10 @@ jobs:
       - name: "Set up Python"
         uses: "actions/setup-python@v5"
         with:
-          python-version: "3.10"
+          python-version: "3.13"
 
       - name: "Install Python Dependencies"
-        run: "python -u -m pip install --upgrade pip && pip install semver==2.13.0"
+        run: "python -u -m pip install --upgrade pip && pip install semver"
 
       - name: "Set LTEX_LS_VERSION"
         run: "echo \"LTEX_LS_VERSION=$(python -u -c \"import datetime; import re; print('{}.nightly.{}'.format(re.search(r'<version>(.*?)(?:\\\\.develop)?</version>', open('pom.xml', 'r').read()).group(1), datetime.datetime.today().strftime('%Y-%m-%d')), end='')\")\" >> $GITHUB_ENV"
