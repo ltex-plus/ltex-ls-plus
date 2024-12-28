@@ -19,7 +19,7 @@ import zipfile
 import os
 import stat
 
-javaVersion = "21.0.4+7"
+javaVersion = "21.0.5+11"
 
 
 
@@ -97,12 +97,6 @@ def downloadJava(tmpDirPath: pathlib.Path, ltexLsDirPath: pathlib.Path,
   javaUrl = ("https://github.com/adoptium/temurin21-binaries/releases/download/"
       f"jdk-{urllib.parse.quote_plus(javaVersion)}/{javaArchiveName}")
   relativeJavaDirPathString = f"jdk-{javaVersion}"
-
-  # See https://github.com/adoptium/adoptium-support/issues/616
-  if platform == "windows" and arch == "aarch64":
-    print("Temurin JDK for Windows on ARM is currently available as beta version only.")    
-    relativeJavaDirPathString = "jdk-21.0.5+9"
-    javaUrl = "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B9-ea-beta/OpenJDK21U-jdk_aarch64_windows_hotspot_21.0.5_9-ea.zip"
 
   javaArchivePath = ltexLsDirPath.joinpath(javaArchiveName)
   print(f"Downloading JDK from '{javaUrl}' to '{javaArchivePath}'...")
