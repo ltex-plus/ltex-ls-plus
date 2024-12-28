@@ -8,7 +8,8 @@
 
 # Acknowledgments
 
-The first version of LT<sub>E</sub>X Language Server was written by [Adam Voss](https://github.com/adamvoss/languagetool-languageserver) under the name `languagetool-languageserver`.
+The first version of LT<sub>E</sub>X+ Language Server was written by [Adam Voss](https://github.com/adamvoss/languagetool-languageserver) under the name `languagetool-languageserver`.
+Until version 16.0.0, LT<sub>E</sub>X+ was developed as LT<sub>E</sub>X by [Julian Valentin](https://github.com/valentjn/ltex-ls).
 
 LT<sub>E</sub>X Language Server uses third-party libraries or other resources that may be distributed under licenses different from itself.
 

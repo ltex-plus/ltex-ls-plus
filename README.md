@@ -14,7 +14,7 @@ Typically, you start the language server (either locally or remotely), you send 
 
 However, it is also possible to supply LT<sub>E</sub>X+ LS paths to files and directories to be checked as command-line arguments. In this mode, LT<sub>E</sub>X+ LS will print the results to standard output, and no language client is necessary.
 
-The reference language client of LT<sub>E</sub>X+ LS is the [LT<sub>E</sub>X extension for Visual Studio Code (vscode-ltex)](https://ltex-plus.github.io/ltex-plus/), whose development LT<sub>E</sub>X+ LS follows closely and vice versa.
+The reference language client of LT<sub>E</sub>X+ LS is the [LT<sub>E</sub>X+ extension for Visual Studio Code (vscode-ltex-plus)](https://ltex-plus.github.io/ltex-plus/), whose development LT<sub>E</sub>X+ LS follows closely and vice versa.
 
 Find more information (how to install, how to use, etc.) at the [website of LT<sub>E</sub>X](https://ltex-plus.github.io/ltex-plus/).
 
