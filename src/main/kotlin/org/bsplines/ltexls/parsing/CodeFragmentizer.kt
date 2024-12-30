@@ -71,6 +71,7 @@ abstract class CodeFragmentizer(
         "rmd",
         -> MarkdownFragmentizer(codeLanguageId)
         "nop" -> NopFragmentizer(codeLanguageId)
+        "neorg" -> OrgFragmentizer(codeLanguageId)
         "org" -> OrgFragmentizer(codeLanguageId)
         "plaintext" -> PlaintextFragmentizer(codeLanguageId)
         "restructuredtext" -> RestructuredtextFragmentizer(codeLanguageId)

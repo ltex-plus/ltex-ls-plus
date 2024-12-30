@@ -141,7 +141,11 @@ abstract class CodeAnnotatedTextBuilder(
         -> MarkdownAnnotatedTextBuilder(codeLanguageId)
 
         "nop" -> NopAnnotatedTextBuilder(codeLanguageId)
-        "org" -> OrgAnnotatedTextBuilder(codeLanguageId)
+
+        "org",
+        "neorg",
+        -> OrgAnnotatedTextBuilder(codeLanguageId)
+
         "plaintext" -> PlaintextAnnotatedTextBuilder(codeLanguageId)
         "restructuredtext" -> RestructuredtextAnnotatedTextBuilder(codeLanguageId)
         "typst" -> TypstAnnotatedTextBuilder(codeLanguageId)

@@ -180,6 +180,7 @@ data class Settings(
         "html",
         "markdown",
         "mdx",
+        "neorg",
         "org",
         "quarto",
         "rmd",

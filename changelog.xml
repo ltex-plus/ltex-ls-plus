@@ -16,6 +16,9 @@
       <action type="update">
         Update bundled Java runtime from 21.0.4+7 to 21.0.5+11. No separate beta Java runtime build is required anymore for Windows aarch64.
       </action>
+      <action type="add" issue="#55">
+        Add support for Neorg (LSP language ID `neorg`)
+      </action>
     </release>
     <release version="18.4.0" date="2024-12-23">
       <action type="add" issue="valentjn/ltex-ls#268" due-to="Benoît Pasquier">

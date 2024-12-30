@@ -133,6 +133,8 @@ object FileIo {
       "matlab"
     } else if (fileName.endsWith(".mdx")) {
       "mdx"
+    } else if (fileName.endsWith(".norg")) {
+      "neorg"
     } else if (fileName.endsWith(".org")) {
       "org"
     } else if (fileName.endsWith(".pl")) {
