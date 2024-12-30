@@ -129,6 +129,7 @@ class MarkdownFragmentizerTest {
 
     assertFragmentizer("quarto", markdownSample)
     assertFragmentizer("rmd", markdownSample)
+    assertFragmentizer("mdx", markdownSample)
   }
 
   @Test
