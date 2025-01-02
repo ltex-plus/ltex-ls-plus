@@ -68,6 +68,8 @@ jobs:
 
       - name: "Delete Old Nightly Releases"
         run: "gh release delete nightly -y"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "Update Nightly Tag"
         run: "git tag -f nightly && git push -f origin nightly"
