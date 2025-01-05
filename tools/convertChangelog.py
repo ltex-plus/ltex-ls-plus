@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
-# Copyright (C) 2019-2023 Julian Valentin, LTeX Development Community
+# Copyright (C) 2019-2025
+# Julian Valentin, Daniel Spitzer, LTeX+ Development Community
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -51,7 +52,8 @@ def convertChangelogFromXmlToMarkdown(xmlFilePath: pathlib.Path,
 
   if version is None:
     markdown = """<!--
-   - Copyright (C) 2019-2023 Julian Valentin, LTeX Development Community
+   - Copyright (C) 2019-2025
+   - Julian Valentin, Daniel Spitzer, LTeX+ Development Community
    -
    - This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -221,7 +223,8 @@ def convertChangelogFromMarkdownToXml(markdownFilePath: pathlib.Path,
   xmlStr = re.sub(r"^<\?xml version=\"1.0\" \?>\n",
       ("""<?xml version="1.0" encoding="UTF-8"?>
 <!--
-   - Copyright (C) 2019-2023 Julian Valentin, LTeX Development Community
+   - Copyright (C) 2019-2025
+   - Julian Valentin, Daniel Spitzer, LTeX+ Development Community
    -
    - This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
