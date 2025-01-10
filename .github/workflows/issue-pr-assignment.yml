@@ -17,10 +17,21 @@ jobs:
     auto-assign:
         runs-on: ubuntu-latest
         permissions:
+            contents: read
             issues: write
             pull-requests: write
         steps:
-            - name: Auto-assign issue and pull request
-              uses: pozil/auto-assign-issue@v2
-              with:
-                  assignees: spitzerd
+            - name: "Checkout Repository"
+              uses: "actions/checkout@v4"
+
+            - name: Auto-assign issue
+              if: "${{ github.event_name  == 'issues' }}"
+              run: gh issue edit ${{ github.event.issue.number }} --add-assignee spitzerd
+              env:
+                GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Auto-assign pull request
+              if: "${{ github.event_name  == 'pull_request' }}"
+              run: gh pr edit ${{ github.event.pull_request.number }} --add-assignee spitzerd
+              env:
+                GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
