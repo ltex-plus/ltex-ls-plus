@@ -19,6 +19,10 @@ The reference language client of LT<sub>E</sub>X+ LS is the [LT<sub>E</sub>X+ ex
 
 Find more information (how to install, how to use, etc.) at the [website of LT<sub>E</sub>X](https://ltex-plus.github.io/ltex-plus/).
 
+Until version 16.0.0, Julian Valentin developed LT<sub>E</sub>X+ LS as [LT<sub>E</sub>X LS](https://github.com/valentjn/ltex-ls). 
+LT<sub>E</sub>X LS is a fork of the abandoned [languagetool-languageserver](https://github.com/adamvoss/languagetool-languageserver) by Adam Voss<sup>†</sup>.
+This language server would not have been possible without the work of Adam Voss<sup>†</sup> and Julian Valentin.
+
 ## Features
 
 - **Supported markup languages:** BibT<sub>E</sub>X, ConT<sub>E</sub>Xt, Git commit messages, L<sup>A</sup>T<sub>E</sub>X, Markdown, MDX, Typst, Org, Neorg, Quarto, reStructuredText, R Markdown, R Sweave, XHTML
