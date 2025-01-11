@@ -175,7 +175,7 @@ def downloadJava(tmpDirPath: pathlib.Path, ltexLsDirPath: pathlib.Path,
   print("Creating Java distribution...")
   subprocess.run(["jlink", "--module-path", str(jmodsDirPath),
       "--add-modules", ",".join(javaModules), "--strip-debug", "--no-man-pages",
-      "--no-header-files", "--compress=2", "--output", str(javaTargetDirPath)])
+      "--no-header-files", "--compress=zip-6", "--output", str(javaTargetDirPath)])
   assert javaTargetDirPath.is_dir()
 
   print("Removing JDK directory...")
