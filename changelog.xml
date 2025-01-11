@@ -15,6 +15,9 @@
   <body>
     <release version="18.5.0" date="upcoming">
       <action type="update">
+        Update to lsp-cli-plus 2.1.0. See [lsp-cli-plus release notes](https://github.com/ltex-plus/lsp-cli-plus/releases/tag/2.1.0).
+      </action>
+      <action type="update">
         Update bundled Java runtime from 21.0.4+7 to 21.0.5+11. No separate beta Java runtime build is required anymore for Windows aarch64.
       </action>
       <action type="add" issue="#55">

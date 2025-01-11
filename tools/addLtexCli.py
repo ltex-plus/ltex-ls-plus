@@ -14,7 +14,7 @@ import tarfile
 import tempfile
 import urllib.request
 
-lspCliVersion = "2.0.0"
+lspCliVersion = "2.1.0"
 
 
 
@@ -56,7 +56,7 @@ def main() -> None:
 {
   "programName": "ltex-cli-plus",
   "helpMessage": {
-    "description": "LTeX CLI - Command-line interface for LTeX LS",
+    "description": "LTeX+ CLI - Command-line interface for LTeX+ LS",
     "visibleArguments": [
       "--client-configuration",
       "--verbose"
