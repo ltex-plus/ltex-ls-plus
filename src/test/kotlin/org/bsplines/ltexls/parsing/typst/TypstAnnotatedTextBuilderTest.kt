@@ -29,11 +29,25 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
   fun testHeadings() {
     assertPlainText(
       """
-      == Heading in Typst
+      = Heading in Typst
       More text
-
+      == A question heading? Is it a problem?
+      Even more text
+      === That is a bold statement!
+      More text to read
+      === A heading with a dot.
+      More text
       """.trimIndent(),
-      "Heading in Typst\nMore text\n",
+      """
+      Heading in Typst.
+      More text
+      A question heading? Is it a problem?
+      Even more text
+      That is a bold statement!
+      More text to read
+      A heading with a dot.
+      More text
+      """.trimIndent(),
     )
   }
 
@@ -146,10 +160,13 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       #show: resume.with(
         author: name,
       )
-      More text
+      More text.
+      #show link: underline
+      #show link: set text(rgb(0, 0, 255))
+      More text.
 
       """.trimIndent(),
-      "\nMore text\n",
+      "\nMore text.\n\n\nMore text.\n",
     )
   }
 
@@ -183,14 +200,24 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
   }
 
   @Test
+  fun testCite() {
+    assertPlainText(
+      """
+      The sky is blue.#cite(label("DBLP:books/lib/Hoff2020")) More text.
+      """.trimIndent(),
+      "The sky is blue. More text.",
+    )
+  }
+
+  @Test
   fun testLabel() {
     assertPlainText(
       """
       This is a @link to a label.
-      = Heading 1 <link>
+      = Heading 1<link>
       More text.
       """.trimIndent(),
-      "This is a Dummy0 to a label.\nHeading 1 \nMore text.",
+      "This is a Dummy0 to a label.\nHeading 1.\nMore text.",
     )
   }
 }

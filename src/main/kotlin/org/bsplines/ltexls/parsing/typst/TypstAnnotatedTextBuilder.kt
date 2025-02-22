@@ -20,28 +20,31 @@ class TypstAnnotatedTextBuilder(
   private var codeModeString = false
   private var codeModeBracketsCounter = 0
   private var codeModeStringCounter = 0
+  private var headingMode = false
 
   override fun processCharacter() {
     processEscapeCharacter()
     addMarkupInternal(NO_TEXT_INLINE_MATH_REGEX, "", true)
     processMathBlock()
     processCodeMode()
+    processHeading()
 
     if (this.isStartOfLine) {
       addMarkupInternal(LIST_REGEX)
       addMarkupInternal(LEADING_WHITESPACE_REGEX)
-      addMarkupInternal(HEADING_REGEX)
     }
 
     addMarkupInternal(LET_CURLY_BRACKETS_REGEX)
     addMarkupInternal(LET_CODE_REGEX, "", false, true)
     addMarkupInternal(LET_REGEX)
+    addMarkupInternal(CITE_REGEX)
     addMarkupInternal(CODE_REGEX, "", false, true)
     addMarkupInternal(CODE_SQUARE_BRACKETS_REGEX, "", true)
     addMarkupInternal(LINE_COMMENT_REGEX, "\n")
     addMarkupInternal(MULTILINELINE_COMMENT_REGEX, "\n")
     addMarkupInternal(MARKUP_REGEX)
     addMarkupInternal(IMPORT_REGEX, "\n")
+    addMarkupInternal(SHOW_REGEX, "\n")
     addMarkupInternal(LABEL_REGEX, " ", true)
     addMarkupInternal(LABEL_REF_REGEX)
     addMarkupInternal(VARIABLE_REGEX, "", true)
@@ -152,20 +155,42 @@ class TypstAnnotatedTextBuilder(
     }
   }
 
+  private fun processHeading() {
+    if (this.isStartOfLine && matchFromPosition(HEADING_REGEX) != null) {
+      addMarkupInternal(HEADING_REGEX)
+      headingMode = true
+    }
+    if (headingMode) {
+      if (matchFromPosition(HEADING_END_REGEX) != null) {
+        if (this.curString == "?") {
+          addMarkupInternal(HEADING_END_REGEX, "?\n")
+        } else if (curString == "!") {
+          addMarkupInternal(HEADING_END_REGEX, "!\n")
+        } else {
+          addMarkupInternal(HEADING_END_REGEX, ".\n")
+        }
+        headingMode = false
+      }
+    }
+  }
+
   companion object {
     private val NO_TEXT_INLINE_MATH_REGEX = Regex("^\\$[^\"$\n]*\\$")
     private val LIST_REGEX = Regex("^\\s*[+|\\-|\\/]\\s")
     private val LEADING_WHITESPACE_REGEX = Regex("^\\s*")
     private val HEADING_REGEX = Regex("^=+\\s")
+    private val HEADING_END_REGEX = Regex("^\\.?\\??\\!?\r?\n")
     private val LET_CURLY_BRACKETS_REGEX = Regex("^#let.*=\\s*\\{(.|\r?\n)*?\\}")
     private val LET_CODE_REGEX = Regex("^#let.*?=\\s*?\\w*?\\(")
     private val LET_REGEX = Regex("^#let.*=\\s*")
-    private val CODE_REGEX = Regex("^#.*\\(")
+    private val CITE_REGEX = Regex("^#cite\\(\\S+\\)")
+    private val CODE_REGEX = Regex("^#.*?\\(")
     private val CODE_SQUARE_BRACKETS_REGEX = Regex("^#.*\\[(.|\r?\n)*?\\]")
     private val LINE_COMMENT_REGEX = Regex("^\\/\\/.*(\r?\n|$)")
     private val MULTILINELINE_COMMENT_REGEX = Regex("^\\/\\*(.|\r?\n)*?\\*\\/")
     private val MARKUP_REGEX = Regex("^(\\*|\\_)")
     private val IMPORT_REGEX = Regex("^(#import|#include).*\r?\n")
+    private val SHOW_REGEX = Regex("^#show.*\r?\n")
     private val LABEL_REGEX = Regex("^\\s@[^\\s]*")
     private val LABEL_REF_REGEX = Regex("^<[^\\s]*>")
     private val VARIABLE_REGEX = Regex("^#\\S+")

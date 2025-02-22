@@ -23,6 +23,9 @@
       <action type="add" issue="#55">
         Add support for Neorg (LSP language ID `neorg`)
       </action>
+      <action type="fix" issue="#72">
+        Fix false positives in Typst
+      </action>
     </release>
     <release version="18.4.0" date="2024-12-23">
       <action type="add" issue="valentjn/ltex-ls#268" due-to="Benoît Pasquier">
