@@ -176,6 +176,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       """
       Text
       #work(
+        font: "New Computer Modern",
         title: "Paper12",
       )
       Some text is #text("bold", weight: 800).

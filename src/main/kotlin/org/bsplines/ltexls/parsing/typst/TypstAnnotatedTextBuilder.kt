@@ -149,6 +149,7 @@ class TypstAnnotatedTextBuilder(
           // String within code mode to be spell checked
           addText(this.curString)
         } else {
+          addMarkupInternal(SPELLCHECK_EXCLUDED_PROPERTY_REGEX)
           addMarkup(this.curString)
         }
       }
@@ -195,5 +196,9 @@ class TypstAnnotatedTextBuilder(
     private val LABEL_REF_REGEX = Regex("^<[^\\s]*>")
     private val VARIABLE_REGEX = Regex("^#\\S+")
     private val FILENAME_REGEX = Regex("^.+\\.\\w{1,4}")
+    private val SPELLCHECK_EXCLUDED_PROPERTY_REGEX =
+      Regex(
+        "^(font|style|weight|top-edge|bottom-edge|lang|region|script|number-type|number-width)\\s?:\\s?\".*?\"",
+      )
   }
 }
