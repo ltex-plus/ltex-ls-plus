@@ -44,7 +44,7 @@
     <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
     <main.class>org.bsplines.ltexls.LtexLanguageServerLauncher</main.class>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <junit.jupiter.version>5.11.4</junit.jupiter.version>
+    <junit.jupiter.version>5.12.0</junit.jupiter.version>
     <languagetool.version>6.5</languagetool.version>
   </properties>
   <dependencies>
@@ -166,7 +166,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.13.0</version>
+        <version>3.14.0</version>
         <configuration>
           <source>${java.version}</source>
           <target>${java.version}</target>
