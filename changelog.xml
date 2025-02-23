@@ -23,6 +23,9 @@
       <action type="add" issue="#55">
         Add support for Neorg (LSP language ID `neorg`)
       </action>
+      <action type="add" issue="#69">
+        Add support for \NewDoumentCommand, \NewDocumentEnvironment, \NewExpandableDocumentCommand, \NewCommandCopy, \NewEnvironmentCopy, \IfNoValueTF, \IfValueTF, \IfBlankTF, \IfBooleanTF and many more (LaTeX)
+      </action>
       <action type="fix" issue="#72">
         Fix false positives in Typst
       </action>
