@@ -37,6 +37,9 @@ class TypstAnnotatedTextBuilder(
     addMarkupInternal(LET_CURLY_BRACKETS_REGEX)
     addMarkupInternal(LET_CODE_REGEX, "", false, true)
     addMarkupInternal(LET_REGEX)
+    addMarkupInternal(RAW_CODE_REGEX_1, "", true)
+    addMarkupInternal(RAW_CODE_REGEX_2, "", true)
+    addMarkupInternal(RAW_CODE_REGEX_3, "", true)
     addMarkupInternal(CITE_REGEX)
     addMarkupInternal(CODE_REGEX, "", false, true)
     addMarkupInternal(CODE_SQUARE_BRACKETS_REGEX, "", true)
@@ -149,7 +152,7 @@ class TypstAnnotatedTextBuilder(
           // String within code mode to be spell checked
           addText(this.curString)
         } else {
-          addMarkupInternal(SPELLCHECK_EXCLUDED_PROPERTY_REGEX)
+          addMarkupInternal(PROPERTY_REGEX)
           addMarkup(this.curString)
         }
       }
@@ -184,6 +187,9 @@ class TypstAnnotatedTextBuilder(
     private val LET_CURLY_BRACKETS_REGEX = Regex("^#let.*=\\s*\\{(.|\r?\n)*?\\}")
     private val LET_CODE_REGEX = Regex("^#let.*?=\\s*?\\w*?\\(")
     private val LET_REGEX = Regex("^#let.*=\\s*")
+    private val RAW_CODE_REGEX_1 = Regex("^`{3,}(.|\r?\n)*?`{3,}")
+    private val RAW_CODE_REGEX_2 = Regex("^`(.|\r?\n)*?`")
+    private val RAW_CODE_REGEX_3 = Regex("^#raw\\((.|\r?\n)*?[^\\\\]\"\\)")
     private val CITE_REGEX = Regex("^#cite\\(\\S+\\)")
     private val CODE_REGEX = Regex("^#.*?\\(")
     private val CODE_SQUARE_BRACKETS_REGEX = Regex("^#.*\\[(.|\r?\n)*?\\]")
@@ -196,7 +202,7 @@ class TypstAnnotatedTextBuilder(
     private val LABEL_REF_REGEX = Regex("^<[^\\s]*>")
     private val VARIABLE_REGEX = Regex("^#\\S+")
     private val FILENAME_REGEX = Regex("^.+\\.\\w{1,4}")
-    private val SPELLCHECK_EXCLUDED_PROPERTY_REGEX =
+    private val PROPERTY_REGEX =
       Regex(
         "^(font|style|weight|top-edge|bottom-edge|lang|region|script|number-type|number-width)\\s?:\\s?\".*?\"",
       )

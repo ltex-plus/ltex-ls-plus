@@ -81,6 +81,32 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
   }
 
   @Test
+  fun testRawCode() {
+    assertPlainText(
+      """
+      Raw code should not be `spell checked`.
+      ```php
+      function main() {
+          echo("Hello World!");
+      }
+      ```
+      You can do the same with the raw element.
+      #raw("function main() {echo(\"Hello World!\");}", lang: "php")
+      Single `backticks` work, too.
+      More text after the code block.
+      """.trimIndent(),
+      """
+      Raw code should not be Dummy0.
+      Dummy1
+      You can do the same with the raw element.
+      Dummy2
+      Single Dummy3 work, too.
+      More text after the code block.
+      """.trimIndent(),
+    )
+  }
+
+  @Test
   fun testMarkup() {
     assertPlainText(
       """      
