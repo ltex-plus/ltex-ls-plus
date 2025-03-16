@@ -25,7 +25,7 @@ This language server would not have been possible without the work of Adam Voss<
 
 ## Features
 
-- **Supported markup languages:** BibT<sub>E</sub>X, ConT<sub>E</sub>Xt, Git commit messages, L<sup>A</sup>T<sub>E</sub>X, Markdown, MDX, Typst, Org, Neorg, Quarto, reStructuredText, R Markdown, R Sweave, XHTML
+- **Supported markup languages:** BibT<sub>E</sub>X, ConT<sub>E</sub>Xt, Git commit messages, L<sup>A</sup>T<sub>E</sub>X, Markdown, MDX, Typst, AsciiDoc, Org, Neorg, Quarto, reStructuredText, R Markdown, R Sweave, XHTML
 - Comment checking in **many popular programming languages** (optional, opt-in)
 - Comes with **everything included,** no need to install Java or LanguageTool
 - **Offline checking:** Does not upload anything to the internet

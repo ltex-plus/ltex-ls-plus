@@ -188,6 +188,7 @@ data class Settings(
         "restructuredtext",
         "rsweave",
         "typst",
+        "asciidoc",
       )
     private const val DEFAULT_SENTENCE_CACHE_SIZE = 2000L
     private val DEFAULT_DIAGNOSTIC_SEVERITY: Map<String, DiagnosticSeverity> =

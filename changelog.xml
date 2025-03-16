@@ -26,6 +26,9 @@
       <action type="add" issue="#69">
         Add support for \NewDoumentCommand, \NewDocumentEnvironment, \NewExpandableDocumentCommand, \NewCommandCopy, \NewEnvironmentCopy, \IfNoValueTF, \IfValueTF, \IfBlankTF, \IfBooleanTF and many more (LaTeX)
       </action>
+      <action type="add" issue="ltex-plus/vscode-ltex-plus#128">
+        Add support for AsciiDoc (LSP language IDs `asciidoc`)
+      </action>
       <action type="fix" issue="#72">
         Fix false positives in Typst
       </action>

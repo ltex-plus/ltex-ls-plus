@@ -8,6 +8,7 @@
 
 package org.bsplines.ltexls.parsing
 
+import org.bsplines.ltexls.parsing.asciidoc.AsciiDocFragmentizer
 import org.bsplines.ltexls.parsing.bibtex.BibtexFragmentizer
 import org.bsplines.ltexls.parsing.gitcommit.GitCommitFragmentizer
 import org.bsplines.ltexls.parsing.html.HtmlFragmentizer
@@ -50,6 +51,7 @@ abstract class CodeFragmentizer(
     @Suppress("ComplexMethod")
     fun create(codeLanguageId: String): CodeFragmentizer =
       when (codeLanguageId) {
+        "asciidoc" -> AsciiDocFragmentizer(codeLanguageId)
         "bib",
         "bibtex",
         -> BibtexFragmentizer(codeLanguageId)

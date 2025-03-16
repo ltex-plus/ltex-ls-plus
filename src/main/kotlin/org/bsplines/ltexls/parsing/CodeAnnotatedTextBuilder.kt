@@ -8,6 +8,7 @@
 
 package org.bsplines.ltexls.parsing
 
+import org.bsplines.ltexls.parsing.asciidoc.AsciiDocAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.gitcommit.GitCommitAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.html.HtmlAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.latex.LatexAnnotatedTextBuilder
@@ -150,6 +151,7 @@ abstract class CodeAnnotatedTextBuilder(
         "plaintext" -> PlaintextAnnotatedTextBuilder(codeLanguageId)
         "restructuredtext" -> RestructuredtextAnnotatedTextBuilder(codeLanguageId)
         "typst" -> TypstAnnotatedTextBuilder(codeLanguageId)
+        "asciidoc" -> AsciiDocAnnotatedTextBuilder(codeLanguageId)
         else -> {
           if (ProgramCommentRegexs.isSupportedCodeLanguageId(codeLanguageId)) {
             ProgramAnnotatedTextBuilder(codeLanguageId)

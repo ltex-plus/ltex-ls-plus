@@ -67,7 +67,12 @@ object FileIo {
   fun getCodeLanguageIdFromPath(path: Path): String? {
     val fileName: String = path.fileName.toString()
 
-    return if (fileName.endsWith(".bib")) {
+    return if (
+      fileName.endsWith(".adoc") ||
+      fileName.endsWith(".asciidoc")
+    ) {
+      "asciidoc"
+    } else if (fileName.endsWith(".bib")) {
       "bibtex"
     } else if (
       fileName.endsWith(".c") ||
