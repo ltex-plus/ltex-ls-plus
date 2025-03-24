@@ -21,6 +21,12 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
   protected var curString = ""
   protected var isStartOfLine = false
   protected var characterProcessed = false
+  protected var codeMode = false
+  protected var codeModeString = false
+  protected var codeModeBracketsCounter = 0
+  protected var codeModeStringCounter = 0
+  protected var headingMode = false
+  protected var headingSubsequentMarkup = false
 
   protected var dummyGenerator = DummyGenerator.getInstance()
   protected var dummyCounter = 0
@@ -69,6 +75,29 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
     return this
   }
 
+  protected fun addMarkup(
+    regex: Regex,
+    interpretAs: String = "",
+    generateDummy: Boolean = false,
+    startofCodeBlock: Boolean = false,
+  ) {
+    if (characterProcessed) return
+    var matchResult: MatchResult?
+    var interpretAsString = interpretAs
+    matchResult = matchFromPosition(regex)
+    if (matchResult != null) {
+      if (generateDummy) {
+        interpretAsString += generateDummy()
+      }
+      addMarkup(matchResult.value, interpretAsString)
+      if (startofCodeBlock) {
+        codeModeBracketsCounter++
+        codeModeStringCounter = 0
+        codeMode = true
+      }
+    }
+  }
+
   override fun addCode(code: String): CharacterBasedCodeAnnotatedTextBuilder {
     this.pos = this.code.length
     this.code += code
@@ -98,6 +127,26 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
     return this
   }
 
+  protected fun processHeading() {
+    if (this.isStartOfLine && matchFromPosition(HEADING_REGEX) != null) {
+      addMarkup(HEADING_REGEX)
+      headingMode = true
+    }
+    if (headingMode) {
+      if (matchFromPosition(HEADING_END_REGEX) != null) {
+        if (this.curString == "?") {
+          addMarkup(HEADING_END_REGEX, "?\n")
+        } else if (curString == "!") {
+          addMarkup(HEADING_END_REGEX, "!\n")
+        } else {
+          addMarkup(HEADING_END_REGEX, ".\n")
+        }
+        headingMode = false
+        headingSubsequentMarkup = true
+      }
+    }
+  }
+
   protected abstract fun processCharacter()
 
   protected fun matchFromPosition(
@@ -110,4 +159,9 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
 
   protected open fun generateDummy(): String =
     this.dummyGenerator.generate(this.language, this.dummyCounter++)
+
+  companion object {
+    private val HEADING_REGEX = Regex("^=+\\s")
+    private val HEADING_END_REGEX = Regex("^\\.?\\??\\!?\r?\n")
+  }
 }

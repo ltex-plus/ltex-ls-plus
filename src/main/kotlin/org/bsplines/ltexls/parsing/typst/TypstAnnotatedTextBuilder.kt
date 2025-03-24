@@ -16,41 +16,36 @@ class TypstAnnotatedTextBuilder(
   private var mathMode = false
   private var mathModeString = false
   private var mathModeStringCounter = 0
-  private var codeMode = false
-  private var codeModeString = false
-  private var codeModeBracketsCounter = 0
-  private var codeModeStringCounter = 0
-  private var headingMode = false
 
   override fun processCharacter() {
     processEscapeCharacter()
-    addMarkupInternal(NO_TEXT_INLINE_MATH_REGEX, "", true)
+    addMarkup(NO_TEXT_INLINE_MATH_REGEX, "", true)
     processMathBlock()
     processCodeMode()
     processHeading()
 
     if (this.isStartOfLine) {
-      addMarkupInternal(LIST_REGEX)
-      addMarkupInternal(LEADING_WHITESPACE_REGEX)
+      addMarkup(LIST_REGEX)
+      addMarkup(LEADING_WHITESPACE_REGEX)
     }
 
-    addMarkupInternal(LET_CURLY_BRACKETS_REGEX)
-    addMarkupInternal(LET_CODE_REGEX, "", false, true)
-    addMarkupInternal(LET_REGEX)
-    addMarkupInternal(RAW_CODE_REGEX_1, "", true)
-    addMarkupInternal(RAW_CODE_REGEX_2, "", true)
-    addMarkupInternal(RAW_CODE_REGEX_3, "", true)
-    addMarkupInternal(CITE_REGEX)
-    addMarkupInternal(CODE_REGEX, "", false, true)
-    addMarkupInternal(CODE_SQUARE_BRACKETS_REGEX, "", true)
-    addMarkupInternal(LINE_COMMENT_REGEX, "\n")
-    addMarkupInternal(MULTILINELINE_COMMENT_REGEX, "\n")
-    addMarkupInternal(MARKUP_REGEX)
-    addMarkupInternal(IMPORT_REGEX, "\n")
-    addMarkupInternal(SHOW_REGEX, "\n")
-    addMarkupInternal(LABEL_REGEX, " ", true)
-    addMarkupInternal(LABEL_REF_REGEX)
-    addMarkupInternal(VARIABLE_REGEX, "", true)
+    addMarkup(LET_CURLY_BRACKETS_REGEX)
+    addMarkup(LET_CODE_REGEX, "", false, true)
+    addMarkup(LET_REGEX)
+    addMarkup(RAW_CODE_REGEX_1, "", true)
+    addMarkup(RAW_CODE_REGEX_2, "", true)
+    addMarkup(RAW_CODE_REGEX_3, "", true)
+    addMarkup(CITE_REGEX)
+    addMarkup(CODE_REGEX, "", false, true)
+    addMarkup(CODE_SQUARE_BRACKETS_REGEX, "", true)
+    addMarkup(LINE_COMMENT_REGEX, "\n")
+    addMarkup(MULTILINELINE_COMMENT_REGEX, "\n")
+    addMarkup(MARKUP_REGEX)
+    addMarkup(IMPORT_REGEX, "\n")
+    addMarkup(SHOW_REGEX, "\n")
+    addMarkup(LABEL_REGEX, " ", true)
+    addMarkup(LABEL_REF_REGEX)
+    addMarkup(VARIABLE_REGEX, "", true)
 
     addText(this.curString)
   }
@@ -58,29 +53,6 @@ class TypstAnnotatedTextBuilder(
   override fun addText(text: String?): CharacterBasedCodeAnnotatedTextBuilder {
     if (characterProcessed) return this
     return super.addText(text)
-  }
-
-  private fun addMarkupInternal(
-    regex: Regex,
-    interpretAs: String = "",
-    generateDummy: Boolean = false,
-    startofCodeBlock: Boolean = false,
-  ) {
-    if (characterProcessed) return
-    var matchResult: MatchResult?
-    var interpretAsString = interpretAs
-    matchResult = matchFromPosition(regex)
-    if (matchResult != null) {
-      if (generateDummy) {
-        interpretAsString += generateDummy()
-      }
-      addMarkup(matchResult.value, interpretAsString)
-      if (startofCodeBlock) {
-        codeModeBracketsCounter++
-        codeModeStringCounter = 0
-        codeMode = true
-      }
-    }
   }
 
   private fun processEscapeCharacter() {
@@ -148,32 +120,13 @@ class TypstAnnotatedTextBuilder(
         codeModeStringCounter++
       } else -> {
         if (codeModeString) {
-          addMarkupInternal(FILENAME_REGEX, generateDummy())
+          addMarkup(FILENAME_REGEX, generateDummy())
           // String within code mode to be spell checked
           addText(this.curString)
         } else {
-          addMarkupInternal(PROPERTY_REGEX)
+          addMarkup(PROPERTY_REGEX)
           addMarkup(this.curString)
         }
-      }
-    }
-  }
-
-  private fun processHeading() {
-    if (this.isStartOfLine && matchFromPosition(HEADING_REGEX) != null) {
-      addMarkupInternal(HEADING_REGEX)
-      headingMode = true
-    }
-    if (headingMode) {
-      if (matchFromPosition(HEADING_END_REGEX) != null) {
-        if (this.curString == "?") {
-          addMarkupInternal(HEADING_END_REGEX, "?\n")
-        } else if (curString == "!") {
-          addMarkupInternal(HEADING_END_REGEX, "!\n")
-        } else {
-          addMarkupInternal(HEADING_END_REGEX, ".\n")
-        }
-        headingMode = false
       }
     }
   }
@@ -182,8 +135,6 @@ class TypstAnnotatedTextBuilder(
     private val NO_TEXT_INLINE_MATH_REGEX = Regex("^\\$[^\"$\n]*\\$")
     private val LIST_REGEX = Regex("^\\s*[+|\\-|\\/]\\s")
     private val LEADING_WHITESPACE_REGEX = Regex("^\\s*")
-    private val HEADING_REGEX = Regex("^=+\\s")
-    private val HEADING_END_REGEX = Regex("^\\.?\\??\\!?\r?\n")
     private val LET_CURLY_BRACKETS_REGEX = Regex("^#let.*=\\s*\\{(.|\r?\n)*?\\}")
     private val LET_CODE_REGEX = Regex("^#let.*?=\\s*?\\w*?\\(")
     private val LET_REGEX = Regex("^#let.*=\\s*")
