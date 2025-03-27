@@ -220,7 +220,7 @@ class AsciiDocAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("asciidoc"
       mailto:info@email.com[info email]
       More text
       """.trimIndent(),
-      "Dummy0\nDummy1\nDummy2\nDummy3\nMore text",
+      "Alt text\nA document\nGoogle search engine\ninfo email\nMore text",
     )
   }
 }

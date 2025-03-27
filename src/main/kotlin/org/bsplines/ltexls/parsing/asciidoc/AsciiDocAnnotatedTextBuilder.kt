@@ -23,6 +23,7 @@ class AsciiDocAnnotatedTextBuilder(
     }
     processEscapeCharacter()
     postProcessHeading()
+    processCodeMode()
     processHeading()
 
     if (this.isStartOfLine) {
@@ -37,10 +38,10 @@ class AsciiDocAnnotatedTextBuilder(
       addMarkup(TABLE_REGEX, "\n")
     }
 
-    addMarkup(IMAGE_REGEX, "", true)
-    addMarkup(LINK_REGEX, "", true)
-    addMarkup(HTTP_REGEX, "", true)
-    addMarkup(MAILTO_REGEX, "", true)
+    addMarkup(IMAGE_REGEX, "", false, true)
+    addMarkup(LINK_REGEX, "", false, true)
+    addMarkup(HTTP_REGEX, "", false, true)
+    addMarkup(MAILTO_REGEX, "", false, true)
     addMarkup(MARKUP_REGEX)
     addMarkup(FORCED_LINEBREAK_REGEX, "\n")
     addMarkup(CURLY_BRACKETS_REGEX, "", true)
@@ -96,6 +97,16 @@ class AsciiDocAnnotatedTextBuilder(
     }
   }
 
+  private fun processCodeMode() {
+    if (!codeMode || characterProcessed) return
+    if (this.curString == "]") {
+      addMarkup(this.curString)
+      codeMode = false
+    } else {
+      addText(this.curString)
+    }
+  }
+
   companion object {
     private val CODE_BLOCK_PLUS_REGEX = Regex("^\\+{3,}(.|\r?\n)*?\\+{3,}")
     private val LIST_REGEX = Regex("^\\s*?(\\.+|\\-|\\*+)\\s+")
@@ -107,10 +118,10 @@ class AsciiDocAnnotatedTextBuilder(
     private val LINE_COMMENT_REGEX = Regex("^\\/\\/.*?\r?\n")
     private val CODE_SQUARE_BRACKETS_REGEX = Regex("^\\[.*?\\]")
     private val TABLE_REGEX = Regex("^\\|={3,}(.|\r?\n)*?\\|={3,}")
-    private val IMAGE_REGEX = Regex("^image:.*?\\[(.|\r?\n)*?\\]")
-    private val LINK_REGEX = Regex("^link:.*?\\[(.|\r?\n)*?\\]")
-    private val HTTP_REGEX = Regex("^http.*?\\[(.|\r?\n)*?\\]")
-    private val MAILTO_REGEX = Regex("^mailto:.*?\\[(.|\r?\n)*?\\]")
+    private val IMAGE_REGEX = Regex("^image:.*?\\[")
+    private val LINK_REGEX = Regex("^link:.*?\\[")
+    private val HTTP_REGEX = Regex("^http.*?\\[")
+    private val MAILTO_REGEX = Regex("^mailto:.*?\\[")
     private val MARKUP_REGEX = Regex("^(\\*|\\_|\\^|~|:{2,}|;;)")
     private val FORCED_LINEBREAK_REGEX = Regex("^\\s\\+\\s*?\r?\n")
     private val CURLY_BRACKETS_REGEX = Regex("^\\{.*?\\}")
