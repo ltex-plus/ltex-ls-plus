@@ -36,6 +36,7 @@ class AsciiDocAnnotatedTextBuilder(
       addMarkup(LINE_COMMENT_REGEX, "\n")
       addMarkup(CODE_SQUARE_BRACKETS_REGEX)
       addMarkup(TABLE_REGEX, "\n")
+      addMarkup(TIP_IMP_WARN_CAUT_REGEX)
     }
 
     addMarkup(IMAGE_REGEX, "", false, true)
@@ -110,7 +111,7 @@ class AsciiDocAnnotatedTextBuilder(
   companion object {
     private val CODE_BLOCK_PLUS_REGEX = Regex("^\\+{3,}(.|\r?\n)*?\\+{3,}")
     private val LIST_REGEX = Regex("^\\s*?(\\.+|\\-|\\*+)\\s+")
-    private val LEADING_WHITESPACE_REGEX = Regex("^\\s")
+    private val LEADING_WHITESPACE_REGEX = Regex("^\\s*")
     private val DOT_REGEX = Regex("^\\.")
     private val CODE_BLOCK_REGEX = Regex("^\\[source.*?\\]\\s*?\r?\n[^\\-](.|\r?\n)*?\r?\n\r?\n")
     private val CODE_BLOCK_MINUS_REGEX = Regex("^-{3,}(.|\r?\n)*?-{3,}")
@@ -118,6 +119,7 @@ class AsciiDocAnnotatedTextBuilder(
     private val LINE_COMMENT_REGEX = Regex("^\\/\\/.*?\r?\n")
     private val CODE_SQUARE_BRACKETS_REGEX = Regex("^\\[.*?\\]")
     private val TABLE_REGEX = Regex("^\\|={3,}(.|\r?\n)*?\\|={3,}")
+    private val TIP_IMP_WARN_CAUT_REGEX = Regex("^(TIP:|IMPORTANT:|WARNING:|CAUTION:)\\s")
     private val IMAGE_REGEX = Regex("^image:.*?\\[")
     private val LINK_REGEX = Regex("^link:.*?\\[")
     private val HTTP_REGEX = Regex("^http.*?\\[")

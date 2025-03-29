@@ -100,6 +100,30 @@ class AsciiDocAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("asciidoc"
   }
 
   @Test
+  fun testTipImportantWarningCaution() {
+    assertPlainText(
+      """
+      TIP: This is a tip text.
+
+      IMPORTANT: This is an important text.
+
+      WARNING: This is a warning text.
+
+      CAUTION: This is a caution text.
+
+      Text. Not a CAUTION: text.
+      """.trimIndent(),
+      """
+      This is a tip text.
+      This is an important text.
+      This is a warning text.
+      This is a caution text.
+      Text. Not a CAUTION: text.
+      """.trimIndent(),
+    )
+  }
+
+  @Test
   fun testAttribute() {
     assertPlainText(
       """
