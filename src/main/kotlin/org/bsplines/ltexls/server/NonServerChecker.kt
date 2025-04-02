@@ -141,14 +141,12 @@ class NonServerChecker {
           RuleMatch.Type.UnknownWord -> Color.RED
           RuleMatch.Type.Hint -> Color.BLUE
           RuleMatch.Type.Other -> Color.YELLOW
-          else -> Color.BLUE
         }
       var typeString: String =
         when (match.type) {
           RuleMatch.Type.UnknownWord -> "spelling"
           RuleMatch.Type.Hint -> "style"
           RuleMatch.Type.Other -> "grammar"
-          else -> "style"
         }
 
       if (match.isUnknownWordRule()) {
