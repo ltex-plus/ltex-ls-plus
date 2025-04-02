@@ -38,14 +38,14 @@
   </licenses>
   <properties>
     <java.version>21</java.version>
-    <kotlin.version>2.1.10</kotlin.version>
+    <kotlin.version>2.1.20</kotlin.version>
     <kotlin.compiler.languageVersion>2.1</kotlin.compiler.languageVersion>
     <kotlin.compiler.jvmTarget>${java.version}</kotlin.compiler.jvmTarget>
     <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
     <main.class>org.bsplines.ltexls.LtexLanguageServerLauncher</main.class>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <junit.jupiter.version>5.12.0</junit.jupiter.version>
-    <languagetool.version>6.5</languagetool.version>
+    <junit.jupiter.version>5.12.1</junit.jupiter.version>
+    <languagetool.version>6.6</languagetool.version>
   </properties>
   <dependencies>
     <dependency>
@@ -231,12 +231,12 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.5.2</version>
+        <version>3.5.3</version>
       </plugin>
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.12</version>
+        <version>0.8.13</version>
         <executions>
           <execution>
             <id>prepare-agent</id>
