@@ -13,7 +13,7 @@
     <author>Julian Valentin, Daniel Spitzer and LTeX+ Development Community</author>
   </properties>
   <body>
-    <release version="18.5.0" date="upcoming">
+    <release version="18.5.0" date="2025-04-04">
       <action type="update">
         Update LanguageTool 6.4 (see [LT release notes](https://github.com/languagetool-org/languagetool/blob/v6.6/languagetool-standalone/CHANGES.md))
       </action>
