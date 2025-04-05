@@ -45,7 +45,16 @@ class LanguageToolHttpInterfaceTest {
 
   @Test
   fun testConstructor() {
+    assertTrue(LanguageToolHttpInterface("http://localhost:8081", "en-US", "").isInitialized())
     assertTrue(LanguageToolHttpInterface("http://localhost:8081/", "en-US", "").isInitialized())
+    assertTrue(
+      LanguageToolHttpInterface("http://localhost:8081/", "en-US", "").getURIString() ==
+        "http://localhost:8081/v2/check",
+    )
+    assertTrue(
+      LanguageToolHttpInterface("http://localhost:8081", "en-US", "").getURIString() ==
+        "http://localhost:8081/v2/check",
+    )
     assertFalse(LanguageToolHttpInterface("http://localhost:80:81/", "en-US", "").isInitialized())
   }
 

@@ -42,7 +42,11 @@ class LanguageToolHttpInterface(
     var exception: Exception? = null
     this.uri =
       try {
-        URI(uriString + "/v2/check").toURL().toURI()
+        if (uriString.last().toString() == "/") {
+          URI(uriString + "v2/check").toURL().toURI()
+        } else {
+          URI(uriString + "/v2/check").toURL().toURI()
+        }
       } catch (e: MalformedURLException) {
         exception = e
         null
@@ -55,6 +59,8 @@ class LanguageToolHttpInterface(
       Logging.LOGGER.severe(I18n.format("couldNotParseHttpServerUri", exception, uriString))
     }
   }
+
+  fun getURIString(): String = this.uri.toString()
 
   override fun isInitialized(): Boolean = (this.uri != null)
 
