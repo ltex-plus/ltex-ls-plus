@@ -13,6 +13,11 @@
     <author>Julian Valentin, Daniel Spitzer and LTeX+ Development Community</author>
   </properties>
   <body>
+    <release version="18.6.0" date="upcoming">
+      <action type="fix" issue="#72">
+        Fix slash issue in HTTP URI
+      </action>
+    </release>
     <release version="18.5.0" date="2025-04-04">
       <action type="update">
         Update LanguageTool 6.6 (see [LT release notes](https://github.com/languagetool-org/languagetool/blob/v6.6/languagetool-standalone/CHANGES.md))
