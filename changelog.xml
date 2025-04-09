@@ -14,7 +14,7 @@
   </properties>
   <body>
     <release version="18.5.1" date="2025-04-09">
-      <action type="fix" issue="#72">
+      <action type="fix" issue="#85">
         Fix slash issue in HTTP URI
       </action>
     </release>
