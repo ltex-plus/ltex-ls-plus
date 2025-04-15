@@ -79,7 +79,7 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
     regex: Regex,
     interpretAs: String = "",
     generateDummy: Boolean = false,
-    startofCodeBlock: Boolean = false,
+    startOfCodeBlock: Boolean = false,
   ) {
     if (characterProcessed) return
     var matchResult: MatchResult?
@@ -90,7 +90,7 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
         interpretAsString += generateDummy()
       }
       addMarkup(matchResult.value, interpretAsString)
-      if (startofCodeBlock) {
+      if (startOfCodeBlock) {
         codeModeBracketsCounter++
         codeModeStringCounter = 0
         codeMode = true

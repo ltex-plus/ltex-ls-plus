@@ -1,0 +1,337 @@
+
+
+
+
+
+
+= Introduction
+
+The typst-theorems package provides Typst functions that help create
+numbered theorem environments. This is heavily inspired by the \newtheorem
+functionality of LaTeX.
+
+A theorem environment lets you wrap content together with automatically
+updating numbering information. Such environments use internal state
+counters for this purpose. Environments can
+
+- share the same counter (Theorems and Lemmas often do so)
+- keep a global count, or be attached to
+  - other environments (Corollaries are often numbered based upon the parent Theorem)
+  - headings
+- have a numbering level depth fixed (for instance, use only top level heading
+  numbers)
+- be referenced elsewhere in the document, via labels
+
+
+= Using typst-theorems
+
+Import all functions provided by typst-theorems using
+RAW_BLOCK
+The second line is crucial for displaying thmenvs and references correctly!
+
+The core of this module consists of thmenv.
+The functions thmbox, thmplain, and thmproof provide some simple
+defaults for the appearance of thmenvs.
+
+
+= Feature demonstration 
+
+Create box-like theorem environments using thmbox, a wrapper around
+thmenv which provides some simple defaults.
+
+RAW_BLOCK
+
+
+Such definitions are convenient to place in the preamble or a template; use
+the environment in your document via
+RAW_BLOCK
+
+This produces the following.
+
+  There are infinitely many primes.
+ 
+
+Note that the name is optional. This theorem environment will be numbered
+based on its parent heading counter, with successive theorems
+automatically updating the final index.
+
+The <euclid> label can be used to refer to this Theorem via the reference
+@euclid. Go to REF to read more.
+
+You can create another environment which uses the same counter, say for
+Lemmas, as follows.
+
+RAW_BLOCK
+
+
+  If MATH divides both MATH and MATH, it also divides MATH.
+
+
+You can attach other environments to ones defined earlier. For instance,
+Corollaries can be created as follows.
+
+RAW_BLOCK
+
+
+
+  If MATH divides two consecutive natural numbers, then MATH.
+
+
+Note that we have provided a numbering string; this can be any valid
+numbering pattern as described in the
+numbering
+documentation.
+
+
+== Proofs
+
+The thmproof function gives nicer defaults for formatting proofs.
+RAW_BLOCK
+
+
+of REF
+  Suppose to the contrary that MATH is a finite enumeration
+  of all primes. Set MATH. Since MATH is not in our list,
+  it cannot be prime. Thus, some prime factor MATH divides MATH.  Since
+  MATH also divides MATH, it must divide the difference MATH, a
+  contradiction.
+
+
+If your proof ends in a block equation, or a list/enum, you can place
+qedhere to correctly position the qed symbol.
+RAW_BLOCK
+
+  There are arbitrarily long stretches of composite numbers.
+
+
+  For any MATH, consider MATH
+
+
+Caution: The qedhere symbol does not play well with numbered/multiline
+equations!
+
+You can set a custom qed symbol (say MATH) by setting the appropriate
+option in thmrules as follows.
+RAW_BLOCK
+
+== Suppressing numbering
+Supplying numbering: none to an environment suppresses numbering for that
+block, and prevents it from updating its counter.
+
+RAW_BLOCK
+
+
+
+  The numbers MATH, MATH, and MATH are prime.
+
+
+Here, we have used the thmplain function, which is identical to thmbox but
+sets some plainer defaults. You can also write
+RAW_BLOCK
+
+  The square of any even number is divisible by MATH.
+
+
+  The square of any odd number is one more than a multiple of MATH.
+
+
+Note that the last Lemma is not numbered 3.1.2!
+
+You can also override the automatic numbering as follows.
+RAW_BLOCK
+
+  The square of any natural number cannot be two more than a multiple of 4.
+
+
+Note that this does not affect the counters either!
+
+
+== Limiting depth
+
+You can limit the number of levels of the base numbering used as follows.
+RAW_BLOCK
+
+
+  A natural number is called a prime number if it is greater than MATH and
+  cannot be written as the product of two smaller natural numbers. 
+
+
+Note that this environment is not numbered 3.2.1!
+
+RAW_BLOCK
+
+  A natural number is called a composite number if it is greater than MATH
+  and not prime.
+
+
+Setting a base_level higher than what base provides will introduce padded
+zeroes.
+
+RAW_BLOCK
+
+  The numbers MATH, MATH, and MATH are composite.
+
+
+
+== Custom formatting
+The thmbox function lets you specify rules for formatting the title, the
+name, and the body individually. Here, the title refers to the head
+and number together.
+
+RAW_BLOCK
+
+     MATH
+  
+
+
+  All even natural numbers greater than 2 are composite.
+
+
+  Every even natural number MATH can be written as the product of the natural
+  numbers MATH and MATH. When MATH, both of these are smaller than MATH
+  itself.
+
+
+You can go even further and use the thmenv function directly. It accepts an
+identifier, a base, a base_level, and a fmt function.
+RAW_BLOCK
+
+                                   Notation () 
+    
+          
+
+  The variable MATH is reserved for prime numbers.
+
+
+  The variable MATH is reserved for real numbers.
+
+
+Note that the color: green named argument supplied to the theorem
+environment gets passed to the fmt function. In general, all extra named
+arguments supplied to the theorem will be passed to fmt.
+On the other hand, the positional argument "for Reals" will always be
+interpreted as the name argument in fmt.
+
+RAW_BLOCK
+
+  All multiples of 3 greater than 3 are composite.
+
+
+Here, we override the title (which defaults to the head) as well as the
+stroke in the fmt produced by thmbox. All block arguments can be
+overridden in thmbox environments in this way.
+
+
+== Labels and references 
+
+You can place a <label> outside a theorem environment, and reference it
+later via @ references! For example, go back to REFtypst
+Recall that there are infinitely many prime numbers via REF
+
+    Recall that there are infinitely many prime numbers via REF
+
+
+RAW_BLOCK
+
+    You can reference future environments too, like REFCor.
+
+RAW_BLOCK
+
+  All primes apart from MATH and MATH are of the form MATH.
+ 
+
+You can modify the supplement and numbering to be used in references, like REFCaution: Links created by references to thmenvs will be styled according
+to #show link: rules.
+
+
+== Overriding base
+
+RAW_BLOCK
+
+
+
+  There are infinitely many composite numbers.
+
+
+  All primes greater than MATH are odd.
+ 
+
+  Two is a lone prime.
+
+
+This remark environment, which would normally be attached to the current
+heading, now uses the corollary as a base.
+
+
+
+
+= Function reference
+== thmenv
+
+The thmenv function produces a theorem environment.
+RAW_BLOCK
+
+The fmt function must accept a theorem name, number, body, and produce
+formatted content. It may also accept additional positional arguments, via
+args.
+
+A theorem environment is itself a map of the following form.
+RAW_BLOCK
+
+Positional arguments in args are as follows
+- name: The name of the theorem, typically displayed after the title.
+
+All additional named arguments in args will be passed on to the associated
+fmt function supplied in thmenv.
+
+
+== thmbox and thmplain
+
+The thmbox wraps thmenv, supplying a box-like fmt function.
+RAW_BLOCK
+
+The thmbox function sets the following defaults for the block.
+RAW_BLOCK
+
+The thmplain function is identical to thmbox, except with plainer
+defaults.
+
+RAW_BLOCK
+
+
+== thmproof, proof-bodyfmt and qedhere
+
+The thmproof function is identical to thmplain, except with defaults
+appropriate for proofs.
+
+RAW_BLOCK
+
+The proof-bodyfmt function is a bodyfmt function that automatically places
+a qed symbol at the end of the body.
+
+You can place #qedhere inside a block equation, or at the end of a list/enum
+item to place the qed symbol on the same line.
+
+
+== thmrules
+
+The thmrules show rule sets important styling rules for theorem
+environments, references, and equations in proofs.
+
+RAW_BLOCK
+
+
+= Acknowledgements
+
+Thanks to
+- MJHutchinson for suggesting and
+  implementing the base_level and base: none features,
+- rmolinari for suggesting and
+  implementing the separator: ... feature,
+- DVDTSB for contributing
+  - the idea of passing named arguments from the theorem directly to the fmt
+    function.
+  - the number: ... override feature.
+  - the title: ... override feature in thmbox.
+- The awesome devs of typst.app for their
+  support.

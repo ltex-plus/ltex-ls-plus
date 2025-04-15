@@ -195,6 +195,7 @@
         <configuration>
           <args>
             <arg>-Werror</arg>
+            <arg>-Xwhen-guards</arg>
           </args>
         </configuration>
       </plugin>
