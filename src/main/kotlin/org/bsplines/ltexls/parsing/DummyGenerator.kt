@@ -16,18 +16,39 @@ class DummyGenerator private constructor(
     language: String,
     number: Int,
     vowel: Boolean = false,
-  ): String =
-    when {
-      language.equals("fr", ignoreCase = true) -> "Jimmy-$number"
-      this.plural && language.equals("sv", ignoreCase = true) -> "Dumma-$number"
-      language.equals("sv", ignoreCase = true) -> "Dummy-$number"
-      this.plural && language.startsWith("es", ignoreCase = true) -> "Maniquíes-$number"
-      language.startsWith("es", ignoreCase = true) -> "Maniquí-$number"
-      this.plural && language.startsWith("de", ignoreCase = true) -> "Dummys"
-      this.plural -> "Dummies"
-      vowel || this.vowel -> "Ina$number"
-      else -> "Dummy$number"
+  ): String {
+    val lang = language.lowercase()
+
+    val pluralSuffixMap =
+      mapOf(
+        "sv" to "Dumma-$number",
+        "es" to "Maniquíes-$number",
+        "nl" to "Dummy's+$number",
+        "de" to "Dummys",
+      )
+
+    val singularSuffixMap =
+      mapOf(
+        "fr" to "Jimmy-$number",
+        "sv" to "Dummy-$number",
+        "es" to "Maniquí-$number",
+        "nl" to "Dummy+$number",
+      )
+
+    if (this.plural) {
+      for ((prefix, suffix) in pluralSuffixMap) {
+        if (lang.startsWith(prefix)) return suffix
+      }
+      return "Dummies"
     }
+
+    for ((prefix, suffix) in singularSuffixMap) {
+      if (lang.startsWith(prefix)) return suffix
+    }
+
+    if (vowel || this.vowel) return "Ina$number"
+    return "Dummy$number"
+  }
 
   companion object {
     private val INSTANCE = DummyGenerator()

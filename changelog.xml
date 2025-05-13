@@ -13,6 +13,11 @@
     <author>Julian Valentin, Daniel Spitzer and LTeX+ Development Community</author>
   </properties>
   <body>
+    <release version="18.6.0" date="upcoming">
+      <action type="fix" issue="ltex-plus/vscode-ltex-plus#145">
+        Fix spelling errors for Dutch dummies
+      </action>
+    </release>
     <release version="18.5.1" date="2025-04-09">
       <action type="fix" issue="#85">
         Fix slash issue in HTTP URI
