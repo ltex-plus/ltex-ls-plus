@@ -258,7 +258,9 @@ class DocumentChecker(
     hiddenFalsePositives: Set<HiddenFalsePositive>,
   ): Boolean {
     for (pair: HiddenFalsePositive in hiddenFalsePositives) {
-      if ((pair.ruleId == ruleId) && (pair.sentenceRegex.find(sentence) != null)) return true
+      if (pair.ruleId == ruleId) {
+        if (pair.sentenceRegex.find(sentence) != null) return true
+      }
     }
 
     return false
@@ -266,8 +268,14 @@ class DocumentChecker(
 
   private fun removeIgnoredMatches(matches: MutableList<LanguageToolRuleMatch>) {
     val settings: Settings = this.settingsManager.settings
-    val hiddenFalsePositives: Set<HiddenFalsePositive> = settings.hiddenFalsePositives
-    if (matches.isEmpty() || hiddenFalsePositives.isEmpty()) return
+    val hiddenFalsePositives: MutableSet<HiddenFalsePositive> =
+      settings.hiddenFalsePositives
+        .toMutableSet()
+    hiddenFalsePositives.add(
+      HiddenFalsePositive("MORFOLOGIK_RULE_NL_NL", "(?:Dummy|Dummy's)\\+[0-9]+-\\w+"),
+    )
+
+    if (matches.isEmpty()) return
 
     val ignoreMatches = ArrayList<LanguageToolRuleMatch>()
 

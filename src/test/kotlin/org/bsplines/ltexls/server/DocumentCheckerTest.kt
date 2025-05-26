@@ -277,8 +277,8 @@ class DocumentCheckerTest {
 
   @Test
   fun testHiddenFalsePositives() {
-    val document: LtexTextDocumentItem = createDocument("markdown", "This is an unknownword.\n")
-    val settings =
+    var document: LtexTextDocumentItem = createDocument("markdown", "This is an unknownword.\n")
+    var settings =
       Settings(
         _allHiddenFalsePositives =
           mapOf(
@@ -288,9 +288,18 @@ class DocumentCheckerTest {
             ),
           ),
       )
-    val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
+    var checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
       checkDocument(document, settings)
     assertTrue(checkingResult.first.isEmpty())
+
+    document = createDocument("latex", "\\(\\Delta Q\\)-waarde. \\(\\Delta Q\\)-waarde.")
+    settings = Settings(_languageShortCode = "nl")
+    checkingResult = checkDocument(document, settings)
+    assertEquals(0, checkingResult.first.size)
+    document = createDocument("latex", "Dummy++1-waarde")
+    settings = Settings(_languageShortCode = "nl")
+    checkingResult = checkDocument(document, settings)
+    assertEquals(1, checkingResult.first.size)
   }
 
   companion object {
