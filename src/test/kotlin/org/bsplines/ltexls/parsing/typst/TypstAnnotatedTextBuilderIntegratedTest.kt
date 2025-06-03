@@ -14,7 +14,7 @@ import kotlin.io.path.readText
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class NewTypstAnnotatedTextBuilderTest {
+class TypstAnnotatedTextBuilderIntegratedTest {
 
   private fun getResourcePath(name: String): Path =
     Path.of(object {}.javaClass.getResource(name)!!.toURI())
@@ -35,7 +35,7 @@ class NewTypstAnnotatedTextBuilderTest {
 
   private fun assertAnnotated(name: String) {
     val source = read("/typst/$name.typ")
-    val annotatedText = NewTypstAnnotatedTextBuilder(source).parse().previewText()
+    val annotatedText = TypstAnnotatedTextBuilder("typ").addCode(source).previewText()
     val expectedAnnotatedText = read("/typst/${name}.annotated.txt")
 
     assertEquals(
@@ -48,7 +48,7 @@ class NewTypstAnnotatedTextBuilderTest {
   private fun assertRebuildSuccessful(name: String) {
     val source = read("/typst/$name.typ")
     val tokenizedRebuild = TypstTokenizer(source).asSequence().map { it.value }.joinToString("")
-    val annotatedRebuild = NewTypstAnnotatedTextBuilder(source).parse().previewAll()
+    val annotatedRebuild = TypstAnnotatedTextBuilder("typ").addCode(source).previewAll()
     assertEquals(
       source,
       tokenizedRebuild,

@@ -1,13 +1,11 @@
 package org.bsplines.ltexls.parsing.typst
 
 import org.bsplines.ltexls.parsing.typst.TypstToken.*
-import java.io.EOFException
-import kotlin.io.path.Path
-import kotlin.io.path.readText
 import kotlin.text.RegexOption.DOT_MATCHES_ALL
 import kotlin.text.RegexOption.MULTILINE
 
 sealed class TypstToken {
+
   data class Content(val text: String) : TypstToken() {
     override val value: String = text
   }
@@ -48,20 +46,16 @@ sealed class TypstToken {
     override val value: String = "$"
   }
 
-  data class Escaped(val char: Char) : TypstToken() {
-    override val value: String = "\\$char"
-  }
+  data class Escaped(val char: Char, override val value: String = "\\$char") : TypstToken()
 
-  data class WhiteSpace(val text: String) : TypstToken() {
-    fun containsNewLine() = text.count { it == '\n' } >= 1
-    fun containsNewParagraph() = text.count { it == '\n' } >= 2
+  data class Spaces(val text: String) : TypstToken() {
     override val value: String = text
   }
 
-  data object BOF : TypstToken() {
-    override val value: String = ""
+  data class Newline(val text: String) : TypstToken() {
+    override val value: String = text
   }
-
+  
   data object EOF : TypstToken() {
     override val value: String = ""
   }
@@ -71,6 +65,7 @@ sealed class TypstToken {
   }
 
   abstract val value: String
+
 }
 
 class TypstTokenizer(val source: String) : Iterator<TypstToken> {
@@ -79,14 +74,14 @@ class TypstTokenizer(val source: String) : Iterator<TypstToken> {
 
   private fun nextChar(): Char {
     if (cur >= source.length) {
-      throw EOFException()
+      throw EOFSignal()
     }
     return source[cur++]
   }
 
-  private fun peekChar(): Char {
+  private fun peekChar(): Char? {
     if (cur >= source.length) {
-      throw EOFException()
+      return null
     }
     return source[cur]
   }
@@ -145,75 +140,88 @@ class TypstTokenizer(val source: String) : Iterator<TypstToken> {
   private var inRawBlock = false
 
   private fun tryNext(): TypstToken? {
-    match('(')?.let {
-      return LParen
-    }
-    match(')')?.let {
-      return RParen
-    }
-    match('[')?.let {
-      return LBracket
-    }
-    match(']')?.let {
-      return RBracket
-    }
-    match('{')?.let {
-      return LBrace
-    }
-    match('}')?.let {
-      return RBrace
-    }
-    match('"')?.let {
-      inString = !inString
-      return Quote
-    }
-    if (!inString) {
-      match("```")?.let {
-        inRawBlock = !inRawBlock
+    try {
+      match('(')?.let {
+        return LParen
+      }
+      match(')')?.let {
+        return RParen
+      }
+      match('[')?.let {
+        return LBracket
+      }
+      match(']')?.let {
+        return RBracket
+      }
+      match('{')?.let {
+        return LBrace
+      }
+      match('}')?.let {
+        return RBrace
+      }
+      match('"')?.let {
+        inString = !inString
+        return Quote
+      }
+      if (!inString) {
+        match("```")?.let {
+          inRawBlock = !inRawBlock
+          return Symbol(it)
+        }
+      }
+      if (!inRawBlock && !inString) {
+        match("`")?.let {
+          inRaw = !inRaw
+          return Symbol(it)
+        }
+      }
+      match('$')?.let {
+        return Dollar
+      }
+      match('\\')?.let {
+        val next = peekChar()
+        if (next == null || next.isWhitespace()) {
+          return Escaped('\n', "\\")
+        }
+        nextChar()
+        return Escaped(next)
+      }
+      if (!inString && !inRaw && !inRawBlock) {
+        match(Regex("//.*$\r?\n", setOf(MULTILINE)))?.let {
+          return Comment(it)
+        }
+      }
+      if (!inString && !inRaw && !inRawBlock) {
+        match(Regex("/\\*.*?\\*/", setOf(MULTILINE, DOT_MATCHES_ALL)))?.let {
+          return Comment(it)
+        }
+      }
+      match(Regex(" +"))?.let {
+        return Spaces(it)
+      }
+      match(Regex("\r?\n"))?.let {
+        return Newline(it)
+      }
+      match(Regex("=>"))?.let {
         return Symbol(it)
       }
-    }
-    if (!inRawBlock && !inString) {
-      match("`")?.let {
-        inRaw = !inRaw
+      match(Regex("=+"))?.let {
         return Symbol(it)
       }
-    }
-    match('$')?.let {
-      return Dollar
-    }
-    match('\\')?.let {
-      val next = peekChar()
-      if (next.isWhitespace()) {
-        return WhiteSpace("\n")
+      match(Regex("==|!="))?.let {
+        return Symbol(it)
       }
-      nextChar()
-      return Escaped(next)
-    }
-    if (!inString && !inRaw && !inRawBlock) {
-      match(Regex("//.*$\r?\n", setOf(MULTILINE)))?.let {
-        return Comment(it)
+      match("_")?.let {
+        return Symbol(it)
       }
-    }
-    if (!inString && !inRaw && !inRawBlock) {
-      match(Regex("/\\*.*?\\*/", setOf(MULTILINE, DOT_MATCHES_ALL)))?.let {
-        return Comment(it)
+      match { !it.isJavaIdentifierPart() }?.let {
+        return Symbol(it)
       }
+      buf.append(nextChar())
+      return null
+    } catch (_: EOFSignal) {
+      return EOF
     }
-    match(Regex("\\s+"))?.let {
-      return WhiteSpace(it)
-    }
-    match("=>")?.let {
-      return Symbol(it)
-    }
-    match("_")?.let {
-      return Symbol(it)
-    }
-    match { !it.isJavaIdentifierPart() && it != '-' }?.let {
-      return Symbol(it)
-    }
-    buf.append(nextChar())
-    return null
   }
 
   override fun next(): TypstToken {
@@ -241,15 +249,17 @@ class TypstTokenizer(val source: String) : Iterator<TypstToken> {
     } while (true)
   }
 
-}
 
-object Main {
-  @JvmStatic
-  fun main(args: Array<String>) {
-    val source = Path("C:\\Users\\Flandia\\Typst\\COMP 3711\\test.typ").readText()
-    val builder = TypstTokenizer(source)
-    for (token in builder) {
-      println(token)
-    }
+  companion object {
+    fun tokenize(source: String): List<TypstToken> {
+      val tokens = TypstTokenizer(source).asSequence().toList()
+      return if (tokens.last() is EOF) {
+        tokens
+      } else {
+        tokens + listOf(EOF)
+      }
+    } 
+      
   }
+  
 }

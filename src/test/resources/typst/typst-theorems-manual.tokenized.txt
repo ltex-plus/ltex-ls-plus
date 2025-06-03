@@ -120,8 +120,12 @@
 		"value": "thmrules"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "#",
@@ -155,8 +159,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "title",
@@ -174,8 +182,16 @@
 		"value": "\""
 	},
 	{
-		"text": "typst-theorems",
-		"value": "typst-theorems"
+		"text": "typst",
+		"value": "typst"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "theorems",
+		"value": "theorems"
 	},
 	{
 		"value": "\""
@@ -185,8 +201,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "authors",
@@ -204,8 +224,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"value": "\""
@@ -222,8 +246,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": ")"
@@ -233,8 +261,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "url",
@@ -292,8 +324,16 @@
 		"value": "/"
 	},
 	{
-		"text": "typst-theorems",
-		"value": "typst-theorems"
+		"text": "typst",
+		"value": "typst"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "theorems",
+		"value": "theorems"
 	},
 	{
 		"value": "\""
@@ -306,8 +346,20 @@
 		"value": ")"
 	},
 	{
-		"text": "\n\n\n\n",
-		"value": "\n\n\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "=",
@@ -322,8 +374,12 @@
 		"value": "Introduction"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "The",
@@ -338,8 +394,16 @@
 		"value": "`"
 	},
 	{
-		"text": "typst-theorems",
-		"value": "typst-theorems"
+		"text": "typst",
+		"value": "typst"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "theorems",
+		"value": "theorems"
 	},
 	{
 		"sym": "`",
@@ -550,8 +614,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "A",
@@ -774,11 +842,15 @@
 		"value": "can"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"text": "-",
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -888,7 +960,7 @@
 		"value": "\n"
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -960,11 +1032,15 @@
 		"value": "to"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"text": "-",
+		"text": "  ",
+		"value": "  "
+	},
+	{
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -1078,11 +1154,15 @@
 		"value": ")"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"text": "-",
+		"text": "  ",
+		"value": "  "
+	},
+	{
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -1098,7 +1178,7 @@
 		"value": "\n"
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -1213,8 +1293,12 @@
 		"value": "heading"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "numbers",
@@ -1228,7 +1312,7 @@
 		"value": "\n"
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -1312,8 +1396,16 @@
 		"value": "s"
 	},
 	{
-		"text": "\n\n\n",
-		"value": "\n\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "=",
@@ -1336,16 +1428,28 @@
 		"value": "`"
 	},
 	{
-		"text": "typst-theorems",
-		"value": "typst-theorems"
+		"text": "typst",
+		"value": "typst"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "theorems",
+		"value": "theorems"
 	},
 	{
 		"sym": "`",
 		"value": "`"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "Import",
@@ -1392,8 +1496,16 @@
 		"value": "`"
 	},
 	{
-		"text": "typst-theorems",
-		"value": "typst-theorems"
+		"text": "typst",
+		"value": "typst"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "theorems",
+		"value": "theorems"
 	},
 	{
 		"sym": "`",
@@ -1602,8 +1714,12 @@
 		"value": "!"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "The",
@@ -1846,8 +1962,16 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n\n",
-		"value": "\n\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "=",
@@ -1886,8 +2010,12 @@
 		"value": ">"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "Create",
@@ -1898,8 +2026,16 @@
 		"value": " "
 	},
 	{
-		"text": "box-like",
-		"value": "box-like"
+		"text": "box",
+		"value": "box"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "like",
+		"value": "like"
 	},
 	{
 		"text": " ",
@@ -2038,8 +2174,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "```",
@@ -2089,8 +2229,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -2127,8 +2271,12 @@
 		"value": "identifier"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -2165,8 +2313,12 @@
 		"value": "head"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "fill",
@@ -2259,8 +2411,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -2277,8 +2433,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -2295,8 +2455,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "fill",
@@ -2342,8 +2506,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "Such",
@@ -2541,8 +2709,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "There",
@@ -2616,8 +2788,12 @@
 		"value": "```"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "This",
@@ -2683,8 +2859,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "There",
@@ -2750,8 +2930,12 @@
 		"value": ">"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "Note",
@@ -3006,8 +3190,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "The",
@@ -3214,8 +3402,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "You",
@@ -3354,8 +3546,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "```",
@@ -3405,8 +3601,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -3447,7 +3647,7 @@
 		"value": " "
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -3491,8 +3691,12 @@
 		"value": "theorem"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -3529,8 +3733,12 @@
 		"value": "head"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "fill",
@@ -3576,8 +3784,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "#",
@@ -3591,8 +3803,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "If",
@@ -3708,7 +3924,7 @@
 		"value": " "
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -3781,8 +3997,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -3799,8 +4019,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -3817,8 +4041,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "fill",
@@ -3879,8 +4107,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "If",
@@ -3996,7 +4228,7 @@
 		"value": " "
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -4022,8 +4254,12 @@
 		"value": "]"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "You",
@@ -4186,8 +4422,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "```",
@@ -4237,8 +4477,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -4275,8 +4519,12 @@
 		"value": "identifier"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -4313,8 +4561,12 @@
 		"value": "head"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "base",
@@ -4367,7 +4619,7 @@
 		"value": " "
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -4403,8 +4655,12 @@
 		"value": "counter"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "fill",
@@ -4450,8 +4706,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "#",
@@ -4501,8 +4761,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "If",
@@ -4663,8 +4927,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -4681,8 +4949,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -4699,8 +4971,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "base",
@@ -4729,8 +5005,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "fill",
@@ -4776,8 +5056,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "#",
@@ -4827,8 +5111,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "If",
@@ -4942,8 +5230,12 @@
 		"value": "]"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "Note",
@@ -5216,16 +5508,20 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n\n",
-		"value": "\n\n\n"
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"sym": "==",
+		"value": "=="
 	},
 	{
 		"text": " ",
@@ -5236,8 +5532,12 @@
 		"value": "Proofs"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "The",
@@ -5402,8 +5702,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "#",
@@ -5445,8 +5749,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "Suppose",
@@ -5591,8 +5899,12 @@
 		"value": "enumeration"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "of",
@@ -5791,8 +6103,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "it",
@@ -5935,8 +6251,12 @@
 		"value": "Since"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "$"
@@ -6068,7 +6388,7 @@
 		"value": " "
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -6111,8 +6431,12 @@
 		"value": "a"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "contradiction",
@@ -6208,8 +6532,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "#",
@@ -6251,8 +6579,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "Suppose",
@@ -6397,8 +6729,12 @@
 		"value": "enumeration"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "of",
@@ -6597,8 +6933,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "it",
@@ -6741,8 +7081,12 @@
 		"value": "Since"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "$"
@@ -6874,7 +7218,7 @@
 		"value": " "
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -6917,8 +7261,12 @@
 		"value": "a"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "contradiction",
@@ -6936,8 +7284,12 @@
 		"value": "]"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "If",
@@ -7159,8 +7511,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "There",
@@ -7249,8 +7605,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "For",
@@ -7314,8 +7674,12 @@
 		"value": "$"
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"text": "n",
@@ -7462,8 +7826,12 @@
 		"value": "qedhere"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "$"
@@ -7499,8 +7867,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "There",
@@ -7589,8 +7961,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "For",
@@ -7654,8 +8030,12 @@
 		"value": "$"
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"text": "n",
@@ -7802,8 +8182,12 @@
 		"value": "qedhere"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "$"
@@ -7816,8 +8200,12 @@
 		"value": "]"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "*",
@@ -7936,8 +8324,12 @@
 		"value": "!"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "You",
@@ -8151,8 +8543,16 @@
 		"value": "("
 	},
 	{
-		"text": "qed-symbol",
-		"value": "qed-symbol"
+		"text": "qed",
+		"value": "qed"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "symbol",
+		"value": "symbol"
 	},
 	{
 		"sym": ":",
@@ -8184,16 +8584,16 @@
 		"value": "```"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"sym": "==",
+		"value": "=="
 	},
 	{
 		"text": " ",
@@ -8376,8 +8776,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "```",
@@ -8427,8 +8831,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -8445,8 +8853,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -8496,8 +8908,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "#",
@@ -8511,8 +8927,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "The",
@@ -8659,8 +9079,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -8677,8 +9101,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -8728,8 +9156,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "#",
@@ -8743,8 +9175,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "The",
@@ -8844,8 +9280,12 @@
 		"value": "]"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "Here",
@@ -9089,8 +9529,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "The",
@@ -9201,8 +9645,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "The",
@@ -9375,8 +9823,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "The",
@@ -9487,8 +9939,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "The",
@@ -9616,8 +10072,12 @@
 		"value": "]"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "Note",
@@ -9724,8 +10184,12 @@
 		"value": "!"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "You",
@@ -9855,8 +10319,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "The",
@@ -10037,8 +10505,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "The",
@@ -10168,8 +10640,12 @@
 		"value": "]"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "Note",
@@ -10252,16 +10728,20 @@
 		"value": "!"
 	},
 	{
-		"text": "\n\n\n",
-		"value": "\n\n\n"
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"sym": "==",
+		"value": "=="
 	},
 	{
 		"text": " ",
@@ -10280,8 +10760,12 @@
 		"value": "depth"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "You",
@@ -10455,8 +10939,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -10473,8 +10961,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -10491,8 +10983,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "base",
@@ -10599,8 +11095,12 @@
 		"value": "base"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "stroke",
@@ -10662,8 +11162,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "#",
@@ -10701,8 +11205,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "A",
@@ -10835,8 +11343,12 @@
 		"value": "and"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "cannot",
@@ -10997,8 +11509,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -11015,8 +11531,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -11033,8 +11553,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "base",
@@ -11065,8 +11589,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "stroke",
@@ -11167,8 +11695,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "A",
@@ -11301,8 +11833,12 @@
 		"value": "and"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "cannot",
@@ -11416,8 +11952,12 @@
 		"value": "]"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "Note",
@@ -11508,8 +12048,12 @@
 		"value": "!"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "```",
@@ -11559,8 +12103,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "A",
@@ -11685,8 +12233,12 @@
 		"value": "$"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "and",
@@ -11767,8 +12319,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "A",
@@ -11893,8 +12449,12 @@
 		"value": "$"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "and",
@@ -11928,8 +12488,12 @@
 		"value": "]"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "Setting",
@@ -12052,8 +12616,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "```",
@@ -12147,8 +12715,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "The",
@@ -12339,8 +12911,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "The",
@@ -12440,16 +13016,20 @@
 		"value": "]"
 	},
 	{
-		"text": "\n\n\n",
-		"value": "\n\n\n"
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"sym": "==",
+		"value": "=="
 	},
 	{
 		"text": " ",
@@ -12760,8 +13340,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "```",
@@ -12788,8 +13372,16 @@
 		"value": " "
 	},
 	{
-		"text": "proof-custom",
-		"value": "proof-custom"
+		"text": "proof",
+		"value": "proof"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "custom",
+		"value": "custom"
 	},
 	{
 		"text": " ",
@@ -12811,8 +13403,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -12829,8 +13425,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -12847,8 +13447,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "base",
@@ -12877,8 +13481,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "titlefmt",
@@ -12901,8 +13509,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "bodyfmt",
@@ -12936,8 +13548,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"sym": "#",
@@ -13052,8 +13668,12 @@
 		"value": "right"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "]"
@@ -13096,8 +13716,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "#",
@@ -13111,8 +13735,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "All",
@@ -13202,15 +13830,27 @@
 		"value": "#"
 	},
 	{
-		"text": "proof-custom",
-		"value": "proof-custom"
+		"text": "proof",
+		"value": "proof"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "custom",
+		"value": "custom"
 	},
 	{
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "Every",
@@ -13327,8 +13967,12 @@
 		"value": "natural"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "numbers",
@@ -13487,8 +14131,12 @@
 		"value": "$"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "itself",
@@ -13530,8 +14178,16 @@
 		"value": " "
 	},
 	{
-		"text": "proof-custom",
-		"value": "proof-custom"
+		"text": "proof",
+		"value": "proof"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "custom",
+		"value": "custom"
 	},
 	{
 		"text": " ",
@@ -13553,8 +14209,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -13571,8 +14231,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -13589,8 +14253,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "base",
@@ -13619,8 +14287,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "titlefmt",
@@ -13643,8 +14315,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "bodyfmt",
@@ -13678,8 +14354,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"sym": "#",
@@ -13726,8 +14406,12 @@
 		"value": "$"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "]"
@@ -13770,8 +14454,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "#",
@@ -13785,8 +14473,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "All",
@@ -13876,15 +14568,27 @@
 		"value": "#"
 	},
 	{
-		"text": "proof-custom",
-		"value": "proof-custom"
+		"text": "proof",
+		"value": "proof"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "custom",
+		"value": "custom"
 	},
 	{
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "Every",
@@ -14001,8 +14705,12 @@
 		"value": "natural"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "numbers",
@@ -14161,8 +14869,12 @@
 		"value": "$"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "itself",
@@ -14180,8 +14892,12 @@
 		"value": "]"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "You",
@@ -14483,8 +15199,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -14521,8 +15241,12 @@
 		"value": "identifier"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "none",
@@ -14557,7 +15281,7 @@
 		"value": " "
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -14605,8 +15329,12 @@
 		"value": "globally"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "none",
@@ -14649,7 +15377,7 @@
 		"value": " "
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -14681,12 +15409,24 @@
 		"value": " "
 	},
 	{
-		"text": "as-is",
-		"value": "as-is"
+		"text": "as",
+		"value": "as"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "is",
+		"value": "is"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "("
@@ -14762,8 +15502,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n                              ",
-		"value": "\n                              "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "                              ",
+		"value": "                              "
 	},
 	{
 		"sym": "/",
@@ -14786,7 +15530,7 @@
 		"value": " "
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -14830,8 +15574,12 @@
 		"value": "environment"
 	},
 	{
-		"text": "\n                              ",
-		"value": "\n                              "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "                              ",
+		"value": "                              "
 	},
 	{
 		"sym": "/",
@@ -14910,8 +15658,12 @@
 		"value": "color"
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"sym": "#",
@@ -15014,8 +15766,12 @@
 		"value": ":"
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"sym": "#",
@@ -15044,8 +15800,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"sym": "#",
@@ -15056,8 +15816,12 @@
 		"value": "body"
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"sym": "#",
@@ -15086,8 +15850,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "]"
@@ -15172,8 +15940,12 @@
 		"value": "numerals"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "#",
@@ -15187,8 +15959,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "The",
@@ -15331,8 +16107,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "The",
@@ -15459,8 +16239,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "\""
@@ -15602,8 +16386,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n                              ",
-		"value": "\n                              "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "                              ",
+		"value": "                              "
 	},
 	{
 		"content": "// fmt - format content using the environment name, number, body, and an optional color\n",
@@ -15714,8 +16502,12 @@
 		"value": ":"
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"sym": "#",
@@ -15744,8 +16536,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"sym": "#",
@@ -15756,8 +16552,12 @@
 		"value": "body"
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"sym": "#",
@@ -15786,8 +16586,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "]"
@@ -15859,8 +16663,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "The",
@@ -16003,8 +16811,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "The",
@@ -16084,8 +16896,12 @@
 		"value": "]"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "Note",
@@ -16578,8 +17394,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "```",
@@ -16661,8 +17481,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "All",
@@ -16823,8 +17647,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "All",
@@ -16906,8 +17734,12 @@
 		"value": "]"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "Here",
@@ -17244,16 +18076,20 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n\n",
-		"value": "\n\n\n"
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"sym": "==",
+		"value": "=="
 	},
 	{
 		"text": " ",
@@ -17296,8 +18132,12 @@
 		"value": ">"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "You",
@@ -17516,8 +18356,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "```",
@@ -17639,8 +18483,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "left",
@@ -17671,15 +18519,23 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "["
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"text": "Recall",
@@ -17766,8 +18622,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "]"
@@ -17780,8 +18640,16 @@
 		"value": ")"
 	},
 	{
-		"text": "\n\n\n",
-		"value": "\n\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "```",
@@ -17905,8 +18773,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "left",
@@ -17937,15 +18809,23 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "["
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"text": "You",
@@ -18034,8 +18914,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"value": "]"
@@ -18048,8 +18932,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "```",
@@ -18151,8 +19039,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "All",
@@ -18316,8 +19208,12 @@
 		"value": ">"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "You",
@@ -18539,8 +19435,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "All",
@@ -18704,8 +19604,12 @@
 		"value": ">"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "You",
@@ -18828,8 +19732,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "*",
@@ -18992,16 +19900,20 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n\n",
-		"value": "\n\n\n"
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"sym": "==",
+		"value": "=="
 	},
 	{
 		"text": " ",
@@ -19028,8 +19940,12 @@
 		"value": "`"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "```",
@@ -19155,8 +20071,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "There",
@@ -19214,8 +20134,12 @@
 		"value": "]"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "#",
@@ -19229,8 +20153,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "All",
@@ -19361,8 +20289,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "Two",
@@ -19428,8 +20360,12 @@
 		"value": "```"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "#",
@@ -19543,8 +20479,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "There",
@@ -19617,8 +20557,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "All",
@@ -19749,8 +20693,12 @@
 		"value": "["
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "Two",
@@ -19808,8 +20756,12 @@
 		"value": "]"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "This",
@@ -19996,8 +20948,16 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n\n",
-		"value": "\n\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "#",
@@ -20018,8 +20978,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "=",
@@ -20046,12 +21010,8 @@
 		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
-	},
-	{
-		"sym": "=",
-		"value": "="
+		"sym": "==",
+		"value": "=="
 	},
 	{
 		"text": " ",
@@ -20070,8 +21030,12 @@
 		"value": "`"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "The",
@@ -20181,8 +21145,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "identifier",
@@ -20229,8 +21197,12 @@
 		"value": "name"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "base",
@@ -20327,8 +21299,12 @@
 		"value": "none"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "base",
@@ -20415,8 +21391,12 @@
 		"value": "use"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "fmt",
@@ -20475,8 +21455,12 @@
 		"value": "form"
 	},
 	{
-		"text": "\n                          ",
-		"value": "\n                          "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "                          ",
+		"value": "                          "
 	},
 	{
 		"sym": "/",
@@ -20549,7 +21533,7 @@
 		"value": " "
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -20618,8 +21602,12 @@
 		"value": "```"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "The",
@@ -20866,8 +21854,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "A",
@@ -20985,8 +21977,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"sym": ".",
@@ -21005,8 +22001,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "body",
@@ -21045,8 +22045,12 @@
 		"value": "content"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "number",
@@ -21125,8 +22129,12 @@
 		"value": "present"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "numbering",
@@ -21227,8 +22235,12 @@
 		"value": "function"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "refnumbering",
@@ -21307,8 +22319,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n                          ",
-		"value": "\n                          "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "                          ",
+		"value": "                          "
 	},
 	{
 		"sym": "/",
@@ -21349,8 +22365,12 @@
 		"value": "\""
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "supplement",
@@ -21417,8 +22437,12 @@
 		"value": "references"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "base",
@@ -21485,8 +22509,12 @@
 		"value": "override"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "base",
@@ -21568,7 +22596,7 @@
 		"value": " "
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -21592,8 +22620,12 @@
 		"value": "```"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "Positional",
@@ -21660,7 +22692,7 @@
 		"value": "\n"
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -21772,8 +22804,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "All",
@@ -21944,16 +22980,20 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n\n",
-		"value": "\n\n\n"
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"sym": "==",
+		"value": "=="
 	},
 	{
 		"text": " ",
@@ -21996,8 +23036,12 @@
 		"value": "`"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "The",
@@ -22068,8 +23112,16 @@
 		"value": " "
 	},
 	{
-		"text": "box-like",
-		"value": "box-like"
+		"text": "box",
+		"value": "box"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "like",
+		"value": "like"
 	},
 	{
 		"text": " ",
@@ -22135,8 +23187,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "identifier",
@@ -22167,8 +23223,12 @@
 		"value": "identifier"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "head",
@@ -22203,7 +23263,7 @@
 		"value": " "
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -22259,8 +23319,12 @@
 		"value": "title"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"sym": ".",
@@ -22339,8 +23403,12 @@
 		"value": "block"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "supplement",
@@ -22433,8 +23501,12 @@
 		"value": "\""
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "padding",
@@ -22515,8 +23587,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n                          ",
-		"value": "\n                          "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "                          ",
+		"value": "                          "
 	},
 	{
 		"sym": "/",
@@ -22575,8 +23651,12 @@
 		"value": "pad"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "namefmt",
@@ -22667,8 +23747,12 @@
 		"value": "name"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "titlefmt",
@@ -22757,8 +23841,12 @@
 		"value": ")"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "bodyfmt",
@@ -22833,8 +23921,12 @@
 		"value": "body"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "separator",
@@ -22915,8 +24007,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n                          ",
-		"value": "\n                          "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "                          ",
+		"value": "                          "
 	},
 	{
 		"sym": "/",
@@ -22975,8 +24071,12 @@
 		"value": "body"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "base",
@@ -23029,7 +24129,7 @@
 		"value": " "
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -23065,8 +24165,12 @@
 		"value": "headings"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "base",
@@ -23129,7 +24233,7 @@
 		"value": " "
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -23169,8 +24273,16 @@
 		"value": " "
 	},
 	{
-		"text": "as-is",
-		"value": "as-is"
+		"text": "as",
+		"value": "as"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "is",
+		"value": "is"
 	},
 	{
 		"text": "\n",
@@ -23226,8 +24338,12 @@
 		"value": "```"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "The",
@@ -23345,8 +24461,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "width",
@@ -23373,8 +24493,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "inset",
@@ -23405,8 +24529,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "radius",
@@ -23437,8 +24565,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "breakable",
@@ -23476,8 +24608,12 @@
 		"value": "```"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "The",
@@ -23588,8 +24724,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "```",
@@ -23647,8 +24787,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "padding",
@@ -23713,8 +24857,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "breakable",
@@ -23737,8 +24885,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "inset",
@@ -23843,8 +24995,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "namefmt",
@@ -23909,8 +25065,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "titlefmt",
@@ -23948,16 +25108,20 @@
 		"value": "```"
 	},
 	{
-		"text": "\n\n\n",
-		"value": "\n\n\n"
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"sym": "==",
+		"value": "=="
 	},
 	{
 		"text": " ",
@@ -23988,8 +25152,16 @@
 		"value": "`"
 	},
 	{
-		"text": "proof-bodyfmt",
-		"value": "proof-bodyfmt"
+		"text": "proof",
+		"value": "proof"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "bodyfmt",
+		"value": "bodyfmt"
 	},
 	{
 		"sym": "`",
@@ -24020,8 +25192,12 @@
 		"value": "`"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "The",
@@ -24148,8 +25324,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "```",
@@ -24217,8 +25397,12 @@
 		"value": "("
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"sym": ".",
@@ -24237,8 +25421,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"text": "namefmt",
@@ -24261,8 +25449,12 @@
 		"value": ","
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"text": "bodyfmt",
@@ -24277,16 +25469,28 @@
 		"value": " "
 	},
 	{
-		"text": "proof-bodyfmt",
-		"value": "proof-bodyfmt"
+		"text": "proof",
+		"value": "proof"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "bodyfmt",
+		"value": "bodyfmt"
 	},
 	{
 		"sym": ",",
 		"value": ","
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"sym": ".",
@@ -24360,8 +25564,12 @@
 		"value": "```"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "The",
@@ -24376,8 +25584,16 @@
 		"value": "`"
 	},
 	{
-		"text": "proof-bodyfmt",
-		"value": "proof-bodyfmt"
+		"text": "proof",
+		"value": "proof"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "bodyfmt",
+		"value": "bodyfmt"
 	},
 	{
 		"sym": "`",
@@ -24532,8 +25748,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "You",
@@ -24760,16 +25980,20 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n\n",
-		"value": "\n\n\n"
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"sym": "=",
-		"value": "="
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"sym": "==",
+		"value": "=="
 	},
 	{
 		"text": " ",
@@ -24788,8 +26012,12 @@
 		"value": "`"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "The",
@@ -24936,8 +26164,12 @@
 		"value": "."
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "```",
@@ -24971,12 +26203,24 @@
 		"value": "("
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"text": "qed-symbol",
-		"value": "qed-symbol"
+		"text": "  ",
+		"value": "  "
+	},
+	{
+		"text": "qed",
+		"value": "qed"
+	},
+	{
+		"sym": "-",
+		"value": "-"
+	},
+	{
+		"text": "symbol",
+		"value": "symbol"
 	},
 	{
 		"sym": ":",
@@ -25053,8 +26297,12 @@
 		"value": "proofs"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "doc",
@@ -25114,8 +26362,16 @@
 		"value": "```"
 	},
 	{
-		"text": "\n\n\n",
-		"value": "\n\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"sym": "=",
@@ -25130,8 +26386,12 @@
 		"value": "Acknowledgements"
 	},
 	{
-		"text": "\n\n",
-		"value": "\n\n"
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "\n",
+		"value": "\n"
 	},
 	{
 		"text": "Thanks",
@@ -25150,7 +26410,7 @@
 		"value": "\n"
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -25248,8 +26508,12 @@
 		"value": "and"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "implementing",
@@ -25340,7 +26604,7 @@
 		"value": "\n"
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -25438,8 +26702,12 @@
 		"value": "and"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "implementing",
@@ -25506,7 +26774,7 @@
 		"value": "\n"
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -25596,11 +26864,15 @@
 		"value": "contributing"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"text": "-",
+		"text": "  ",
+		"value": "  "
+	},
+	{
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -25716,8 +26988,12 @@
 		"value": "`"
 	},
 	{
-		"text": "\n    ",
-		"value": "\n    "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "    ",
+		"value": "    "
 	},
 	{
 		"text": "function",
@@ -25728,11 +27004,15 @@
 		"value": "."
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"text": "-",
+		"text": "  ",
+		"value": "  "
+	},
+	{
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -25800,11 +27080,15 @@
 		"value": "."
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
 	},
 	{
-		"text": "-",
+		"text": "  ",
+		"value": "  "
+	},
+	{
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -25900,7 +27184,7 @@
 		"value": "\n"
 	},
 	{
-		"text": "-",
+		"sym": "-",
 		"value": "-"
 	},
 	{
@@ -26026,8 +27310,12 @@
 		"value": "their"
 	},
 	{
-		"text": "\n  ",
-		"value": "\n  "
+		"text": "\n",
+		"value": "\n"
+	},
+	{
+		"text": "  ",
+		"value": "  "
 	},
 	{
 		"text": "support",
