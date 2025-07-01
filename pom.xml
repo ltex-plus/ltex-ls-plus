@@ -38,13 +38,13 @@
   </licenses>
   <properties>
     <java.version>21</java.version>
-    <kotlin.version>2.1.21</kotlin.version>
+    <kotlin.version>2.2.0</kotlin.version>
     <kotlin.compiler.languageVersion>2.1</kotlin.compiler.languageVersion>
     <kotlin.compiler.jvmTarget>${java.version}</kotlin.compiler.jvmTarget>
     <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
     <main.class>org.bsplines.ltexls.LtexLanguageServerLauncher</main.class>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <junit.jupiter.version>5.13.0</junit.jupiter.version>
+    <junit.jupiter.version>5.13.2</junit.jupiter.version>
     <languagetool.version>6.6</languagetool.version>
   </properties>
   <dependencies>
