@@ -11,6 +11,7 @@ package org.bsplines.ltexls.parsing.html
 import org.bsplines.ltexls.parsing.CodeFragment
 import org.bsplines.ltexls.parsing.CodeFragmentizer
 import org.bsplines.ltexls.settings.Settings
+import org.bsplines.ltexls.settings.SettingsOverride
 
 class HtmlFragmentizer(
   codeLanguageId: String,
@@ -25,7 +26,8 @@ class HtmlFragmentizer(
     originalSettings: Settings,
   ): List<CodeFragment> {
     val codeFragments = ArrayList<CodeFragment>()
-    var currentSettings: Settings = originalSettings
+    val currentOverride = SettingsOverride(originalSettings)
+    var currentSettings = currentOverride.toSettings()
 
     var currentIndex = 0
 
@@ -65,7 +67,8 @@ class HtmlFragmentizer(
         val matchResult = regex.matchEntire(commentContent)
         if (matchResult != null) {
           val settingsLine = matchResult.groups[1]!!.value
-          currentSettings = SettingsParser.createUpdatedSettings(settingsLine, currentSettings)
+          SettingsParser.updateSettingsOverride(settingsLine, currentOverride)
+          currentSettings = currentOverride.toSettings()
         }
 
         codeFragments.add(CodeFragment("nop", comment, openingTagIndex, currentSettings))

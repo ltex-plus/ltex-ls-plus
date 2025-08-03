@@ -114,6 +114,189 @@ class DocumentCheckerTest {
   }
 
   @Test
+  @Suppress("LongMethod")
+  fun testMagicComments() {
+    val document =
+      createDocument(
+        "latex",
+        """
+        \documentclass{article}
+
+        \newcommand{\ltexComment}[1]{}
+
+        \begin{document}
+
+        % LTeX: latex.commands.\ltexComment{}=ignore
+        \ltexComment{This text is now ignored. This is an test.}
+        \ltexComment{
+            Use KEY=VALUE to set scalar properties.
+            Use KEY=# to restore global settings (undo magic commands for this KEY).
+            Use KEY-=VALUE to remove VALUE from a set.
+            Use KEY+=VALUE to add VALUE to a set.
+            Use KEY#=VALUE to have VALUE in a set if and only if it is in the global set (undo magic commands for this KEY and VALUE).
+
+            Use 'true' or 'false' without quotes for booleans.
+        }
+
+        \ltexComment{}
+
+        \ltexComment{Enable and disable all checks.}
+        This is an \textbf{test} with a mistake.
+        % LTeX: enabled=false
+        This is an \textbf{test} with no mistake.
+        % LTeX: enabled=true
+        This is an \textbf{test} with a mistake.
+        % LTeX: enabled=#
+        This is an \textbf{test} with a mistake.
+
+        \ltexComment{Change the language.}
+        % LTeX: language=de-DE
+        This test contains the mistake. Dies ist ein Test ohne Fehler.
+        % LTeX: language=#
+        This is a test with no mistake. Dies ist ein Test with mistakes.
+
+
+        \ltexComment{Enable and disable rules.}
+        This is an \textbf{test} with a mistake.
+        % LTeX: rules-=EN_A_VS_AN
+        This is an \textbf{test} with no mistake.
+        % LTeX: rules+=EN_A_VS_AN
+        This is an \textbf{test} with a mistake.
+        % LTeX: rules#=EN_A_VS_AN
+        This is an \textbf{test} with a mistake.
+
+
+        \ltexComment{Add and remove words from the dictionary.}
+        \ltexComment{Known word: BROKEN}
+        Test is a word.
+        % LTeX: dictionary-=Test
+        Test is not a word.
+        % LTeX: dictionary+=Test
+        Test is a word.
+        % LTeX: dictionary#=Test
+        Test is a word.
+
+        \ltexComment{Unknown word}
+        Dcba is not a word.
+        % LTeX: dictionary-=Dcba
+        Dcba is not a word.
+        % LTeX: dictionary+=Dcba
+        Dcba is a word.
+        % LTeX: dictionary#=Dcba
+        Dcba is not a word.
+
+        \ltexComment{Set actions for latex commands.}
+        This is an \textbf{test} with a mistake.
+        % LTeX: latex.commands.\textbf{}=default 'default': parameters are checked.
+        This is an \textbf{test} with a mistake.
+        % LTeX: latex.commands.\textbf{}=ignore 'ignore': pretend it is not there.
+        This is an \textbf{test} ignored test without a mistake.
+        % LTeX: latex.commands.\textbf{}=dummy
+        \ltexComment{Apparently dummy can be plural.}
+        This \textbf{test} has no mistake.
+        These \textbf{test} have no mistake.
+        % LTeX: latex.commands.\textbf{}=pluralDummy
+        This \textbf{test} has a mistake.
+        These \textbf{test} have no mistake.
+        % LTeX: latex.commands.\textbf{}=vowelDummy
+        This is an \textbf{test} with no mistake.
+        % LTeX: latex.commands.\textbf{}=#
+        This is an \textbf{test} with a mistake.
+
+        \ltexComment{Set actions for latex environments.}
+        \begin{center}
+            This is an test with a mistake.
+        \end{center}
+        % LTeX: latex.environments.center=default 'default': check contents
+        \begin{center}
+            This is an test with a mistake.
+        \end{center}
+        % LTeX: latex.environments.center=ignore 'default': check nothing
+        \begin{center}
+            This is an test with no mistake.
+        \end{center}
+        % LTeX: latex.environments.center=#
+        \begin{center}
+            This is an test with a mistake.
+        \end{center}
+
+        \ltexComment{Enable picky rules}
+        The rules have been enabled by the comment. The sentence is fine.
+        % LTeX: enablePickyRules=false
+        The rules have been enabled by the comment. The sentence is fine.
+        % LTeX: enablePickyRules=true
+        The rules have been enabled by the comment. The sentence should be in active voice.
+        % LTeX: enablePickyRules=#
+        The rules have been enabled by the comment. The sentence is fine.
+
+        \ltexComment{Set logLevel for debugging a specific section}
+
+        % LTeX: logLevel=finer
+        Suppose this sentence produces weird logs.
+        % LTeX: logLevel=#
+
+        \ltexComment{You can change multiple values at once.}
+        % Ltex: language=de-DE rules-=DE_AGREEMENT
+        Dies ist eine Test.
+        % Ltex: language=#
+
+        \ltexComment{Comment suffixes that do not conform to KEY=VALUE are ignored.}
+        % Ltex: rules-=EN_A_VS_AN       I know what I am doing!
+        This is an test with no mistake.
+        % Ltex: rules#=EN_A_VS_AN       Never mind.
+        This is an test with a mistake.
+
+        \end{document}
+        """.trimIndent(),
+      )
+    val checkingResult = checkDocument(document)
+
+    val matches: List<LanguageToolRuleMatch> = checkingResult.first
+    assertEquals(matches.size, 22)
+
+    assertMatchIs(matches[0], "EN_A_VS_AN", "This is an test with a mistake.", 656, 658)
+    assertMatchIs(matches[1], "EN_A_VS_AN", "This is an test with a mistake.", 782, 784)
+    assertMatchIs(matches[2], "EN_A_VS_AN", "This is an test with a mistake.", 841, 843)
+    assertMatchIs(matches[3], "GERMAN_SPELLER_RULE", "This test contains the mistake.", 952, 955)
+    assertMatchIs(matches[4], "GERMAN_SPELLER_RULE", "This test contains the mistake.", 956, 963)
+    assertMatchIs(
+      matches[5],
+      "MORFOLOGIK_RULE_EN_US",
+      "Dies ist ein Test with mistakes.",
+      1052,
+      1055,
+    )
+    assertMatchIs(
+      matches[6],
+      "MORFOLOGIK_RULE_EN_US",
+      "Dies ist ein Test with mistakes.",
+      1056,
+      1059,
+    )
+    assertMatchIs(matches[7], "EN_A_VS_AN", "This is an test with a mistake.", 1130, 1132)
+    assertMatchIs(matches[8], "EN_A_VS_AN", "This is an test with a mistake.", 1265, 1267)
+    assertMatchIs(matches[9], "EN_A_VS_AN", "This is an test with a mistake.", 1332, 1334)
+    assertMatchIs(matches[10], "MORFOLOGIK_RULE_EN_US", "Dcba is not a word.", 1627, 1631)
+    assertMatchIs(matches[11], "MORFOLOGIK_RULE_EN_US", "Dcba is not a word.", 1672, 1676)
+    assertMatchIs(matches[12], "MORFOLOGIK_RULE_EN_US", "Dcba is not a word.", 1758, 1762)
+    assertMatchIs(matches[13], "EN_A_VS_AN", "This is an test with a mistake.", 1833, 1835)
+    assertMatchIs(matches[14], "EN_A_VS_AN", "This is an test with a mistake.", 1950, 1952)
+    assertMatchIs(matches[15], "AGREEMENT_SENT_START", "This Dummies has a mistake.", 2322, 2335)
+    assertMatchIs(matches[16], "EN_A_VS_AN", "This is an test with a mistake.", 2517, 2519)
+    assertMatchIs(matches[17], "EN_A_VS_AN", "This is an test with a mistake.", 2628, 2630)
+    assertMatchIs(matches[18], "EN_A_VS_AN", "This is an test with a mistake.", 2760, 2762)
+    assertMatchIs(matches[19], "EN_A_VS_AN", "This is an test with a mistake.", 2991, 2993)
+    assertMatchIs(
+      matches[20],
+      "PASSIVE_VOICE_SIMPLE",
+      "The rules have been enabled by the comment.",
+      3255,
+      3297,
+    )
+    assertMatchIs(matches[21], "EN_A_VS_AN", "This is an test with a mistake.", 3935, 3937)
+  }
+
+  @Test
   fun testMarkdown() {
     val document: LtexTextDocumentItem =
       createDocument(
@@ -128,6 +311,72 @@ class DocumentCheckerTest {
         """.trimIndent(),
       )
     assertMatches(checkDocument(document).first, 8, 10, 62, 73)
+  }
+
+  @Test
+  @Suppress("LongMethod")
+  fun testMagicCommentsMarkdown() {
+    val document =
+      createDocument(
+        "markdown",
+        """
+        # Magic comments
+
+        <!-- LTeX: loglevel=finest rules-=CONSECUTIVE_SPACES -->
+
+        This is an **test** with a mistake.
+        <!-- LTeX: markdown.nodes.StrongEmphasis=ignore -->
+        This is an **test** ignored test without a mistake.
+        <!-- LTeX: markdown.nodes.StrongEmphasis=default -->
+        This is an **test** with a mistake.
+        <!-- LTeX: markdown.nodes.StrongEmphasis=dummy -->
+        This is an **test** with a mistake.
+        <!-- LTeX: markdown.nodes.StrongEmphasis=# -->
+        This is an **test** with a mistake.
+        """.trimIndent(),
+      )
+    val checkingResult = checkDocument(document)
+
+    val matches: List<LanguageToolRuleMatch> = checkingResult.first
+    assertEquals(matches.size, 4)
+
+    assertMatchIs(matches[0], "EN_A_VS_AN", "This is an test with a mistake.", 84, 86)
+    assertMatchIs(matches[1], "EN_A_VS_AN", "This is an test with a mistake.", 277, 279)
+    assertMatchIs(matches[2], "EN_A_VS_AN", "This is an Dummy0 with a mistake.", 364, 366)
+    assertMatchIs(matches[3], "EN_A_VS_AN", "This is an test with a mistake.", 447, 449)
+  }
+
+  @Test
+  @Suppress("LongMethod")
+  fun testMagicCommentsBibtex() {
+    val document =
+      createDocument(
+        "bibtex",
+        """
+        % Set actions for bibtex fields.
+        @misc{sample,
+          author    = {This is an test.},
+        }
+        % LTeX: bibtex.fields.author=false
+        @misc{sample,
+          author    = {This is an test.},
+        }
+        % LTeX: bibtex.fields.author=true
+        @misc{sample,
+          author    = {This is an test.},
+        }
+        % LTeX: bibtex.fields.author=#
+        @misc{sample,
+          author    = {This is an test.},
+        }
+        """.trimIndent(),
+      )
+    val checkingResult = checkDocument(document)
+
+    val matches: List<LanguageToolRuleMatch> = checkingResult.first
+    assertEquals(matches.size, 1)
+
+    assertMatchIs(matches[0], "EN_A_VS_AN", "This is an test.", 239, 241)
   }
 
   @Test
@@ -398,6 +647,19 @@ class DocumentCheckerTest {
       assertEquals("ein Test", matches[1].suggestedReplacements[0])
       assertEquals("einen Test", matches[1].suggestedReplacements[1])
       assertEquals("einem Test", matches[1].suggestedReplacements[2])
+    }
+
+    fun assertMatchIs(
+      match: LanguageToolRuleMatch,
+      rule: String,
+      sentence: String,
+      fromPos: Int,
+      toPos: Int,
+    ) {
+      assertEquals(rule, match.ruleId)
+      assertEquals(sentence.trim(), match.sentence?.trim())
+      assertEquals(fromPos, match.fromPos)
+      assertEquals(toPos, match.toPos)
     }
   }
 }
