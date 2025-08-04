@@ -85,6 +85,10 @@ data class Settings(
   val clearDiagnosticsWhenClosingFile: Boolean
     get() = (this._clearDiagnosticsWhenClosingFile ?: true)
 
+  /**
+   * Returns differences between `this` and `other` that call for
+   * ``SettingsManager.reinitializeLanguageToolInterface()``
+   * */
   fun getDifferencesRelevantForLanguageTool(other: Settings?): Set<SettingsDifference> {
     val differences = HashSet<SettingsDifference>()
 

@@ -8,7 +8,9 @@
 
 package org.bsplines.ltexls.parsing
 
+import SettingsParser
 import org.bsplines.ltexls.settings.Settings
+import org.bsplines.ltexls.settings.SettingsOverride
 import org.bsplines.ltexls.tools.I18n
 import org.bsplines.ltexls.tools.Logging
 
@@ -21,15 +23,15 @@ open class RegexCodeFragmentizer(
     originalSettings: Settings,
   ): List<CodeFragment> {
     val codeFragments = ArrayList<CodeFragment>()
-    var curSettings: Settings = originalSettings
+    val settingsOverride = SettingsOverride(originalSettings)
+    var curSettings: Settings = settingsOverride.toSettings()
     var curPos = 0
 
     for (matchResult: MatchResult in this.regex.findAll(code)) {
       var lastPos: Int = curPos
       curPos = matchResult.range.first
       var lastCode: String = code.substring(lastPos, curPos)
-      var lastSettings: Settings = curSettings
-      codeFragments.add(CodeFragment(codeLanguageId, lastCode, lastPos, lastSettings))
+      codeFragments.add(CodeFragment(codeLanguageId, lastCode, lastPos, curSettings))
 
       var settingsLine: String? = null
 
@@ -45,13 +47,13 @@ open class RegexCodeFragmentizer(
         continue
       }
 
-      curSettings = SettingsParser.createUpdatedSettings(settingsLine, curSettings)
+      SettingsParser.updateSettingsOverride(settingsLine, settingsOverride)
+      curSettings = settingsOverride.toSettings()
 
       lastPos = curPos
       curPos = matchResult.range.last + 1
       lastCode = code.substring(lastPos, curPos)
-      lastSettings = curSettings
-      codeFragments.add(CodeFragment("nop", lastCode, lastPos, lastSettings))
+      codeFragments.add(CodeFragment("nop", lastCode, lastPos, curSettings))
     }
 
     codeFragments.add(
