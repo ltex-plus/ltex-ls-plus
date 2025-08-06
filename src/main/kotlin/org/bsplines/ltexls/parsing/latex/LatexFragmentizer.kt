@@ -455,7 +455,6 @@ class LatexFragmentizer(
         map["english"] = "en-US"
         map["USenglish"] = "en-US"
         map["esperanto"] = "eo"
-        map["estonian"] = "es"
         map["farsi"] = "fa"
         map["french"] = "fr"
         map["irish"] = "ga-IE"
