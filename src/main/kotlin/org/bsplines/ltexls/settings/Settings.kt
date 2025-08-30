@@ -368,7 +368,7 @@ data class Settings(
     ): Map<String, Set<HiddenFalsePositive>>? {
       val hiddenFalsePositiveJsonStringMap: Map<String, Set<JsonObject>>? =
         convertJsonObjectToMapOfJsonObjects(
-          getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings, "hiddenFalsePositives")
+          getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings, "hiddenFalsePositives"),
         )
 
       return if (hiddenFalsePositiveJsonStringMap != null) {
@@ -626,7 +626,9 @@ data class Settings(
       return map
     }
 
-    private fun convertJsonObjectToMapOfJsonObjects(obj: JsonObject?): Map<String, Set<JsonObject>>? {
+    private fun convertJsonObjectToMapOfJsonObjects(
+      obj: JsonObject?,
+    ): Map<String, Set<JsonObject>>? {
       if (obj == null) return null
       val map = HashMap<String, Set<JsonObject>>()
 
