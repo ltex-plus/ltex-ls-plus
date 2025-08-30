@@ -247,8 +247,12 @@ class SettingsTest {
     val dictionary = JsonObject()
     dictionary.add("en-US", englishDictionary)
 
+    val hiddenFalsePositiveRule = JsonObject()
+    hiddenFalsePositiveRule.addProperty("rule", "rule")
+    hiddenFalsePositiveRule.addProperty("sentence", "sentence")
+
     val englishHiddenFalsePositives = JsonArray()
-    englishHiddenFalsePositives.add("{\"rule\": \"rule\", \"sentence\": \"sentence\"}")
+    englishHiddenFalsePositives.add(hiddenFalsePositiveRule)
 
     val hiddenFalsePositives = JsonObject()
     hiddenFalsePositives.add("en-US", englishHiddenFalsePositives)

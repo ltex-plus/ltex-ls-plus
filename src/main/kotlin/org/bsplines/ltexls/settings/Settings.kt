@@ -366,18 +366,16 @@ data class Settings(
     private fun getAllHiddenFalsePositivesFromJson(
       jsonWorkspaceSpecificSettings: JsonElement,
     ): Map<String, Set<HiddenFalsePositive>>? {
-      val hiddenFalsePositiveJsonStringMap: Map<String, Set<String>>? =
-        mergeMapOfListsIntoMapOfSets(
-          convertJsonObjectToMapOfLists(
-            getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings, "hiddenFalsePositives"),
-          ),
+      val hiddenFalsePositiveJsonStringMap: Map<String, Set<JsonObject>>? =
+        convertJsonObjectToMapOfJsonObjects(
+          getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings, "hiddenFalsePositives")
         )
 
       return if (hiddenFalsePositiveJsonStringMap != null) {
         val allHiddenFalsePositives = HashMap<String, HashSet<HiddenFalsePositive>>()
 
         for (
-        (curLanguage: String, hiddenFalsePositiveJsonStrings: Set<String>)
+        (curLanguage: String, hiddenFalsePositiveJsonObjects: Set<JsonObject>)
         in hiddenFalsePositiveJsonStringMap
         ) {
           val curHiddenFalsePositives: HashSet<HiddenFalsePositive> =
@@ -387,9 +385,9 @@ data class Settings(
               set
             }
 
-          for (hiddenFalsePositiveJsonString: String in hiddenFalsePositiveJsonStrings) {
+          for (hiddenFalsePositiveJsonObject: JsonObject in hiddenFalsePositiveJsonObjects) {
             curHiddenFalsePositives.add(
-              HiddenFalsePositive.fromJsonString(hiddenFalsePositiveJsonString),
+              HiddenFalsePositive.fromJsonObject(hiddenFalsePositiveJsonObject),
             )
           }
         }
@@ -623,6 +621,25 @@ data class Settings(
       for (entry: Map.Entry<String, JsonElement> in obj.entrySet()) {
         val enumValue: T? = convertJsonElementToEnum(entry.value, enumValues)
         if (enumValue != null) map[entry.key] = enumValue
+      }
+
+      return map
+    }
+
+    private fun convertJsonObjectToMapOfJsonObjects(obj: JsonObject?): Map<String, Set<JsonObject>>? {
+      if (obj == null) return null
+      val map = HashMap<String, Set<JsonObject>>()
+
+      for (entry: Map.Entry<String, JsonElement> in obj.entrySet()) {
+        if (!entry.value.isJsonArray) return null
+        val set = HashSet<JsonObject>()
+
+        for (element: JsonElement in entry.value.asJsonArray) {
+          if (!element.isJsonObject) return null
+          set.add(element.asJsonObject)
+        }
+
+        map[entry.key] = set
       }
 
       return map

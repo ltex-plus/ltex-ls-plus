@@ -18,8 +18,7 @@ data class HiddenFalsePositive(
   val sentenceRegex = Regex(sentenceRegexString)
 
   companion object {
-    fun fromJsonString(jsonString: String): HiddenFalsePositive {
-      val jsonObject: JsonObject = JsonParser.parseString(jsonString).asJsonObject
+    fun fromJsonObject(jsonObject: JsonObject): HiddenFalsePositive {
       val ruleId: String = jsonObject.get("rule").asString
       val sentenceString: String = jsonObject.get("sentence").asString
       return HiddenFalsePositive(ruleId, sentenceString)
