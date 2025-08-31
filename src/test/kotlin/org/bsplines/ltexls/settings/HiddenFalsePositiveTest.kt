@@ -8,6 +8,7 @@
 
 package org.bsplines.ltexls.settings
 
+import com.google.gson.JsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -16,9 +17,12 @@ class HiddenFalsePositiveTest {
   @Test
   fun test() {
     val hiddenFalsePositive = HiddenFalsePositive("a", "b")
+    val hiddenFalsePositiveRule = JsonObject()
+    hiddenFalsePositiveRule.addProperty("rule", "a")
+    hiddenFalsePositiveRule.addProperty("sentence", "b")
     assertEquals(
       hiddenFalsePositive,
-      HiddenFalsePositive.fromJsonString("{\"rule\":\"a\",\"sentence\":\"b\"}"),
+      HiddenFalsePositive.fromJsonObject(hiddenFalsePositiveRule),
     )
     assertNotEquals(hiddenFalsePositive, HiddenFalsePositive("X", "b"))
     assertNotEquals(hiddenFalsePositive, HiddenFalsePositive("a", "X"))
