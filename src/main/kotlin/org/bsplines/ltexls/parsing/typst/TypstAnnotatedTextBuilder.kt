@@ -125,7 +125,7 @@ class TypstAnnotatedTextBuilder(
           addText(this.curString)
         } else {
           addMarkup(PROPERTY_REGEX)
-          addMarkup(this.curString)
+          if (!characterProcessed) addMarkup(this.curString)
         }
       }
     }

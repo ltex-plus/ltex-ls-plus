@@ -148,6 +148,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
   fun testVariables() {
     assertPlainText(
       """
+      #set text(lang: "en")
       #let val = "Joe"
       #let json = json("test.json")
       #let alertBox(body, fill: red) = {
@@ -163,7 +164,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       #val is the best.
 
       """.trimIndent(),
-      "\"Joe\"\nDummy0\n\nDummy1 is the best.\n",
+      "\n\"Joe\"\nDummy0\n\nDummy1 is the best.\n",
     )
   }
 
