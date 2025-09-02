@@ -34,7 +34,7 @@ jobs:
 
     steps:
       - name: "Checkout Repository"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
 
       - name: "Set up Java"
         uses: "actions/setup-java@v4"
@@ -60,7 +60,7 @@ jobs:
       contents: read
     steps:
       - name: "Checkout Repository"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
 
       - name: "Set up Python"
         uses: "actions/setup-python@v5"
@@ -93,7 +93,7 @@ jobs:
       contents: write
     steps:
       - name: "Checkout Repository"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
 
       - name: "Set up Java"
         uses: "actions/setup-java@v4"
