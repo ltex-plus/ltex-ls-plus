@@ -14,17 +14,23 @@
   </properties>
   <body>
     <release version="18.6.0" date="upcoming">
-      <action type="add" issue="#102" due-to="Nils1729">
+      <action type="add" issue="#102" due-to="@Nils1729">
         Add support comprehensive magic comments
       </action>
-      <action type="add" issue="#100" due-to="Dominik Peters">
+      <action type="add" issue="#100" due-to="Dominik Peters (@DominikPeters)">
         Add support for various LaTeX commands
       </action>
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#145">
         Fix spelling errors for Dutch dummies
       </action>
-      <action type="fix" issue="#103" due-to="Simmo Saan">
+      <action type="fix" issue="#103" due-to="Simmo Saan (@sim642)">
         Remove incorrect babel language mapping for estonian
+      </action>
+      <action type="fix" issue="#105" due-to="Jonathan Chan (@ionathanch)">
+        `ltex.hiddenFalsePositives` rules should be JSON, not strings
+      </action>    
+      <action type="fix" issue="ltex-plus/vscode-ltex-plus#157">
+        Fix Typst parsing. E.g. the statement `#set text(lang: "en")` caused the entire document not to be checked. 
       </action>
     </release>
     <release version="18.5.1" date="2025-04-09">
@@ -59,13 +65,13 @@
       </action>
     </release>
     <release version="18.4.0" date="2024-12-23">
-      <action type="add" issue="valentjn/ltex-ls#268" due-to="Benoît Pasquier">
+      <action type="add" issue="valentjn/ltex-ls#268" due-to="Benoît Pasquier (@briochemc)">
         Add support for apacite commands 
       </action>
-      <action type="add" issue="valentjn/ltex-ls#266" due-to="Loïc Reynier">
+      <action type="add" issue="valentjn/ltex-ls#266" due-to="Loïc Reynier (@loicreynier)">
         Add support for \cpageref, \labelcref and variants
       </action>
-      <action type="fix" issue="valentjn/ltex-ls#238,valentjn/ltex-ls#224" due-to="Andrii Savytskyi">
+      <action type="fix" issue="valentjn/ltex-ls#238,valentjn/ltex-ls#224" due-to="Andrii Savytskyi (@qRoC)">
         Improved comment parsing and Rust support
       </action>
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#105">
