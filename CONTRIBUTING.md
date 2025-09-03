@@ -57,7 +57,7 @@ If you like LT<sub>E</sub>X+, but are not able to contribute in any of these way
 1. Install VS Code, Git, and Apache Maven.
 2. Fork ltex-ls-plus on GitHub.
 3. Clone the fork: `git clone https://github.com/<YOUR_USERNAME>/ltex-ls-plus.git`
-4. Build the project: `cd ltex-ls-plus && python tools/createCompletionLists.py && mvn verify`
+4. Build the project: `cd ltex-ls-plus && mvn verify`
 5. It's recommended to use IntelliJ IDEA to debug ltex-ls-plus.
 
 ## How to Contribute Code

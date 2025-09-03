@@ -310,6 +310,21 @@
         <version>3.1.0</version>
         <executions>
           <execution>
+            <?m2e execute onConfiguration?>
+            <id>create-completion-Lists</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <exec executable="python">
+                  <arg value="tools/createCompletionLists.py"/>
+                </exec>
+              </target>
+            </configuration>
+          </execution>
+          <execution>
             <id>ktlint</id>
             <phase>verify</phase>
             <goals>

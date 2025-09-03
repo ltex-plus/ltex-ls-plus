@@ -121,7 +121,15 @@ def createCompletionList(languageToolJarFilePath: pathlib.Path, tmpDirPath: path
   dictText = "\n".join([line[2:] for line in dictText.splitlines()[1::2]]) + "\n"
   with open(targetFilePath, "w", encoding="utf-8") as file: file.write(dictText)
 
-
+def checkIfCompletionListsAvailable(directoryStr: str) -> bool:
+  directory = os.path.normpath(directoryStr)
+  if os.path.isdir(directory):
+    for filename in os.listdir(directory):
+        if filename.startswith("completionList"):
+            print(f"Completion lists are already available in the folder {directoryStr}.")
+            print("Run 'mvn clean' to download/extract the completion lists again.")
+            return True
+  return False
 
 def main() -> None:
   parser = argparse.ArgumentParser(
@@ -129,6 +137,9 @@ def main() -> None:
   parser.add_argument("--languagetool-path", type=pathlib.Path, metavar="PATH",
       help="Path to standalone version of LanguageTool; will be downloaded if omitted")
   arguments = parser.parse_args()
+
+  if checkIfCompletionListsAvailable("target\\classes\\"):
+    exit()
 
   targetDirPath = pathlib.Path(__file__).parent.parent.joinpath("src", "main", "resources")
 
