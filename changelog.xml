@@ -32,6 +32,9 @@
       <action type="fix" issue="#105" due-to="Jonathan Chan (@ionathanch)">
         `ltex.hiddenFalsePositives` rules should be JSON, not strings
       </action>    
+      <action type="fix" issue="ltex-plus/vscode-ltex-plus#142">
+        Fix spell checking in square brackets for Typst documents
+      </action>
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#157">
         Fix Typst parsing. E.g. the statement `#set text(lang: "en")` caused the entire document not to be checked. 
       </action>

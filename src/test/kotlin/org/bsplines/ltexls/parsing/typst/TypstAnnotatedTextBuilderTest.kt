@@ -209,10 +209,21 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       Some text is #text("bold", weight: 800).
       #image("some_text_with_typos.svg")
       This is an image.
-      #function[ABC][AB][A]
       More text.
       """.trimIndent(),
-      "Text\nPaper12\nSome text is bold.\nDummy11\nThis is an image.\nDummy12\nMore text.",
+      "Text\nPaper12\nSome text is bold.\nDummy11\nThis is an image.\nMore text.",
+    )
+  }
+
+  @Test
+  fun testEnum() {
+    assertPlainText(
+      """
+      Text
+      My tasks are: #enum(start: 2)[Go shopping][Clean the porch]
+      More text.
+      """.trimIndent(),
+      "Text\nMy tasks are: \nGo shopping\nClean the porch\n\nMore text.",
     )
   }
 

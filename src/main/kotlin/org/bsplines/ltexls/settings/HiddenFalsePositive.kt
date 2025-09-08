@@ -9,7 +9,6 @@
 package org.bsplines.ltexls.settings
 
 import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 
 data class HiddenFalsePositive(
   val ruleId: String,
