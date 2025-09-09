@@ -17,6 +17,9 @@
       <action type="update">
         Update to lsp-cli-plus 2.2.1. See [lsp-cli-plus release notes](https://github.com/ltex-plus/lsp-cli-plus/releases/tag/2.2.1).
       </action>
+      <action type="update">
+        Update bundled Java runtime from 21.0.5+11 to 21.0.8+9
+      </action>
       <action type="add" issue="#102" due-to="@Nils1729">
         Add support comprehensive magic comments
       </action>

@@ -20,7 +20,7 @@ import zipfile
 import os
 import stat
 
-javaVersion = "21.0.5+11"
+javaVersion = "21.0.8+9"
 
 
 
