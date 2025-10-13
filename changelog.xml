@@ -13,7 +13,10 @@
     <author>Julian Valentin, Daniel Spitzer and LTeX+ Development Community</author>
   </properties>
   <body>
-    <release version="18.6.0" date="upcoming">
+    <release version="18.6.0" date="2025-10-13">
+      <action type="update">
+        Update to LanguageTool 6.7 (see [LT release notes](https://github.com/languagetool-org/languagetool/blob/v6.7/languagetool-standalone/CHANGES.md))
+      </action>
       <action type="update">
         Update to lsp-cli-plus 2.2.1. See [lsp-cli-plus release notes](https://github.com/ltex-plus/lsp-cli-plus/releases/tag/2.2.1).
       </action>
