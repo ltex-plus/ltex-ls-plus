@@ -23,19 +23,19 @@
       <action type="update">
         Update bundled Java runtime from 21.0.5+11 to 21.0.8+9
       </action>
-      <action type="add" issue="#102" due-to="@Nils1729">
+      <action type="add" issue="ltex-plus/ltex-ls-plus#102" due-to="@Nils1729">
         Add support comprehensive magic comments
       </action>
-      <action type="add" issue="#100" due-to="Dominik Peters (@DominikPeters)">
+      <action type="add" issue="ltex-plus/ltex-ls-plus#100" due-to="Dominik Peters (@DominikPeters)">
         Add support for various LaTeX commands
       </action>
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#145">
         Fix spelling errors for Dutch dummies
       </action>
-      <action type="fix" issue="#103" due-to="Simmo Saan (@sim642)">
+      <action type="fix" issue="ltex-plus/ltex-ls-plus#103" due-to="Simmo Saan (@sim642)">
         Remove incorrect babel language mapping for estonian
       </action>
-      <action type="fix" issue="#105" due-to="Jonathan Chan (@ionathanch)">
+      <action type="fix" issue="ltex-plus/ltex-ls-plus#105" due-to="Jonathan Chan (@ionathanch)">
         `ltex.hiddenFalsePositives` rules should be JSON, not strings
       </action>    
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#142">
@@ -46,7 +46,7 @@
       </action>
     </release>
     <release version="18.5.1" date="2025-04-09">
-      <action type="fix" issue="#85">
+      <action type="fix" issue="ltex-plus/ltex-ls-plus#85">
         Fix slash issue in HTTP URI
       </action>
     </release>
@@ -60,19 +60,19 @@
       <action type="update">
         Update bundled Java runtime from 21.0.4+7 to 21.0.5+11. No separate beta Java runtime build is required anymore for Windows aarch64.
       </action>
-      <action type="add" issue="#55">
+      <action type="add" issue="ltex-plus/ltex-ls-plus#55">
         Add support for Neorg (LSP language ID `neorg`)
       </action>
-      <action type="add" issue="#69">
+      <action type="add" issue="ltex-plus/ltex-ls-plus#69">
         Add support for \NewDoumentCommand, \NewDocumentEnvironment, \NewExpandableDocumentCommand, \NewCommandCopy, \NewEnvironmentCopy, \IfNoValueTF, \IfValueTF, \IfBlankTF, \IfBooleanTF and many more (LaTeX)
       </action>
       <action type="add" issue="ltex-plus/vscode-ltex-plus#128">
         Add support for AsciiDoc (LSP language IDs `asciidoc`)
       </action>
-      <action type="fix" issue="#72">
+      <action type="fix" issue="ltex-plus/ltex-ls-plus#72">
         Fix false positives in Typst
       </action>
-      <action type="fix" issue="#74">
+      <action type="fix" issue="ltex-plus/ltex-ls-plus#74">
         Ignore code blocks and raw text in Typst
       </action>
     </release>
@@ -100,7 +100,7 @@
       <action type="add">
         Add Dockerfile
       </action>
-      <action type="fix" issue="#40">
+      <action type="fix" issue="ltex-plus/ltex-ls-plus#40">
         Bundled ltex-cli-plus did not start due to a wrong setting .lsp-cli.json
       </action>
       <action type="update">
