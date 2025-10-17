@@ -296,6 +296,37 @@ class DocumentCheckerTest {
     assertMatchIs(matches[21], "EN_A_VS_AN", "This is an test with a mistake.", 3935, 3937)
   }
 
+  /**
+   * This is a regression test for https://github.com/ltex-plus/ltex-ls-plus/pull/102#issuecomment-3415086204.
+   */
+  @Test
+  fun testMultipleDictionaryEntriesInMagicComment() {
+    val document =
+      createDocument(
+        "latex",
+        """
+        \documentclass{article}
+        \newcommand{\ltexComment}[1]{}
+        \begin{document}
+        Olching
+
+        Ruedsy
+        % LTeX: dictionary+=Olching dictionary+=Ruedsy
+        Olching
+
+        Ruedsy
+        \end{document}
+        """.trimIndent(),
+      )
+    val checkingResult = checkDocument(document)
+
+    val matches: List<LanguageToolRuleMatch> = checkingResult.first
+    assertEquals(2, matches.size)
+
+    assertMatchIs(matches[0], "MORFOLOGIK_RULE_EN_US", "Olching", 72, 79)
+    assertMatchIs(matches[1], "MORFOLOGIK_RULE_EN_US", "Ruedsy", 81, 87)
+  }
+
   @Test
   fun testMarkdown() {
     val document: LtexTextDocumentItem =
