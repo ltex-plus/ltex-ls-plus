@@ -50,8 +50,8 @@ object SettingsParser {
     Regex("^(?<t>true|1|yes)|(?<f>false|0|no)|(?<n>null|nil|clear|#|)$", RegexOption.IGNORE_CASE)
   private val OP_REGEX = Regex("^(?<add>\\+)|(?<remove>-)|(?<keep>#)$", RegexOption.IGNORE_CASE)
 
-  private fun parseSettings(settingsLine: String): Map<String, String> {
-    val settingsMap = HashMap<String, String>()
+  private fun parseSettings(settingsLine: String): Iterable<Pair<String, String>> {
+    val settingsUpdates = ArrayList<Pair<String, String>>()
 
     var remainingLine = settingsLine
 
@@ -65,7 +65,7 @@ object SettingsParser {
 
     var kv = nextMatch()
     while (kv != null) {
-      settingsMap[kv.first] = kv.second
+      settingsUpdates.add(kv)
       kv = nextMatch()
     }
 
@@ -73,7 +73,7 @@ object SettingsParser {
       Logging.LOGGER.warning(I18n.format("ignoringMalformedInlineSetting", remainingLine))
     }
 
-    return settingsMap
+    return settingsUpdates
   }
 
   @Suppress("CyclomaticComplexMethod", "LongMethod", "NestedBlockDepth")
@@ -175,15 +175,15 @@ object SettingsParser {
     settingsLine: String,
     override: SettingsOverride,
   ) {
-    val settingsMap = parseSettings(settingsLine)
-    updateSettingsOverride(settingsMap, override)
+    val settingsUpdates = parseSettings(settingsLine)
+    updateSettingsOverride(settingsUpdates, override)
   }
 
   public fun updateSettingsOverride(
-    settingsMap: Map<String, String>,
+    settingsUpdate: Iterable<Pair<String, String>>,
     override: SettingsOverride,
   ) {
-    for ((settingKey: String, settingValue: String) in settingsMap) {
+    for ((settingKey: String, settingValue: String) in settingsUpdate) {
       updateSettingsOverride(settingKey, settingValue, override)
     }
   }
