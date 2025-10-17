@@ -24,6 +24,10 @@ class HiddenFalsePositiveTest {
       hiddenFalsePositive,
       HiddenFalsePositive.fromJsonObject(hiddenFalsePositiveRule),
     )
+    assertEquals(
+      hiddenFalsePositive,
+      HiddenFalsePositive.fromJsonString("{\"rule\":\"a\",\"sentence\":\"b\"}"),
+    )
     assertNotEquals(hiddenFalsePositive, HiddenFalsePositive("X", "b"))
     assertNotEquals(hiddenFalsePositive, HiddenFalsePositive("a", "X"))
     assertEquals("a", hiddenFalsePositive.ruleId)

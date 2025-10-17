@@ -366,36 +366,44 @@ data class Settings(
     private fun getAllHiddenFalsePositivesFromJson(
       jsonWorkspaceSpecificSettings: JsonElement,
     ): Map<String, Set<HiddenFalsePositive>>? {
-      val hiddenFalsePositiveJsonStringMap: Map<String, Set<JsonObject>>? =
+      val objectMap: Map<String, Set<JsonObject>>? =
         convertJsonObjectToMapOfJsonObjects(
           getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings, "hiddenFalsePositives"),
         )
+      val stringMap: Map<String, Set<String>>? =
+        mergeMapOfListsIntoMapOfSets(
+          convertJsonObjectToMapOfLists(
+            getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings, "hiddenFalsePositives"),
+          ),
+        )
 
-      return if (hiddenFalsePositiveJsonStringMap != null) {
-        val allHiddenFalsePositives = HashMap<String, HashSet<HiddenFalsePositive>>()
+      if (objectMap == null && stringMap == null) {
+        return null
+      }
 
-        for (
-        (curLanguage: String, hiddenFalsePositiveJsonObjects: Set<JsonObject>)
-        in hiddenFalsePositiveJsonStringMap
-        ) {
-          val curHiddenFalsePositives: HashSet<HiddenFalsePositive> =
-            allHiddenFalsePositives[curLanguage] ?: run {
-              val set = HashSet<HiddenFalsePositive>()
-              allHiddenFalsePositives[curLanguage] = set
-              set
-            }
+      val hiddenFalsePositivesMap = HashMap<String, HashSet<HiddenFalsePositive>>()
 
-          for (hiddenFalsePositiveJsonObject: JsonObject in hiddenFalsePositiveJsonObjects) {
-            curHiddenFalsePositives.add(
-              HiddenFalsePositive.fromJsonObject(hiddenFalsePositiveJsonObject),
-            )
+      if (objectMap != null) {
+        for ((language, jsonObjectSet) in objectMap) {
+          val falsePositivesSet = hiddenFalsePositivesMap.getOrPut(language) { HashSet() }
+          for (jsonObject in jsonObjectSet) {
+            val falsePositive = HiddenFalsePositive.fromJsonObject(jsonObject)
+            falsePositivesSet.add(falsePositive)
           }
         }
-
-        allHiddenFalsePositives
-      } else {
-        null
       }
+
+      if (stringMap != null) {
+        for ((language, stringSet) in stringMap) {
+          val falsePositivesSet = hiddenFalsePositivesMap.getOrPut(language) { HashSet() }
+          for (jsonString in stringSet) {
+            val falsePositive = HiddenFalsePositive.fromJsonString(jsonString)
+            falsePositivesSet.add(falsePositive)
+          }
+        }
+      }
+
+      return hiddenFalsePositivesMap
     }
 
     private fun getDiagnosticSeverityFromJson(
