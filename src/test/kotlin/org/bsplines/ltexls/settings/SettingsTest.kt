@@ -254,10 +254,10 @@ class SettingsTest {
     val englishHiddenFalsePositives = JsonArray()
     englishHiddenFalsePositives.add(hiddenFalsePositiveRule)
 
-    val hiddenFalsePositives = JsonObject()
+    var hiddenFalsePositives = JsonObject()
     hiddenFalsePositives.add("en-US", englishHiddenFalsePositives)
 
-    val jsonWorkspaceSpecificSettings = JsonObject()
+    var jsonWorkspaceSpecificSettings = JsonObject()
     jsonWorkspaceSpecificSettings.add("dictionary", dictionary)
     jsonWorkspaceSpecificSettings.add("hiddenFalsePositives", hiddenFalsePositives)
 
@@ -270,6 +270,16 @@ class SettingsTest {
     assertEquals(mapOf(Pair("latexEnvironment", "ignore")), settings.latexEnvironments)
     assertEquals(mapOf(Pair("markdownNode", "ignore")), settings.markdownNodes)
     assertEquals(true, settings.enablePickyRules)
+
+    // See https://github.com/ltex-plus/vscode-ltex-plus/issues/165
+    val vscodeLTeXJSON = JsonArray()
+    vscodeLTeXJSON.add("{\"rule\": \"rule\", \"sentence\": \"sentence\"}")
+    hiddenFalsePositives = JsonObject()
+    hiddenFalsePositives.add("en-US", vscodeLTeXJSON)
+    jsonWorkspaceSpecificSettings = JsonObject()
+    jsonWorkspaceSpecificSettings.add("hiddenFalsePositives", hiddenFalsePositives)
+    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
+    assertEquals(setOf(HiddenFalsePositive("rule", "sentence")), settings.hiddenFalsePositives)
 
     jsonSettings.addProperty("diagnosticSeverity", "error")
     settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
