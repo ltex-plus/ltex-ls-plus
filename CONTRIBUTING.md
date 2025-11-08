@@ -54,11 +54,10 @@ If you like LT<sub>E</sub>X+, but are not able to contribute in any of these way
 
 [As explained in the FAQ](https://ltex-plus.github.io/ltex-plus/faq.html#whats-the-difference-between-vscode-ltex-ltex-ls-and-languagetool), LT<sub>E</sub>X+ consists of two components: [vscode-ltex-plus](https://github.com/ltex-plus/vscode-ltex-plus) and [ltex-ls-plus](https://github.com/ltex-plus/ltex-ls-plus). This guide is only about the ltex-ls-plus part. If you want to change vscode-ltex-plus as well, [be sure to read and follow the contribution guidelines of ltex-ls-plus](https://ltex-plus.github.io/ltex-plus/vscode-ltex/contributing.html).
 
-1. Install VS Code, Git, and Apache Maven.
+1. Install Java 21 JDK, Python, Git, and Apache Maven.
 2. Fork ltex-ls-plus on GitHub.
 3. Clone the fork: `git clone https://github.com/<YOUR_USERNAME>/ltex-ls-plus.git`
 4. Build the project: `cd ltex-ls-plus && mvn verify`
-5. It's recommended to use IntelliJ IDEA to debug ltex-ls-plus.
 
 ## How to Contribute Code
 
