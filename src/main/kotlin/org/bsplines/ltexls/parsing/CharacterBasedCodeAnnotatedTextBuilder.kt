@@ -22,6 +22,7 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
   protected var isStartOfLine = false
   protected var characterProcessed = false
   protected var codeMode = false
+  protected var codeBlockDelimiter = BracketType.RoundBracket
   protected var codeModeString = false
   protected var codeModeBracketsCounter = 0
   protected var codeModeStringCounter = 0
@@ -80,6 +81,7 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
     interpretAs: String = "",
     generateDummy: Boolean = false,
     startofCodeBlock: Boolean = false,
+    delimiter: BracketType = BracketType.RoundBracket,
   ) {
     if (characterProcessed) return
     var matchResult: MatchResult?
@@ -91,6 +93,7 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
       }
       addMarkup(matchResult.value, interpretAsString)
       if (startofCodeBlock) {
+        codeBlockDelimiter = delimiter
         codeModeBracketsCounter++
         codeModeStringCounter = 0
         codeMode = true
@@ -163,5 +166,13 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
   companion object {
     private val HEADING_REGEX = Regex("^=+\\s")
     private val HEADING_END_REGEX = Regex("^\\.?\\??\\!?\r?\n")
+  }
+
+  enum class BracketType(
+    val openingBracket: String,
+    val closingBracket: String,
+  ) {
+    RoundBracket("(", ")"),
+    CurlyBracket("{", "}"),
   }
 }

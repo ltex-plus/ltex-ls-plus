@@ -37,6 +37,7 @@ class TypstAnnotatedTextBuilder(
     addMarkup(RAW_CODE_REGEX_3, "", true)
     addMarkup(CITE_REGEX)
     addMarkup(CODE_REGEX, "", false, true)
+    addMarkup(CODE_CURLY_BRACKETS_REGEX, "", false, true, BracketType.CurlyBracket)
     addMarkup(LINE_COMMENT_REGEX, "\n")
     addMarkup(MULTILINELINE_COMMENT_REGEX, "\n")
     addMarkup(MARKUP_REGEX)
@@ -99,14 +100,14 @@ class TypstAnnotatedTextBuilder(
   private fun processCodeMode() {
     if (!codeMode || characterProcessed) return
     when (this.curString) {
-      "(" -> {
+      codeBlockDelimiter.openingBracket -> {
         codeModeBracketsCounter++
         addMarkup(this.curString)
       }
-      ")" -> {
+      codeBlockDelimiter.closingBracket -> {
         codeModeBracketsCounter--
         addMarkup(this.curString)
-        // Last closing parenthesis?
+        // Last closing bracket?
         if (codeModeBracketsCounter == 0) {
           codeMode = false
         }
@@ -144,6 +145,7 @@ class TypstAnnotatedTextBuilder(
     private val RAW_CODE_REGEX_3 = Regex("^#raw\\((.|\r?\n)*?[^\\\\]\"\\)")
     private val CITE_REGEX = Regex("^#cite\\(\\S+\\)")
     private val CODE_REGEX = Regex("^#.*?\\(")
+    private val CODE_CURLY_BRACKETS_REGEX = Regex("^#\\{")
     private val LINE_COMMENT_REGEX = Regex("^\\/\\/.*(\r?\n|$)")
     private val MULTILINELINE_COMMENT_REGEX = Regex("^\\/\\*(.|\r?\n)*?\\*\\/")
     private val MARKUP_REGEX = Regex("^(\\*|\\_)")

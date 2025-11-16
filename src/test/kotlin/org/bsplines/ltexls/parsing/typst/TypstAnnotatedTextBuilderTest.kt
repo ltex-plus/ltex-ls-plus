@@ -209,9 +209,12 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       Some text is #text("bold", weight: 800).
       #image("some_text_with_typos.svg")
       This is an image.
+      #{
+        heading("Title")
+      }
       More text.
       """.trimIndent(),
-      "Text\nPaper12\nSome text is bold.\nDummy11\nThis is an image.\nMore text.",
+      "Text\nPaper12\nSome text is bold.\nDummy11\nThis is an image.\nTitle\nMore text.",
     )
   }
 
