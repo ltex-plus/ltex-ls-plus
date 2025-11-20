@@ -33,6 +33,7 @@ class DummyGenerator private constructor(
         "sv" to "Dummy-$number",
         "es" to "Maniquí-$number",
         "nl" to "Dummy+$number",
+        "pl" to "Atrapa-$number",
       )
 
     if (this.plural) {

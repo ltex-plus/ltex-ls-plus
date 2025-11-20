@@ -13,6 +13,11 @@
     <author>Julian Valentin, Daniel Spitzer and LTeX+ Development Community</author>
   </properties>
   <body>
+    <release version="18.7.0" date="upcoming">
+      <action type="fix" issue="ltex-plus/vscode-ltex-plus#170">
+        Fix spelling errors for Polish dummies
+      </action>
+    </release>
     <release version="18.6.1" date="2025-10-19">
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#165">
         Fix Hidden False Positives in vscode-ltex-plus

@@ -389,7 +389,7 @@ class CodeActionProvider(
     private const val DISABLE_RULES_COMMAND_NAME = "_ltex.disableRules"
     private const val HIDE_FALSE_POSITIVES_COMMAND_NAME = "_ltex.hideFalsePositives"
     private const val DUMMY_REGEX_STRING =
-      "(?:Dummy|Ina|Jimmy-|Dummy-|Maniquí-|Maniquíes-|Dummy\\+|Dummy's\\+)[0-9]+"
+      "(?:Dummy|Ina|Jimmy-|Dummy-|Maniquí-|Maniquíes-|Atrapa-|Dummy\\+|Dummy's\\+)[0-9]+"
     private val DUMMY_REGEX = Regex(DUMMY_REGEX_STRING)
 
     private const val MAX_NUMBER_OF_ACCEPT_SUGGESTIONS_CODE_ACTIONS = 5

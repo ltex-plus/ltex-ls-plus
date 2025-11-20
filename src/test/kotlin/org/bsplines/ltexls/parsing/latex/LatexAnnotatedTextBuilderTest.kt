@@ -433,6 +433,11 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
       Settings(_languageShortCode = "nl"),
     )
     assertPlainText(
+      "To jest test: \$E = mc^2$.\n",
+      "To jest test: Atrapa-0. ",
+      Settings(_languageShortCode = "pl"),
+    )
+    assertPlainText(
       """
       This is an ${"$"}A$, ${"$"}e$, ${"$"}F$, ${"$"}h$, ${"$"}I$, ${"$"}l$, ${"$"}M$,
       ${"$"}n$, ${"$"}O$, ${"$"}r$, ${"$"}S$, ${"$"}X$, $\ell$, $\mathcal{r}$.
