@@ -29,7 +29,7 @@ class TypstAnnotatedTextBuilder(
       addMarkup(LEADING_WHITESPACE_REGEX)
     }
 
-    addMarkup(LET_CURLY_BRACKETS_REGEX)
+    addMarkup(LET_CURLY_BRACKETS_REGEX, "", false, true, BracketType.CurlyBracket)
     addMarkup(LET_CODE_REGEX, "", false, true)
     addMarkup(LET_REGEX)
     addMarkup(RAW_CODE_REGEX_1, "", true)
@@ -138,7 +138,7 @@ class TypstAnnotatedTextBuilder(
     private val NO_TEXT_INLINE_MATH_REGEX = Regex("^\\$[^\"$\n]*\\$")
     private val LIST_REGEX = Regex("^\\s*[+|\\-|\\/]\\s")
     private val LEADING_WHITESPACE_REGEX = Regex("^\\s*")
-    private val LET_CURLY_BRACKETS_REGEX = Regex("^#let.*=\\s*\\{(.|\r?\n)*?\\}")
+    private val LET_CURLY_BRACKETS_REGEX = Regex("^#let.*=\\s*\\{")
     private val LET_CODE_REGEX = Regex("^#let.*?=\\s*?\\w*?\\(")
     private val LET_REGEX = Regex("^#let.*=\\s*")
     private val RAW_CODE_REGEX_1 = Regex("^`{3,}(.|\r?\n)*?`{3,}")

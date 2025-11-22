@@ -161,10 +161,11 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
           [*Warning:\ #body*],
         )
       }
+      #let f() = {"dummy text"}
       #val is the best.
 
       """.trimIndent(),
-      "\nJoe\nDummy0\n\nDummy1 is the best.\n",
+      "\nJoe\nDummy0\n \ndummy text\nDummy11 is the best.\n",
     )
   }
 
