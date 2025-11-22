@@ -40,7 +40,6 @@
     <java.version>21</java.version>
     <kotlin.version>2.2.21</kotlin.version>
     <kotlin.compiler.jvmTarget>${java.version}</kotlin.compiler.jvmTarget>
-    <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
     <main.class>org.bsplines.ltexls.LtexLanguageServerLauncher</main.class>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.jupiter.version>6.0.1</junit.jupiter.version>
