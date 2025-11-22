@@ -48,6 +48,7 @@ class TypstAnnotatedTextBuilder(
     addMarkup(VARIABLE_REGEX, "", true)
     addMarkup(SQUARE_BRACKETS_REGEX_MID, "\n")
     addMarkup(SQUARE_BRACKETS_REGEX_START_END, "\n")
+    addMarkup(QUOTATION_MARK, "")
 
     addText(this.curString)
   }
@@ -156,6 +157,7 @@ class TypstAnnotatedTextBuilder(
     private val VARIABLE_REGEX = Regex("^#\\w*")
     private val SQUARE_BRACKETS_REGEX_MID = Regex("^\\]\\[")
     private val SQUARE_BRACKETS_REGEX_START_END = Regex("^(\\[|\\])")
+    private val QUOTATION_MARK = Regex("^\"")
     private val FILENAME_REGEX = Regex("^.+\\.\\w{1,4}")
     private val PROPERTY_REGEX =
       Regex(

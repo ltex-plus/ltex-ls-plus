@@ -164,7 +164,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       #val is the best.
 
       """.trimIndent(),
-      "\n\"Joe\"\nDummy0\n\nDummy1 is the best.\n",
+      "\nJoe\nDummy0\n\nDummy1 is the best.\n",
     )
   }
 
