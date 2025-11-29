@@ -103,6 +103,7 @@ object SettingsParser {
           override.updateCurrentRule(value, opToIncluded(it.groups["op"]!!.value, key))
         } != null -> {
         }
+
         // FALSE_POSITIVE_REGEX.matchEntire(key)?.let {
         //   // parsing is too complicated for now
         //   updateCurrentFalsePositive(???, nullableBool(value))
@@ -197,9 +198,18 @@ object SettingsParser {
     val m = NULL_BOOL_REGEX.matchEntire(s)
     return m?.let {
       return when {
-        (m.groups["t"] != null) -> true
-        (m.groups["f"] != null) -> false
-        (m.groups["n"] != null) -> null
+        (m.groups["t"] != null) -> {
+          true
+        }
+
+        (m.groups["f"] != null) -> {
+          false
+        }
+
+        (m.groups["n"] != null) -> {
+          null
+        }
+
         else -> {
           throw InlineSettingsParserException(
             I18n.format(
@@ -220,9 +230,18 @@ object SettingsParser {
     val m = OP_REGEX.matchEntire(s)
     return m?.let {
       return when {
-        (m.groups["add"] != null) -> true
-        (m.groups["remove"] != null) -> false
-        (m.groups["keep"] != null) -> null
+        (m.groups["add"] != null) -> {
+          true
+        }
+
+        (m.groups["remove"] != null) -> {
+          false
+        }
+
+        (m.groups["keep"] != null) -> {
+          null
+        }
+
         else -> {
           throw InlineSettingsParserException(
             I18n.format(

@@ -250,8 +250,14 @@ class MarkdownAnnotatedTextBuilder(
 
       val action: MarkdownNodeSignature.Action =
         when (actionString) {
-          "default" -> MarkdownNodeSignature.Action.Default
-          "ignore" -> MarkdownNodeSignature.Action.Ignore
+          "default" -> {
+            MarkdownNodeSignature.Action.Default
+          }
+
+          "ignore" -> {
+            MarkdownNodeSignature.Action.Ignore
+          }
+
           "dummy", "pluralDummy", "vowelDummy" -> {
             val plural: Boolean = (actionString == "pluralDummy")
             val vowel: Boolean = (actionString == "vowelDummy")
@@ -259,7 +265,9 @@ class MarkdownAnnotatedTextBuilder(
             MarkdownNodeSignature.Action.Dummy
           }
 
-          else -> continue
+          else -> {
+            continue
+          }
         }
 
       this.nodeSignatures.add(MarkdownNodeSignature(nodeName, action, dummyGenerator))

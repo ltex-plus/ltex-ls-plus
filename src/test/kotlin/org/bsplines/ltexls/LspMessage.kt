@@ -39,11 +39,13 @@ class LspMessage(
         body.addProperty("method", method)
         body.add("params", params)
       }
+
       Type.Request -> {
         if (id != null) body.addProperty("id", id)
         body.addProperty("method", method)
         body.add("params", params)
       }
+
       Type.Response -> {
         if (id != null) body.addProperty("id", id)
         body.add("result", params)

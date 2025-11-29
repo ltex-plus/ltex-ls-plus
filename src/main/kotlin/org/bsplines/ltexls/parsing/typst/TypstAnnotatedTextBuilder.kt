@@ -111,10 +111,13 @@ class TypstAnnotatedTextBuilder(
         codeMode.adjustBracketsCounter(1)
         addMarkup(this.curString)
       }
+
       codeBlockDelimiter.closingBracket -> {
         codeMode.adjustBracketsCounter(-1)
         addMarkup(this.curString)
-      } "\"" -> {
+      }
+
+      "\"" -> {
         codeMode.codeModeString = !codeMode.codeModeString
         if (codeMode.codeModeString && codeMode.stringCounter > 0) {
           addMarkup(this.curString, " ")
@@ -123,7 +126,9 @@ class TypstAnnotatedTextBuilder(
           addMarkup(this.curString)
         }
         codeMode.stringCounter++
-      } else -> {
+      }
+
+      else -> {
         if (codeMode.codeModeString) {
           addMarkup(FILENAME_REGEX, generateDummy())
           // String within code mode to be spell checked

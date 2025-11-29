@@ -47,10 +47,12 @@ object LatexPackageOptionsParser {
           groupDepth++
           pos++
         }
+
         '}' -> {
           groupDepth--
           pos++
         }
+
         ' ', '\n', '\r', '\t' -> {
           val whitespace = matchFromPosition(WHITESPACE_REGEX, optionsString, pos)
 
@@ -62,6 +64,7 @@ object LatexPackageOptionsParser {
 
           pos += whitespace.length
         }
+
         else -> {
           var addCurCharToOption = true
 

@@ -80,6 +80,7 @@ data class ProgramCommentRegexs(
           blockCommentEndRegexString = "\\*\\*?/"
           lineCommentRegexString = "//[/!]?"
         }
+
         "c", "cpp", "csharp", "dart", "fsharp", "go", "groovy", "java", "javascript",
         "javascriptreact", "kotlin", "php", "scala", "swift", "typescript",
         "typescriptreact", "verilog",
@@ -88,49 +89,61 @@ data class ProgramCommentRegexs(
           blockCommentEndRegexString = "\\*\\*?/"
           lineCommentRegexString = "///?"
         }
+
         "elixir", "python" -> {
           blockCommentStartRegexString = "\"\"\""
           blockCommentEndRegexString = "\"\"\""
           lineCommentRegexString = "##?"
         }
+
         "powershell" -> {
           blockCommentStartRegexString = "<#"
           blockCommentEndRegexString = "#>"
           lineCommentRegexString = "##?"
         }
+
         "coffeescript", "julia", "perl", "perl6", "puppet", "r", "ruby", "shellscript" -> {
           lineCommentRegexString = "##?"
         }
+
         "lua" -> {
           blockCommentStartRegexString = "--\\[\\["
           blockCommentEndRegexString = "\\]\\]"
           lineCommentRegexString = "---?"
         }
+
         "elm", "haskell" -> {
           blockCommentStartRegexString = "\\{-"
           blockCommentEndRegexString = "-\\}"
           lineCommentRegexString = "---?"
         }
+
         "sql" -> {
           lineCommentRegexString = "---?"
         }
+
         "clojure", "lisp" -> {
           lineCommentRegexString = ";;?"
         }
+
         "matlab" -> {
           blockCommentStartRegexString = "%\\{"
           blockCommentEndRegexString = "%\\}"
           lineCommentRegexString = "%%?"
         }
+
         "erlang" -> {
           lineCommentRegexString = "%%?"
         }
+
         "fortran-modern" -> {
           lineCommentRegexString = "c"
         }
+
         "vb" -> {
           lineCommentRegexString = "''?"
         }
+
         else -> {
           blockCommentStartRegexString = null
           blockCommentEndRegexString = null

@@ -79,34 +79,43 @@ class RestructuredtextAnnotatedTextBuilder(
         this.blockType = BlockType.Footnote
         addMarkup(matchResult?.value)
       }
+
       matchFromPosition(DIRECTIVE_REGEX)?.also { matchResult = it } != null -> {
         this.blockType = BlockType.Directive
         addMarkup(matchResult?.value)
       }
+
       matchFromPosition(COMMENT_REGEX)?.also { matchResult = it } != null -> {
         this.blockType = BlockType.Comment
         addMarkup(matchResult?.value)
       }
+
       matchFromPosition(GRID_TABLE_START_REGEX)?.also { matchResult = it } != null -> {
         this.blockType = BlockType.GridTable
         addMarkup(matchResult?.value)
       }
+
       matchFromPosition(SIMPLE_TABLE_START_REGEX)?.also { matchResult = it } != null -> {
         this.blockType = BlockType.SimpleTable
         addMarkup(matchResult?.value)
       }
+
       matchFromPosition(SECTION_TITLE_ADORNMENT_REGEX)?.also { matchResult = it } != null -> {
         addMarkup(matchResult?.value)
       }
+
       matchFromPosition(LINE_BLOCK_REGEX)?.also { matchResult = it } != null -> {
         addMarkup(matchResult?.value)
       }
+
       matchFromPosition(BULLET_LIST_REGEX)?.also { matchResult = it } != null -> {
         addMarkup(matchResult?.value)
       }
+
       matchFromPosition(ENUMERATED_LIST_REGEX)?.also { matchResult = it } != null -> {
         addMarkup(matchResult?.value)
       }
+
       else -> {
         blockFound = false
       }
@@ -123,74 +132,89 @@ class RestructuredtextAnnotatedTextBuilder(
       matchInlineStartFromPosition(STRONG_EMPHASIS_REGEX)?.also { matchResult = it } != null -> {
         addMarkup(matchResult?.value)
       }
+
       matchInlineEndFromPosition(STRONG_EMPHASIS_REGEX)?.also { matchResult = it } != null -> {
         addMarkup(matchResult?.value)
       }
+
       matchInlineStartFromPosition(EMPHASIS_REGEX)?.also { matchResult = it } != null -> {
         addMarkup(matchResult?.value)
       }
+
       matchInlineEndFromPosition(EMPHASIS_REGEX)?.also { matchResult = it } != null -> {
         addMarkup(matchResult?.value)
       }
+
       matchInlineStartFromPosition(INLINE_LITERAL_REGEX)?.also { matchResult = it } != null -> {
         addMarkup(matchResult?.value, generateDummy())
         this.inIgnoredMarkup = true
       }
+
       matchInlineEndFromPosition(INLINE_LITERAL_REGEX)?.also { matchResult = it } != null -> {
         addMarkup(matchResult?.value)
         this.inIgnoredMarkup = false
       }
+
       matchInlineStartFromPosition(INTERPRETED_TEXT_START_REGEX)?.also {
         matchResult = it
       } != null -> {
         addMarkup(matchResult?.value, generateDummy())
         this.inIgnoredMarkup = true
       }
+
       matchInlineEndFromPosition(INTERPRETED_TEXT_END_REGEX)?.also {
         matchResult = it
       } != null -> {
         addMarkup(matchResult?.value)
         this.inIgnoredMarkup = false
       }
+
       matchInlineStartFromPosition(INLINE_INTERNAL_TARGET_START_REGEX)?.also {
         matchResult = it
       } != null -> {
         addMarkup(matchResult?.value, generateDummy())
         this.inIgnoredMarkup = true
       }
+
       matchInlineEndFromPosition(INLINE_INTERNAL_TARGET_END_REGEX)?.also {
         matchResult = it
       } != null -> {
         addMarkup(matchResult?.value)
         this.inIgnoredMarkup = false
       }
+
       matchInlineStartFromPosition(FOOTNOTE_REFERENCE_START_REGEX)?.also {
         matchResult = it
       } != null -> {
         addMarkup(matchResult?.value, generateDummy())
         this.inIgnoredMarkup = true
       }
+
       matchInlineEndFromPosition(FOOTNOTE_REFERENCE_END_REGEX)?.also {
         matchResult = it
       } != null -> {
         addMarkup(matchResult?.value)
         this.inIgnoredMarkup = false
       }
+
       matchInlineStartFromPosition(HYPERLINK_REFERENCE_START_REGEX)?.also {
         matchResult = it
       } != null -> {
         addMarkup(matchResult?.value, generateDummy())
         this.inIgnoredMarkup = true
       }
+
       matchInlineEndFromPosition(HYPERLINK_REFERENCE_END_REGEX)?.also {
         matchResult = it
       } != null -> {
         addMarkup(matchResult?.value)
         this.inIgnoredMarkup = false
       }
+
       this.inIgnoredMarkup -> {
         addMarkup(this.curString)
       }
+
       else -> {
         addText(this.curString)
       }

@@ -238,10 +238,12 @@ class LtexLanguageServerLauncher : Callable<Int> {
           commandLine.usage(commandLine.out)
           commandLine.commandSpec.exitCodeOnUsageHelp()
         }
+
         commandLine.isVersionHelpRequested -> {
           commandLine.printVersionHelp(commandLine.out)
           commandLine.commandSpec.exitCodeOnVersionHelp()
         }
+
         else -> {
           val exitCode: Int = launcher.call()
           commandLine.setExecutionResult(exitCode)

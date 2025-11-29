@@ -118,15 +118,21 @@ abstract class CodeAnnotatedTextBuilder(
       when (codeLanguageId) {
         "bib",
         "bibtex",
-        -> LatexAnnotatedTextBuilder(codeLanguageId)
+        -> {
+          LatexAnnotatedTextBuilder(codeLanguageId)
+        }
 
         "git-commit",
         "gitcommit",
-        -> GitCommitAnnotatedTextBuilder(codeLanguageId)
+        -> {
+          GitCommitAnnotatedTextBuilder(codeLanguageId)
+        }
 
         "html",
         "xhtml",
-        -> HtmlAnnotatedTextBuilder(codeLanguageId)
+        -> {
+          HtmlAnnotatedTextBuilder(codeLanguageId)
+        }
 
         "context",
         "context.tex",
@@ -134,24 +140,44 @@ abstract class CodeAnnotatedTextBuilder(
         "plaintex",
         "rsweave",
         "tex",
-        -> LatexAnnotatedTextBuilder(codeLanguageId)
+        -> {
+          LatexAnnotatedTextBuilder(codeLanguageId)
+        }
 
         "markdown",
         "mdx",
         "quarto",
         "rmd",
-        -> MarkdownAnnotatedTextBuilder(codeLanguageId)
+        -> {
+          MarkdownAnnotatedTextBuilder(codeLanguageId)
+        }
 
-        "nop" -> NopAnnotatedTextBuilder(codeLanguageId)
+        "nop" -> {
+          NopAnnotatedTextBuilder(codeLanguageId)
+        }
 
         "org",
         "neorg",
-        -> OrgAnnotatedTextBuilder(codeLanguageId)
+        -> {
+          OrgAnnotatedTextBuilder(codeLanguageId)
+        }
 
-        "plaintext" -> PlaintextAnnotatedTextBuilder(codeLanguageId)
-        "restructuredtext" -> RestructuredtextAnnotatedTextBuilder(codeLanguageId)
-        "typst" -> TypstAnnotatedTextBuilder(codeLanguageId)
-        "asciidoc" -> AsciiDocAnnotatedTextBuilder(codeLanguageId)
+        "plaintext" -> {
+          PlaintextAnnotatedTextBuilder(codeLanguageId)
+        }
+
+        "restructuredtext" -> {
+          RestructuredtextAnnotatedTextBuilder(codeLanguageId)
+        }
+
+        "typst" -> {
+          TypstAnnotatedTextBuilder(codeLanguageId)
+        }
+
+        "asciidoc" -> {
+          AsciiDocAnnotatedTextBuilder(codeLanguageId)
+        }
+
         else -> {
           if (ProgramCommentRegexs.isSupportedCodeLanguageId(codeLanguageId)) {
             ProgramAnnotatedTextBuilder(codeLanguageId)

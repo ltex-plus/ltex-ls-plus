@@ -51,34 +51,70 @@ abstract class CodeFragmentizer(
     @Suppress("ComplexMethod")
     fun create(codeLanguageId: String): CodeFragmentizer =
       when (codeLanguageId) {
-        "asciidoc" -> AsciiDocFragmentizer(codeLanguageId)
+        "asciidoc" -> {
+          AsciiDocFragmentizer(codeLanguageId)
+        }
+
         "bib",
         "bibtex",
-        -> BibtexFragmentizer(codeLanguageId)
+        -> {
+          BibtexFragmentizer(codeLanguageId)
+        }
+
         "git-commit",
         "gitcommit",
-        -> GitCommitFragmentizer(codeLanguageId)
+        -> {
+          GitCommitFragmentizer(codeLanguageId)
+        }
+
         "html",
         "xhtml",
-        -> HtmlFragmentizer(codeLanguageId)
+        -> {
+          HtmlFragmentizer(codeLanguageId)
+        }
+
         "context",
         "context.tex",
         "latex",
         "plaintex",
         "rsweave",
         "tex",
-        -> LatexFragmentizer(codeLanguageId)
+        -> {
+          LatexFragmentizer(codeLanguageId)
+        }
+
         "markdown",
         "mdx",
         "quarto",
         "rmd",
-        -> MarkdownFragmentizer(codeLanguageId)
-        "nop" -> NopFragmentizer(codeLanguageId)
-        "neorg" -> OrgFragmentizer(codeLanguageId)
-        "org" -> OrgFragmentizer(codeLanguageId)
-        "plaintext" -> PlaintextFragmentizer(codeLanguageId)
-        "restructuredtext" -> RestructuredtextFragmentizer(codeLanguageId)
-        "typst" -> TypstFragmentizer(codeLanguageId)
+        -> {
+          MarkdownFragmentizer(codeLanguageId)
+        }
+
+        "nop" -> {
+          NopFragmentizer(codeLanguageId)
+        }
+
+        "neorg" -> {
+          OrgFragmentizer(codeLanguageId)
+        }
+
+        "org" -> {
+          OrgFragmentizer(codeLanguageId)
+        }
+
+        "plaintext" -> {
+          PlaintextFragmentizer(codeLanguageId)
+        }
+
+        "restructuredtext" -> {
+          RestructuredtextFragmentizer(codeLanguageId)
+        }
+
+        "typst" -> {
+          TypstFragmentizer(codeLanguageId)
+        }
+
         else -> {
           if (ProgramCommentRegexs.isSupportedCodeLanguageId(codeLanguageId)) {
             ProgramFragmentizer(codeLanguageId)

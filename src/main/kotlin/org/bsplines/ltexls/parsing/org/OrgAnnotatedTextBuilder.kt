@@ -30,7 +30,10 @@ class OrgAnnotatedTextBuilder(
       when (
         val matchResult: MatchResult? = matchInlineEndFromPosition(TEXT_MARKUP_VERBATIM_END_REGEX)
       ) {
-        null -> addMarkup(this.curString)
+        null -> {
+          addMarkup(this.curString)
+        }
+
         else -> {
           popObjectType()
           addMarkup(matchResult.value, generateDummy())
@@ -40,7 +43,10 @@ class OrgAnnotatedTextBuilder(
       when (
         val matchResult: MatchResult? = matchInlineEndFromPosition(TEXT_MARKUP_CODE_END_REGEX)
       ) {
-        null -> addMarkup(this.curString)
+        null -> {
+          addMarkup(this.curString)
+        }
+
         else -> {
           popObjectType()
           addMarkup(matchResult.value, generateDummy())
@@ -82,7 +88,10 @@ class OrgAnnotatedTextBuilder(
       matchResult = matchFromPosition(BLOCK_END_REGEX)
 
       when (matchResult) {
-        null -> addMarkup(this.curString)
+        null -> {
+          addMarkup(this.curString)
+        }
+
         else -> {
           popElementType()
           addMarkup(matchResult.value)
@@ -92,7 +101,10 @@ class OrgAnnotatedTextBuilder(
       matchResult = matchFromPosition(DRAWER_END_REGEX)
 
       when (matchResult) {
-        null -> addMarkup(this.curString)
+        null -> {
+          addMarkup(this.curString)
+        }
+
         else -> {
           popElementType()
           addMarkup(matchResult.value)

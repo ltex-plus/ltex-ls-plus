@@ -115,15 +115,18 @@ class HtmlAnnotatedTextBuilder(
           "body", "div", "h1", "h2", "h3", "h4", "h5", "h6", "p", "table", "tr" -> {
             interpretAs += "\n\n"
           }
+
           "br", "li" -> {
             interpretAs += "\n"
           }
         }
       }
+
       XMLStreamReader.END_ELEMENT -> {
         Logging.LOGGER.finest("END_ELEMENT")
         this.elementNameStack.removeLastOrNull()
       }
+
       XMLStreamReader.CHARACTERS -> {
         val elementName: String =
           if (this.elementNameStack.isEmpty()) "" else this.elementNameStack.last()
@@ -131,10 +134,12 @@ class HtmlAnnotatedTextBuilder(
         Logging.LOGGER.finest("CHARACTERS: text = '$text'")
         if ((elementName != "script") && (elementName != "style")) this.nextText = text
       }
+
       XMLStreamReader.ENTITY_REFERENCE -> {
         this.nextText = xmlStreamReader.text
         Logging.LOGGER.finest("ENTITY_REFERENCE: text = '" + this.nextText + "'")
       }
+
       else -> {
         // ignore other event types
       }

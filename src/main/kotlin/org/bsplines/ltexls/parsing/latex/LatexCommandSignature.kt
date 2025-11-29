@@ -149,9 +149,18 @@ open class LatexCommandSignature(
 
       while (pos < code.length) {
         when (val curChar: Char = code[pos]) {
-          '\\' -> if (pos + 1 < code.length) pos++
-          '{' -> argumentTypeStack.addLast(ArgumentType.Brace)
-          '[' -> argumentTypeStack.addLast(ArgumentType.Bracket)
+          '\\' -> {
+            if (pos + 1 < code.length) pos++
+          }
+
+          '{' -> {
+            argumentTypeStack.addLast(ArgumentType.Brace)
+          }
+
+          '[' -> {
+            argumentTypeStack.addLast(ArgumentType.Bracket)
+          }
+
           '}', ']' -> {
             val curArgumentType: ArgumentType =
               when (curChar) {
@@ -164,10 +173,17 @@ open class LatexCommandSignature(
               argumentTypeStack.isNotEmpty() && (argumentTypeStack.last() != curArgumentType) -> {
                 return ""
               }
-              (argumentTypeStack.size == 1) -> return code.substring(fromPos, pos + 1)
-              else -> argumentTypeStack.removeLastOrNull()
+
+              (argumentTypeStack.size == 1) -> {
+                return code.substring(fromPos, pos + 1)
+              }
+
+              else -> {
+                argumentTypeStack.removeLastOrNull()
+              }
             }
           }
+
           ')' -> {
             if (
               (argumentTypeStack.size == 1) &&
@@ -176,6 +192,7 @@ open class LatexCommandSignature(
               return code.substring(fromPos, pos + 1)
             }
           }
+
           else -> {}
         }
 

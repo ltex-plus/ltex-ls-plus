@@ -174,8 +174,14 @@ class AnnotatedTextFragment(
         val textPart: TextPart = textParts[i]
 
         when (textPart.type) {
-          TextPart.Type.TEXT -> inverseAnnotatedTextBuilder.addText(textPart.part)
-          TextPart.Type.FAKE_CONTENT -> inverseAnnotatedTextBuilder.addMarkup(textPart.part)
+          TextPart.Type.TEXT -> {
+            inverseAnnotatedTextBuilder.addText(textPart.part)
+          }
+
+          TextPart.Type.FAKE_CONTENT -> {
+            inverseAnnotatedTextBuilder.addMarkup(textPart.part)
+          }
+
           TextPart.Type.MARKUP -> {
             val markup: String =
               if (
@@ -190,6 +196,7 @@ class AnnotatedTextFragment(
 
             inverseAnnotatedTextBuilder.addMarkup(markup, textPart.part)
           }
+
           null -> {}
         }
 

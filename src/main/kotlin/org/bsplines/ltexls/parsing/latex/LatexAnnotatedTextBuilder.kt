@@ -56,15 +56,24 @@ class LatexAnnotatedTextBuilder(
 
       val action: LatexCommandSignature.Action =
         when (actionString) {
-          "default" -> LatexCommandSignature.Action.Default
-          "ignore" -> LatexCommandSignature.Action.Ignore
+          "default" -> {
+            LatexCommandSignature.Action.Default
+          }
+
+          "ignore" -> {
+            LatexCommandSignature.Action.Ignore
+          }
+
           "dummy", "pluralDummy", "vowelDummy" -> {
             val plural: Boolean = (actionString == "pluralDummy")
             val vowel: Boolean = (actionString == "vowelDummy")
             dummyGenerator = DummyGenerator.getInstance(plural = plural, vowel = vowel)
             LatexCommandSignature.Action.Dummy
           }
-          else -> continue
+
+          else -> {
+            continue
+          }
         }
 
       this.commandSignatures.add(LatexCommandSignature(key, action, dummyGenerator))
@@ -482,9 +491,11 @@ class LatexAnnotatedTextBuilder(
           LatexCommandSignature.Action.Ignore -> {
             addMarkup(match)
           }
+
           LatexCommandSignature.Action.Dummy -> {
             addMarkup(match, generateDummy(matchingCommandSignature.dummyGenerator))
           }
+
           else -> {
             addMarkup(match)
           }
@@ -518,6 +529,7 @@ class LatexAnnotatedTextBuilder(
               "\\widetilde",
               "\\widehat",
               -> this.mathVowelState
+
               "\\alpha",
               "\\ell",
               "\\epsilon",
@@ -527,6 +539,7 @@ class LatexAnnotatedTextBuilder(
               "\\omega",
               "\\varepsilon",
               -> MathVowelState.StartsWithVowel
+
               else -> MathVowelState.StartsWithConsonant
             }
         }
@@ -638,15 +651,19 @@ class LatexAnnotatedTextBuilder(
         this.lastSpace.isEmpty() && (whitespace == " " || whitespace == "\n") -> {
           addText(" ")
         }
+
         this.lastSpace.isEmpty() && whitespace == "\n\n" -> {
           addText("\n\n")
         }
+
         containsTwoEndsOfLine(whitespace) -> {
           addMarkup(whitespace, "\n\n")
         }
+
         this.curChar == '~' -> {
           addMarkup(whitespace, (if (this.lastSpace.isEmpty()) "\u00a0" else ""))
         }
+
         else -> {
           addMarkup(whitespace, (if (this.lastSpace.isEmpty()) " " else ""))
         }
@@ -704,6 +721,7 @@ class LatexAnnotatedTextBuilder(
           }
         }
       }
+
       '[' -> {
         val length: String = matchFromPositionAsString(LENGTH_IN_BRACKET_REGEX)
 
@@ -714,6 +732,7 @@ class LatexAnnotatedTextBuilder(
           return
         }
       }
+
       '<' -> {
         if (this.codeLanguageId == "rsweave") {
           val rsweaveBegin: String = matchFromPositionAsString(RSWEAVE_BEGIN_REGEX)
@@ -831,34 +850,49 @@ class LatexAnnotatedTextBuilder(
       when (accentCommand[1]) {
         // grave
         '`' -> "\u0300"
+
         // acute
         '\'' -> "\u0301"
+
         // circumflex
         '^' -> "\u0302"
+
         // tilde
         '~' -> "\u0303"
+
         // diaeresis/umlaut
         '"' -> "\u0308"
+
         // macron
         '=' -> "\u0304"
+
         // dot above
         '.' -> "\u0307"
+
         // double acute
         'H' -> "\u030b"
+
         // macron below
         'b' -> "\u0331"
+
         // cedilla
         'c' -> "\u0327"
+
         // dot below
         'd' -> "\u0323"
+
         // ogonek
         'k' -> "\u0328"
+
         // ring above
         'r' -> "\u030a"
+
         // breve
         'u' -> "\u0306"
+
         // caron
         'v' -> "\u030c"
+
         else -> ""
       }
 

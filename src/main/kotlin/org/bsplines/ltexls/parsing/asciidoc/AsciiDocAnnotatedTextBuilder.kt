@@ -75,7 +75,11 @@ class AsciiDocAnnotatedTextBuilder(
         addMarkup(this.curString)
         escapeModeBackslash = true
       }
-      " " -> escapeModeBackslash = false
+
+      " " -> {
+        escapeModeBackslash = false
+      }
+
       "+" -> {
         addMarkup(this.curString)
         escapeModePlus = !escapeModePlus
