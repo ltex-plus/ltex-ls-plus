@@ -126,11 +126,22 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       This is also math $ "exercice" 3 + 4$ in Typst.
       This is the multi line math mode
       $
-        A = pi r^2
+        sum_(k=0)^n k
+        &= 1 + ... + n \
+        &= (n(n+1)) / 2
       $
       in Typst.
       This is the end at time $\t$.
       At time $ t_"end" "maybe" $ I go home.
+      #let x = $"text"$
+      Text is important.
+      $
+        dim(D_n) = cases(
+          0 "                   if " n>1 " or " n<1,
+          1 "                   if " n=1,
+        )
+      $
+      More text for this test.
       """.trimIndent(),
       """
       This is the math mode Dummy0 in Typst.
@@ -140,6 +151,10 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       in Typst.
       This is the end at time Dummy1.
       At time end maybe I go home.
+      
+      Text is important.
+      if or if
+      More text for this test.
       """.trimIndent(),
     )
   }
@@ -162,10 +177,21 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
         )
       }
       #let f() = {"dummy text"}
+      #let date =  datetime.today().display("[year]")
+      #let heading(
+        heading: []
+      ) = box(content: heading)
+      #let add(x, y) = x + y
+      #let colors = (
+        blue: "blue-colored",
+        red: "red-colored",
+      )
+      #let (x, y) = (1, 
+      2)
       #val is the best.
 
       """.trimIndent(),
-      "\nJoe\nDummy0\n \ndummy text\nDummy11 is the best.\n",
+      "\nJoe\n \ndummy text\n[year]\n\nblue-colored red-colored\n\nDummy39 is the best.\n",
     )
   }
 
@@ -205,7 +231,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       Text
       #work(
         font: "New Computer Modern",
-        title: "Paper12",
+        title: "Paper12())",
       )
       Some text is #text("bold", weight: 800).
       #image("some_text_with_typos.svg")
@@ -246,9 +272,11 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
   fun testCite() {
     assertPlainText(
       """
-      The sky is blue.#cite(label("DBLP:books/lib/Hoff2020")) More text.
+      The sky is blue.#cite(label("DBLP:books/lib/Hoff2020"))
+      The sea is blue#footnote[See $ a = (2+3)*8 $].
+      More text.
       """.trimIndent(),
-      "The sky is blue. More text.",
+      "The sky is blue.\nThe sea is blue.\nMore text.",
     )
   }
 

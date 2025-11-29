@@ -8,6 +8,7 @@
 
 package org.bsplines.ltexls.parsing.asciidoc
 
+import org.bsplines.ltexls.parsing.CharacterBasedCodeAnnotatedHeadingParser
 import org.bsplines.ltexls.parsing.CharacterBasedCodeAnnotatedTextBuilder
 
 class AsciiDocAnnotatedTextBuilder(
@@ -17,6 +18,8 @@ class AsciiDocAnnotatedTextBuilder(
   private var escapeModePlus = false
   private var escapeModeIndent = false
 
+  private val headingParser = CharacterBasedCodeAnnotatedHeadingParser(this)
+
   override fun processCharacter() {
     if (this.isStartOfLine) {
       addMarkup(CODE_BLOCK_PLUS_REGEX, "\n")
@@ -24,7 +27,7 @@ class AsciiDocAnnotatedTextBuilder(
     processEscapeCharacter()
     postProcessHeading()
     processCodeMode()
-    processHeading()
+    headingParser.processHeading()
 
     if (this.isStartOfLine) {
       addMarkup(LIST_REGEX)
@@ -90,19 +93,19 @@ class AsciiDocAnnotatedTextBuilder(
 
   private fun postProcessHeading() {
     // Text after heading is markup
-    if (headingSubsequentMarkup) {
+    if (headingParser.headingSubsequentMarkup) {
       if (matchFromPosition(EMPTY_LINE_REGEX) == null) {
         addMarkup(SUBSEQUENT_TEXT_REGEX)
       }
-      headingSubsequentMarkup = false
+      headingParser.headingSubsequentMarkup = false
     }
   }
 
   private fun processCodeMode() {
-    if (!codeMode || characterProcessed) return
+    if (!codeMode.mode || characterProcessed) return
     if (this.curString == "]") {
       addMarkup(this.curString)
-      codeMode = false
+      codeMode.mode = false
     } else {
       addText(this.curString)
     }
