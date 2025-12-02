@@ -21,7 +21,7 @@ jobs:
       NEW_COMMIT: ${{ steps.check_latest_commit.outputs.NEW_COMMIT }}
     steps:
       - name: "Checkout Repository"
-        uses: "actions/checkout@v5"
+        uses: "actions/checkout@v6"
 
       - id: "check_latest_commit"
         name: "Check if there were any commits in the last 48 hours"
@@ -36,7 +36,7 @@ jobs:
       contents: write
     steps:
       - name: "Checkout Repository"
-        uses: "actions/checkout@v5"
+        uses: "actions/checkout@v6"
 
       - name: "Set up Java"
         uses: "actions/setup-java@v5"
