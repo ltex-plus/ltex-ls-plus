@@ -191,7 +191,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       #val is the best.
 
       """.trimIndent(),
-      "\nJoe\n \ndummy text\n[year]\n\nblue-colored red-colored\n\nDummy39 is the best.\n",
+      "\nJoe\nWarning: Dummy0\ndummy text\n[year]\n\nblue-colored red-colored\n\nDummy44 is the best.\n",
     )
   }
 
@@ -241,7 +241,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       }
       More text.
       """.trimIndent(),
-      "Text\nPaper12\nSome text is bold.\nDummy11\nThis is an image.\nTitle\nMore text.",
+      "Text\nPaper12\nSome text is bold.\nDummy17\nThis is an image.\nTitle\nMore text.",
     )
   }
 

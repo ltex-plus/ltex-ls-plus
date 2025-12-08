@@ -18,9 +18,11 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
   protected var code = ""
   protected var pos = 0
   protected var curChar = '\u0000'
-  protected var characterProcessed = false
-  protected var codeBlockDelimiter = BracketType.RoundBracket
-  protected val codeMode = CodeModeHandler()
+  var characterProcessed = false
+    protected set
+  var codeBlockDelimiter = BracketType.RoundBracket
+    protected set
+  val codeMode = CodeModeHandler()
 
   protected var dummyGenerator = DummyGenerator.getInstance()
   protected var dummyCounter = 0
@@ -138,7 +140,7 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
     return if ((matchResult != null) && matchResult.value.isNotEmpty()) matchResult else null
   }
 
-  protected open fun generateDummy(): String =
+  open fun generateDummy(): String =
     this.dummyGenerator.generate(this.language, this.dummyCounter++)
 
   enum class BracketType(

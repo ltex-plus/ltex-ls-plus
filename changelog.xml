@@ -20,6 +20,9 @@
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#169,ltex-plus/vscode-ltex-plus#171,ltex-plus/ltex-ls-plus#122">
         Fix several parsing issues in Typst documents
       </action>
+      <action type="add" issue="ltex-plus/ltex-ls-plus#128">
+        Spell check content blocks in Typst
+      </action>
     </release>
     <release version="18.6.1" date="2025-10-19">
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#165">

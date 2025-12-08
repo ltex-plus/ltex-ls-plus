@@ -12,7 +12,9 @@ class CodeModeHandler {
   var bracketsCounter = 0
     private set
   var stringCounter = 0
+  var squareBracketscounter = 0
   var codeModeString = false
+  var codeModeContentBlock = false
   var mode = false
 
   fun adjustBracketsCounter(delta: Int) {
