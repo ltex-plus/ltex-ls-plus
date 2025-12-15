@@ -17,7 +17,7 @@
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#170">
         Fix spelling errors for Polish dummies
       </action>
-      <action type="fix" issue="ltex-plus/vscode-ltex-plus#169,ltex-plus/vscode-ltex-plus#171,ltex-plus/ltex-ls-plus#122">
+      <action type="fix" issue="ltex-plus/vscode-ltex-plus#169,ltex-plus/vscode-ltex-plus#171,ltex-plus/ltex-ls-plus#122,ltex-plus/ltex-ls-plus#129">
         Fix several parsing issues in Typst documents
       </action>
       <action type="add" issue="ltex-plus/ltex-ls-plus#128">
