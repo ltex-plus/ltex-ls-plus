@@ -133,10 +133,10 @@ class TypstModeHandler(
   }
 
   companion object {
-    val QUOTATION_MARK_WHITESPACE_REGEX = Regex("^\"\\s*")
-    val WHITESPACE_QUOTATION_MARK_REGEX = Regex("^\\s*(?=\")")
-    val FILENAME_REGEX = Regex("^.+\\.\\w{1,4}")
-    val PROPERTY_REGEX =
+    private val QUOTATION_MARK_WHITESPACE_REGEX = Regex("^\"\\s*")
+    private val WHITESPACE_QUOTATION_MARK_REGEX = Regex("^\\s*(?=\")")
+    private val FILENAME_REGEX = Regex("^.+\\.\\w{1,4}")
+    private val PROPERTY_REGEX =
       Regex(
         "^(font|fit|style|weight|top-edge|bottom-edge|lang|region|script|number-type|number-width)\\s?:\\s?\".*?\"",
       )

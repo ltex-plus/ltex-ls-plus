@@ -14,8 +14,8 @@ import org.bsplines.ltexls.parsing.CharacterBasedCodeAnnotatedTextBuilder
 open class TypstAnnotatedTextBuilder(
   codeLanguageId: String,
 ) : CharacterBasedCodeAnnotatedTextBuilder(codeLanguageId) {
-  val headingParser = CharacterBasedCodeAnnotatedHeadingParser(this)
-  val modeHandler = TypstModeHandler(this)
+  private val headingParser = CharacterBasedCodeAnnotatedHeadingParser(this)
+  private val modeHandler = TypstModeHandler(this)
 
   override fun processCharacter() {
     addMarkup(NO_TEXT_INLINE_MATH_REGEX, "", true)
@@ -86,39 +86,32 @@ open class TypstAnnotatedTextBuilder(
   }
 
   companion object {
-    val NO_TEXT_INLINE_MATH_REGEX = Regex("^\\$[^\"$\n]*\\$")
-    val LIST_REGEX = Regex("^\\s*[+|\\-|\\/]\\s")
+    private val NO_TEXT_INLINE_MATH_REGEX = Regex("^\\$[^\"$\n]*\\$")
+    private val LIST_REGEX = Regex("^\\s*[+|\\-|\\/]\\s")
     val LEADING_WHITESPACE_REGEX = Regex("^\\s*")
-    val LET_STRING_REGEX = Regex("^#let\\s.*?=\\s*\"")
-    val LET_CURLY_BRACKETS_REGEX = Regex("^#let\\s[^\$]*?=[^\$\r\n]*\\{")
-    val LET_ROUND_BRACKETS_REGEX = Regex("^#let\\s[^\$]*?=[^\$\r\n]*\\(")
-    val LET_SINGLE_LINE_REGEX = Regex("^#let\\s.*?=.*\r?\n")
-    val RAW_CODE_REGEX_1 = Regex("^`{3,}(.|\r?\n)*?`{3,}")
-    val RAW_CODE_REGEX_2 = Regex("^`(.|\r?\n)*?`")
-    val RAW_CODE_REGEX_3 = Regex("^#raw\\((.|\r?\n)*?[^\\\\]\"\\)")
-    val CITE_REGEX = Regex("^#cite\\(\\S+\\)")
-    val FOOTNOTE_REGEX = Regex("^#footnote\\[(.|\r?\n)*?\\]")
-    val CODE_REGEX = Regex("^#.*?\\(")
-    val CODE_CURLY_BRACKETS_REGEX = Regex("^#\\{")
-    val SQUARE_BRACKETS_REGEX_MID = Regex("^\\]\\[")
-    val FOR_WHILE_IF_REGEX = Regex("^(#for|#while|#if)\\s.*?(\\[|\\{)")
-    val ELSE_REGEX = Regex("^(\\]|\\})\\s*else.*?(\\[|\\{)")
-    val BRACKETS_REGEX = Regex("^(\\{|\\}|\\[|\\])")
-    val LINE_COMMENT_REGEX = Regex("^\\/\\/.*(\r?\n|$)")
-    val MULTILINELINE_COMMENT_REGEX = Regex("^\\/\\*(.|\r?\n)*?\\*\\/")
-    val MARKUP_REGEX = Regex("^(\\*|\\_)")
-    val IMPORT_REGEX = Regex("^(#import|#include)\\s.*\r?\n")
-    val SHOW_REGEX = Regex("^#show\\s.*\r?\n")
-    val LABEL_REGEX = Regex("^\\s@[^\\s]*")
-    val LABEL_REF_REGEX = Regex("^<[^\\s]*>")
-    val VARIABLE_REGEX = Regex("^#\\w*")
-    val QUOTATION_MARK_REGEX = Regex("^\"")
-    val QUOTATION_MARK_WHITESPACE_REGEX = Regex("^\"\\s*")
-    val WHITESPACE_QUOTATION_MARK_REGEX = Regex("^\\s*(?=\")")
-    val FILENAME_REGEX = Regex("^.+\\.\\w{1,4}")
-    val PROPERTY_REGEX =
-      Regex(
-        "^(font|fit|style|weight|top-edge|bottom-edge|lang|region|script|number-type|number-width)\\s?:\\s?\".*?\"",
-      )
+    private val LET_STRING_REGEX = Regex("^#let\\s.*?=\\s*\"")
+    private val LET_CURLY_BRACKETS_REGEX = Regex("^#let\\s[^\$]*?=[^\$\r\n]*\\{")
+    private val LET_ROUND_BRACKETS_REGEX = Regex("^#let\\s[^\$]*?=[^\$\r\n]*\\(")
+    private val LET_SINGLE_LINE_REGEX = Regex("^#let\\s.*?=.*\r?\n")
+    private val RAW_CODE_REGEX_1 = Regex("^`{3,}(.|\r?\n)*?`{3,}")
+    private val RAW_CODE_REGEX_2 = Regex("^`(.|\r?\n)*?`")
+    private val RAW_CODE_REGEX_3 = Regex("^#raw\\((.|\r?\n)*?[^\\\\]\"\\)")
+    private val CITE_REGEX = Regex("^#cite\\(\\S+\\)")
+    private val FOOTNOTE_REGEX = Regex("^#footnote\\[(.|\r?\n)*?\\]")
+    private val CODE_REGEX = Regex("^#.*?\\(")
+    private val CODE_CURLY_BRACKETS_REGEX = Regex("^#\\{")
+    private val SQUARE_BRACKETS_REGEX_MID = Regex("^\\]\\[")
+    private val FOR_WHILE_IF_REGEX = Regex("^(#for|#while|#if)\\s.*?(\\[|\\{)")
+    private val ELSE_REGEX = Regex("^(\\]|\\})\\s*else.*?(\\[|\\{)")
+    private val BRACKETS_REGEX = Regex("^(\\{|\\}|\\[|\\])")
+    private val LINE_COMMENT_REGEX = Regex("^\\/\\/.*(\r?\n|$)")
+    private val MULTILINELINE_COMMENT_REGEX = Regex("^\\/\\*(.|\r?\n)*?\\*\\/")
+    private val MARKUP_REGEX = Regex("^(\\*|\\_)")
+    private val IMPORT_REGEX = Regex("^(#import|#include)\\s.*\r?\n")
+    private val SHOW_REGEX = Regex("^#show\\s.*\r?\n")
+    private val LABEL_REGEX = Regex("^\\s@[^\\s]*")
+    private val LABEL_REF_REGEX = Regex("^<[^\\s]*>")
+    private val VARIABLE_REGEX = Regex("^#\\w*")
+    private val QUOTATION_MARK_REGEX = Regex("^\"")
   }
 }
