@@ -246,6 +246,63 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
   }
 
   @Test
+  fun testIfElse() {
+    assertPlainText(
+      """
+      Conditionals.
+      #if 1 = 2 [
+      Text if true.
+      ] else if 3 = 4 [
+      Text if else true.
+      ] else [
+      Text if false.
+      ]
+      More text after if-else.
+      """.trimIndent(),
+      """
+      Conditionals.
+
+      Text if true.
+      
+      Text if else true.
+      
+      Text if false.
+      
+
+      More text after if-else.
+      """.trimIndent(),
+    )
+  }
+
+  @Test
+  fun testLoops() {
+    assertPlainText(
+      """
+      Loops.
+      #while n < 12 {
+        n = n + 1
+      }
+      #for c in "ABC" [
+        #c
+      ]
+      More text after the loops.
+      """.trimIndent(),
+      """
+      Loops.
+
+      n = n + 1
+
+
+
+      Dummy0
+
+
+      More text after the loops.
+      """.trimIndent(),
+    )
+  }
+
+  @Test
   fun testEnum() {
     assertPlainText(
       """
