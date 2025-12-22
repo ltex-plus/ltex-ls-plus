@@ -81,7 +81,7 @@ data class ProgramCommentRegexs(
           lineCommentRegexString = "//[/!]?"
         }
 
-        "c", "cpp", "csharp", "dart", "fsharp", "go", "groovy", "java", "javascript",
+        "c", "cpp", "csharp", "cs", "dart", "fsharp", "go", "groovy", "java", "javascript",
         "javascriptreact", "kotlin", "php", "scala", "swift", "typescript",
         "typescriptreact", "verilog",
         -> {
@@ -96,13 +96,13 @@ data class ProgramCommentRegexs(
           lineCommentRegexString = "##?"
         }
 
-        "powershell" -> {
+        "powershell", "ps1" -> {
           blockCommentStartRegexString = "<#"
           blockCommentEndRegexString = "#>"
           lineCommentRegexString = "##?"
         }
 
-        "coffeescript", "julia", "perl", "perl6", "puppet", "r", "ruby", "shellscript" -> {
+        "coffeescript", "coffee", "julia", "perl", "perl6", "puppet", "r", "ruby", "shellscript", "sh", "bash" -> {
           lineCommentRegexString = "##?"
         }
 
@@ -136,7 +136,7 @@ data class ProgramCommentRegexs(
           lineCommentRegexString = "%%?"
         }
 
-        "fortran-modern" -> {
+        "fortran-modern", "fortran" -> {
           lineCommentRegexString = "c"
         }
 
