@@ -102,7 +102,9 @@ data class ProgramCommentRegexs(
           lineCommentRegexString = "##?"
         }
 
-        "coffeescript", "coffee", "julia", "perl", "perl6", "puppet", "r", "ruby", "shellscript", "sh", "bash" -> {
+        "coffeescript", "coffee", "julia", "perl", "perl6", "puppet", "r", "ruby", "shellscript",
+        "sh", "bash",
+        -> {
           lineCommentRegexString = "##?"
         }
 
