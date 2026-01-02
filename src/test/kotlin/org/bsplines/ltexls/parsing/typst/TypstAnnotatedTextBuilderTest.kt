@@ -267,7 +267,6 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       Text if else true.
       
       Text if false.
-      
 
       More text after if-else.
       """.trimIndent(),
@@ -293,9 +292,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       n = n + 1
 
 
-
       Dummy0
-
 
       More text after the loops.
       """.trimIndent(),
@@ -310,7 +307,38 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       My tasks are: #enum(start: 2)[Go shopping][Clean the porch]
       More text.
       """.trimIndent(),
-      "Text\nMy tasks are: \nGo shopping\nClean the porch\n\nMore text.",
+      "Text\nMy tasks are: \nGo shopping\nClean the porch\nMore text.",
+    )
+  }
+
+  @Test
+  fun testStyle() {
+    assertPlainText(
+      """
+      Text #highlight[can] #upper[be] #sub[styled] in #strong[different] ways.
+      """.trimIndent(),
+      "Text can be styled in different ways.",
+    )
+  }
+
+  @Test
+  fun testTable() {
+    assertPlainText(
+      """
+      Tables.
+      #table(
+        columns: 2,
+        [Column One], [Column Two],
+        [
+          First #strong[text].
+        ],
+        [
+          Second text.
+        ],
+      )
+      More text after the table.
+      """.trimIndent(),
+      "Tables.\nColumn One Column Two \nFirst text.\n \nSecond text.\n\nMore text after the table.",
     )
   }
 

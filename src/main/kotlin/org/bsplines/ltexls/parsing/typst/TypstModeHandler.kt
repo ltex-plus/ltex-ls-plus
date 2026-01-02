@@ -82,7 +82,15 @@ class TypstModeHandler(
 
   private fun processOpeningSquareBracket() {
     if (!typstTextBuilder.codeMode.codeModeString) {
-      typstTextBuilder.addMarkup(typstTextBuilder.curString)
+      if (typstTextBuilder.codeMode.stringCounter > 0 &&
+        typstTextBuilder.codeMode.squareBracketscounter == 0
+      ) {
+        typstTextBuilder.addMarkup(typstTextBuilder.curString, " ")
+      } else {
+        // First content block/string of current code mode does not get a leading space
+        typstTextBuilder.addMarkup(typstTextBuilder.curString)
+      }
+      typstTextBuilder.codeMode.stringCounter++
       typstTextBuilder.codeMode.squareBracketscounter++
       typstTextBuilder.codeMode.codeModeContentBlock = true
     }
@@ -126,7 +134,7 @@ class TypstModeHandler(
     ) {
       typstTextBuilder.addMarkup(typstTextBuilder.curString, " ")
     } else {
-      // First String of current code mode does not get a leading space
+      // First content block/string of current code mode does not get a leading space
       typstTextBuilder.addMarkup(typstTextBuilder.curString)
     }
     typstTextBuilder.codeMode.stringCounter++

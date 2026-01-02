@@ -24,11 +24,6 @@ open class TypstAnnotatedTextBuilder(
     modeHandler.processCodeMode()
     headingParser.processHeading()
 
-    if (this.isStartOfLine) {
-      addMarkup(LIST_REGEX)
-      addMarkup(LEADING_WHITESPACE_REGEX)
-    }
-
     addMarkup(LET_STRING_REGEX)
     addMarkup(LET_CURLY_BRACKETS_REGEX, "", false, true, BracketType.CurlyBracket)
     addMarkup(LET_ROUND_BRACKETS_REGEX, "", false, true)
@@ -37,13 +32,14 @@ open class TypstAnnotatedTextBuilder(
     addMarkup(RAW_CODE_REGEX_2, "", true)
     addMarkup(RAW_CODE_REGEX_3, "", true)
     addMarkup(CITE_REGEX)
+    addMarkup(ENUM_REGEX, "\n")
     addMarkup(FOOTNOTE_REGEX)
     addMarkup(CODE_REGEX, "", false, true)
     addMarkup(CODE_CURLY_BRACKETS_REGEX, "", false, true, BracketType.CurlyBracket)
     addMarkup(SQUARE_BRACKETS_REGEX_MID, "\n")
     addMarkup(FOR_WHILE_IF_REGEX)
     addMarkup(ELSE_REGEX)
-    addMarkup(BRACKETS_REGEX, "\n")
+    addMarkup(BRACKETS_REGEX)
 
     addBasicMarkup()
 
@@ -61,11 +57,17 @@ open class TypstAnnotatedTextBuilder(
   }
 
   fun addBasicMarkup() {
+    if (this.isStartOfLine) {
+      addMarkup(LIST_REGEX)
+      addMarkup(LEADING_WHITESPACE_REGEX)
+    }
+
     addMarkup(LINE_COMMENT_REGEX, "\n")
     addMarkup(MULTILINELINE_COMMENT_REGEX, "\n")
     addMarkup(MARKUP_REGEX)
     addMarkup(IMPORT_REGEX, "\n")
     addMarkup(SHOW_REGEX, "\n")
+    addMarkup(STYLE_REGEX)
     addMarkup(LABEL_REGEX, " ", true)
     addMarkup(LABEL_REF_REGEX)
     addMarkup(VARIABLE_REGEX, "", true)
@@ -97,6 +99,7 @@ open class TypstAnnotatedTextBuilder(
     private val RAW_CODE_REGEX_2 = Regex("^`(.|\r?\n)*?`")
     private val RAW_CODE_REGEX_3 = Regex("^#raw\\((.|\r?\n)*?[^\\\\]\"\\)")
     private val CITE_REGEX = Regex("^#cite\\(\\S+\\)")
+    private val ENUM_REGEX = Regex("^#enum(\\((.|\r?\n)*?\\)\\[|\\[)")
     private val FOOTNOTE_REGEX = Regex("^#footnote\\[(.|\r?\n)*?\\]")
     private val CODE_REGEX = Regex("^#.*?\\(")
     private val CODE_CURLY_BRACKETS_REGEX = Regex("^#\\{")
@@ -109,6 +112,8 @@ open class TypstAnnotatedTextBuilder(
     private val MARKUP_REGEX = Regex("^(\\*|\\_)")
     private val IMPORT_REGEX = Regex("^(#import|#include)\\s.*\r?\n")
     private val SHOW_REGEX = Regex("^#show\\s.*\r?\n")
+    private val STYLE_REGEX =
+      Regex("^#(highlight|lower|upper|overline|smallcaps|strike|sub|super|underline|strong)(?=\\[)")
     private val LABEL_REGEX = Regex("^\\s@[^\\s]*")
     private val LABEL_REF_REGEX = Regex("^<[^\\s]*>")
     private val VARIABLE_REGEX = Regex("^#\\w*")
