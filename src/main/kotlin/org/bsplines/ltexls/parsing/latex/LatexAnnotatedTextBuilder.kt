@@ -495,10 +495,6 @@ class LatexAnnotatedTextBuilder(
           LatexCommandSignature.Action.Dummy -> {
             addMarkup(match, generateDummy(matchingCommandSignature.dummyGenerator))
           }
-
-          else -> {
-            addMarkup(match)
-          }
         }
       } else {
         if (isMathMode(curMode) && (this.mathVowelState == MathVowelState.Undecided)) {
