@@ -343,6 +343,14 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
   }
 
   @Test
+  fun testConditionalHyphen() {
+    assertPlainText(
+      "Cond-?itional hypens?",
+      "Conditional hypens?",
+    )
+  }
+
+  @Test
   fun testEscapeCharacter() {
     assertPlainText(
       """

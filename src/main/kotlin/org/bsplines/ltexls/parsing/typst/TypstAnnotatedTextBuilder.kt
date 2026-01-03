@@ -72,6 +72,7 @@ open class TypstAnnotatedTextBuilder(
     addMarkup(LABEL_REF_REGEX)
     addMarkup(VARIABLE_REGEX, "", true)
     addMarkup(QUOTATION_MARK_REGEX)
+    addMarkup(CONDITIONAL_HYPHEN_REGEX)
   }
 
   private fun processEscapeCharacter() {
@@ -118,5 +119,6 @@ open class TypstAnnotatedTextBuilder(
     private val LABEL_REF_REGEX = Regex("^<[^\\s]*>")
     private val VARIABLE_REGEX = Regex("^#\\w*")
     private val QUOTATION_MARK_REGEX = Regex("^\"")
+    private val CONDITIONAL_HYPHEN_REGEX = Regex("^-\\?")
   }
 }
