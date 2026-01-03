@@ -113,7 +113,7 @@ class LtexLanguageServer :
 
     // should return null according to LSP specification, but return empty object instead,
     // see https://github.com/eclipse/lsp4j/issues/18
-    return CompletableFuture.completedFuture(Any())
+    return CompletableFuture.completedFuture(Object())
   }
 
   override fun exit() {
