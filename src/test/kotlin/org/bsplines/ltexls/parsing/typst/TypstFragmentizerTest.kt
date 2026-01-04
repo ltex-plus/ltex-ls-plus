@@ -11,6 +11,7 @@ package org.bsplines.ltexls.parsing.typst
 import org.bsplines.ltexls.parsing.restructuredtext.RestructuredtextFragmentizerTest
 import org.bsplines.ltexls.settings.Settings
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class TypstFragmentizerTest {
   @Test
@@ -30,6 +31,35 @@ class TypstFragmentizerTest {
 
       """.trimIndent(),
     )
+  }
+
+  @Test
+  fun testTable() {
+    val fragmentizer = TypstFragmentizer("typst")
+    var fragments =
+      fragmentizer.fragmentize(
+        "Sentence 1\n#table([A], [B], [C])\nSentence 2",
+        Settings(),
+      )
+    assertEquals(2, fragments.size)
+    fragments =
+      fragmentizer.fragmentize(
+        """
+        Sentence 1
+        #table([A], [B], [C])
+        // ltex: language=de-DE
+        Sentence 2
+        """.trimIndent(),
+        Settings(),
+      )
+    assertEquals(4, fragments.size)
+    assertEquals(0, fragments[0].fromPos)
+    assertEquals(11, fragments[0].code.length)
+    assertEquals(22, fragments[1].code.length)
+    assertEquals(23, fragments[2].code.length)
+    assertEquals(11, fragments[3].code.length)
+    fragments = fragmentizer.fragmentize("Sentence 1\n#tab()\nSentence 2", Settings())
+    assertEquals(1, fragments.size)
   }
 
   @Test
