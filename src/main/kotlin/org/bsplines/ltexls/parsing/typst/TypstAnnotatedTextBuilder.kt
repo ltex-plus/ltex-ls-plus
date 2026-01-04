@@ -19,6 +19,7 @@ open class TypstAnnotatedTextBuilder(
 
   override fun processCharacter() {
     addMarkup(NO_TEXT_INLINE_MATH_REGEX, "", true)
+    addMarkup(EMPTY_CONTENT_BLOCK)
     modeHandler.processMathBlock()
     processEscapeCharacter()
     modeHandler.processCodeMode()
@@ -90,6 +91,7 @@ open class TypstAnnotatedTextBuilder(
 
   companion object {
     private val NO_TEXT_INLINE_MATH_REGEX = Regex("^\\$[^\"$\n]*\\$")
+    private val EMPTY_CONTENT_BLOCK = Regex("^\\[\\s*\\]")
     private val LIST_REGEX = Regex("^\\s*[+|\\-|\\/]\\s")
     val LEADING_WHITESPACE_REGEX = Regex("^\\s*")
     private val LET_STRING_REGEX = Regex("^#let\\s.*?=\\s*\"")

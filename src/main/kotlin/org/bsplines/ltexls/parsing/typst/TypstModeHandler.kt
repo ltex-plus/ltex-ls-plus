@@ -72,11 +72,15 @@ class TypstModeHandler(
       }
     }
     if (typstTextBuilder.codeMode.codeModeString) {
-      processCodeModeString()
+      typstTextBuilder.addMarkup(FILENAME_REGEX, typstTextBuilder.generateDummy())
+      // String within code mode to be spell checked
+      typstTextBuilder.addText(typstTextBuilder.curString)
     } else if (typstTextBuilder.codeMode.codeModeContentBlock) {
-      processContentBlock()
+      typstTextBuilder.addBasicMarkup()
+      typstTextBuilder.addText(typstTextBuilder.curString)
     } else {
-      processMarkup()
+      typstTextBuilder.addMarkup(PROPERTY_REGEX)
+      typstTextBuilder.addMarkup(typstTextBuilder.curString)
     }
   }
 
@@ -85,7 +89,9 @@ class TypstModeHandler(
       if (typstTextBuilder.codeMode.stringCounter > 0 &&
         typstTextBuilder.codeMode.squareBracketscounter == 0
       ) {
-        typstTextBuilder.addMarkup(typstTextBuilder.curString, " ")
+        // No leading whitespace if 1st char is a dot
+        typstTextBuilder.addMarkup(DOT_REGEX)
+        addCurStringAsMarkupWithSpace()
       } else {
         // First content block/string of current code mode does not get a leading space
         typstTextBuilder.addMarkup(typstTextBuilder.curString)
@@ -111,28 +117,14 @@ class TypstModeHandler(
     typstTextBuilder.addMarkup(typstTextBuilder.curString)
   }
 
-  private fun processCodeModeString() {
-    typstTextBuilder.addMarkup(FILENAME_REGEX, typstTextBuilder.generateDummy())
-    // String within code mode to be spell checked
-    typstTextBuilder.addText(typstTextBuilder.curString)
-  }
-
-  private fun processContentBlock() {
-    typstTextBuilder.addBasicMarkup()
-    typstTextBuilder.addText(typstTextBuilder.curString)
-  }
-
-  private fun processMarkup() {
-    typstTextBuilder.addMarkup(PROPERTY_REGEX)
-    typstTextBuilder.addMarkup(typstTextBuilder.curString)
-  }
-
   private fun processQuotationMark() {
     typstTextBuilder.codeMode.codeModeString = !typstTextBuilder.codeMode.codeModeString
     if (typstTextBuilder.codeMode.codeModeString &&
       typstTextBuilder.codeMode.stringCounter > 0
     ) {
-      typstTextBuilder.addMarkup(typstTextBuilder.curString, " ")
+      // No leading whitespace if 1st char is a dot
+      typstTextBuilder.addMarkup(DOT_REGEX)
+      addCurStringAsMarkupWithSpace()
     } else {
       // First content block/string of current code mode does not get a leading space
       typstTextBuilder.addMarkup(typstTextBuilder.curString)
@@ -140,10 +132,17 @@ class TypstModeHandler(
     typstTextBuilder.codeMode.stringCounter++
   }
 
+  private fun addCurStringAsMarkupWithSpace() {
+    if (!typstTextBuilder.characterProcessed) {
+      typstTextBuilder.addMarkup(typstTextBuilder.curString, " ")
+    }
+  }
+
   companion object {
     private val QUOTATION_MARK_WHITESPACE_REGEX = Regex("^\"\\s*")
     private val WHITESPACE_QUOTATION_MARK_REGEX = Regex("^\\s*(?=\")")
     private val FILENAME_REGEX = Regex("^.+\\.\\w{1,4}")
+    private val DOT_REGEX = Regex("^.(?=\\.)")
     private val PROPERTY_REGEX =
       Regex(
         "^(font|fit|style|weight|top-edge|bottom-edge|lang|region|script|number-type|number-width)\\s?:\\s?\".*?\"",

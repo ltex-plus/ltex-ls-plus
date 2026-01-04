@@ -322,7 +322,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
   }
 
   @Test
-  fun testTable() {
+  fun testTable1() {
     assertPlainText(
       """
       Tables.
@@ -339,6 +339,18 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       More text after the table.
       """.trimIndent(),
       "Tables.\nColumn One Column Two \nFirst text.\n \nSecond text.\n\nMore text after the table.",
+    )
+  }
+
+  @Test
+  fun testTable2() {
+    assertPlainText(
+      """
+      This is an empty table: #table([], [], [])
+      Dots do not get a leading whitespace: #table([TEST], [.])
+      More text after the table.
+      """.trimIndent(),
+      "This is an empty table: \nDots do not get a leading whitespace: TEST.\nMore text after the table.",
     )
   }
 
