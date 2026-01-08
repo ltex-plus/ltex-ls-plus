@@ -12,6 +12,7 @@ import org.bsplines.ltexls.parsing.CodeFragment
 import org.bsplines.ltexls.parsing.CodeFragmentizer
 import org.bsplines.ltexls.parsing.RegexCodeFragmentizer
 import org.bsplines.ltexls.settings.Settings
+import java.beans.PropertyEditorManager
 
 class TypstFragmentizer(
   codeLanguageId: String,
@@ -22,30 +23,49 @@ class TypstFragmentizer(
     code: String,
     originalSettings: Settings,
   ): List<CodeFragment> {
+    var fragments = commentFragmentizer.fragmentize(code, originalSettings)
     // Create new code fragment before #table() function to prevent
     // false positive "Please add a punctuation mark at the end of paragraph."
-    var fragments = fragmentizeTable(code, originalSettings)
-    fragments = commentFragmentizer.fragmentize(fragments)
+    fragments = fragmentizeTable(fragments)
     return fragments
   }
 
-  private fun fragmentizeTable(
-    code: String,
-    settings: Settings,
-  ): List<CodeFragment> {
+  private fun fragmentizeTable(fragments: List<CodeFragment>): List<CodeFragment> {
     val codeFragments = ArrayList<CodeFragment>()
-    var curPos = 0
 
-    for (matchResult: MatchResult in TABLE_REGEX.findAll(code)) {
-      val lastPos: Int = curPos
-      curPos = matchResult.range.first
-      val lastCode: String = code.substring(lastPos, curPos)
-      codeFragments.add(CodeFragment(codeLanguageId, lastCode, lastPos, settings))
+    for (fragment in fragments) {
+      var lastPos = 0
+      val matches = TABLE_REGEX.findAll(fragment.code).toList()
+
+      if (matches.isEmpty()) {
+        codeFragments.add(
+          CodeFragment(fragment.codeLanguageId, fragment.code, fragment.fromPos, fragment.settings),
+        )
+        continue
+      }
+
+      for (matchResult in matches) {
+        val matchStart = matchResult.range.first
+        codeFragments.add(
+          CodeFragment(
+            fragment.codeLanguageId,
+            fragment.code.substring(lastPos, matchStart),
+            fragment.fromPos + lastPos,
+            fragment.settings,
+          ),
+        )
+        lastPos = matchResult.range.last + 1
+      }
+
+      codeFragments.add(
+        CodeFragment(
+          fragment.codeLanguageId,
+          fragment.code.substring(lastPos),
+          fragment.fromPos + lastPos,
+          fragment.settings,
+        ),
+      )
     }
-
-    // Add the remaining code after the last match
-    val remainingCode = code.substring(curPos)
-    codeFragments.add(CodeFragment(codeLanguageId, remainingCode, curPos, settings))
 
     return codeFragments
   }
