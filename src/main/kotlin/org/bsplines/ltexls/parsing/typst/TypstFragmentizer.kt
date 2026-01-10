@@ -24,18 +24,18 @@ class TypstFragmentizer(
     originalSettings: Settings,
   ): List<CodeFragment> {
     var fragments = commentFragmentizer.fragmentize(code, originalSettings)
-    // Create new code fragment before #table() function to prevent
+    // Create new code fragment before #table() and #grid() function to prevent
     // false positive "Please add a punctuation mark at the end of paragraph."
-    fragments = fragmentizeTable(fragments)
+    fragments = fragmentizeAtFunction(fragments)
     return fragments
   }
 
-  private fun fragmentizeTable(fragments: List<CodeFragment>): List<CodeFragment> {
+  private fun fragmentizeAtFunction(fragments: List<CodeFragment>): List<CodeFragment> {
     val codeFragments = ArrayList<CodeFragment>()
 
     for (fragment in fragments) {
       var lastPos = 0
-      val matches = TABLE_REGEX.findAll(fragment.code).toList()
+      val matches = FUNCTION_REGEX.findAll(fragment.code).toList()
 
       if (matches.isEmpty()) {
         codeFragments.add(
@@ -54,7 +54,7 @@ class TypstFragmentizer(
             fragment.settings,
           ),
         )
-        lastPos = matchResult.range.last + 1
+        lastPos = matchStart
       }
 
       codeFragments.add(
@@ -76,6 +76,6 @@ class TypstFragmentizer(
         "^[ \t]*\\/\\/[ \t]*(?i)ltex(?-i):(.*?)[ \t]*$",
         RegexOption.MULTILINE,
       )
-    private val TABLE_REGEX = Regex("(?=#table\\()")
+    private val FUNCTION_REGEX = Regex("(#table\\(|#grid\\()")
   }
 }

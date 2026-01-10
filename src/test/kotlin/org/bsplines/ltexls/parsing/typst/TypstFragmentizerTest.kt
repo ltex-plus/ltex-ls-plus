@@ -19,12 +19,6 @@ class TypstFragmentizerTest {
     val fragmentizer = TypstFragmentizer("typst")
     var fragments =
       fragmentizer.fragmentize(
-        "Sentence 1\n#table([A], [B], [C])\nSentence 2",
-        Settings(),
-      )
-    assertEquals(2, fragments.size)
-    fragments =
-      fragmentizer.fragmentize(
         """
         Sentence 1
         #table([A], [B], [C])
@@ -33,10 +27,12 @@ class TypstFragmentizerTest {
         //	ltex:	language=en-GB
         #table([A], [B], [C])
         Sentence 3
+        #grid([Test 1],[Test 2])
+        Sentence 4
         """.trimIndent(),
         Settings(),
       )
-    assertEquals(7, fragments.size)
+    assertEquals(8, fragments.size)
 
     assertEquals("typst", fragments[0].codeLanguageId)
     assertEquals(0, fragments[0].fromPos)
@@ -70,8 +66,13 @@ class TypstFragmentizerTest {
 
     assertEquals("typst", fragments[6].codeLanguageId)
     assertEquals(92, fragments[6].fromPos)
-    assertEquals(32, fragments[6].code.length)
+    assertEquals(33, fragments[6].code.length)
     assertEquals("en-GB", fragments[6].languageShortCode)
+
+    assertEquals("typst", fragments[7].codeLanguageId)
+    assertEquals(125, fragments[7].fromPos)
+    assertEquals(35, fragments[7].code.length)
+    assertEquals("en-GB", fragments[7].languageShortCode)
 
     fragments = fragmentizer.fragmentize("Sentence 1\n#tab()\nSentence 2", Settings())
     assertEquals(1, fragments.size)
