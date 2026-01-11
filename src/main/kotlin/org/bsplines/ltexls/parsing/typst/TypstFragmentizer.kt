@@ -35,26 +35,18 @@ class TypstFragmentizer(
 
     for (fragment in fragments) {
       var lastPos = 0
-      val matches = FUNCTION_REGEX.findAll(fragment.code).toList()
 
-      if (matches.isEmpty()) {
-        codeFragments.add(
-          CodeFragment(fragment.codeLanguageId, fragment.code, fragment.fromPos, fragment.settings),
-        )
-        continue
-      }
-
-      for (matchResult in matches) {
-        val matchStart = matchResult.range.first
+      for (matchResult in FUNCTION_REGEX.findAll(fragment.code)) {
+        val matchPos = matchResult.range.first
         codeFragments.add(
           CodeFragment(
             fragment.codeLanguageId,
-            fragment.code.substring(lastPos, matchStart),
+            fragment.code.substring(lastPos, matchPos),
             fragment.fromPos + lastPos,
             fragment.settings,
           ),
         )
-        lastPos = matchStart
+        lastPos = matchPos
       }
 
       codeFragments.add(
