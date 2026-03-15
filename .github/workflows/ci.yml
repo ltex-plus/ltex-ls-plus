@@ -79,11 +79,44 @@ jobs:
       - name: "Check Source Consistency"
         run: "python -u tools/checkSourceConsistency.py"
 
+  get-version:
+    name: "CI - Get Version Job"
+    runs-on: ubuntu-latest
+    outputs:
+      ltex_ls_version: ${{ steps.meta.outputs.ltex_ls_version }}
+      ltex_ls_is_prerelease: ${{ steps.meta.outputs.ltex_ls_is_prerelease }}
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v6
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: "Install Python Dependencies"
+        run: python -u -m pip install --upgrade pip && pip install semver
+
+      - name: "Compute metadata"
+        id: meta
+        run: |
+          LTEX_LS_VERSION="$(python -u -c "import re; print(re.search(r'<version>(.*?)</version>', open('pom.xml', 'r').read()).group(1), end='')")"
+          if [[ -z "$LTEX_LS_VERSION" ]]; then
+            echo "Error: LTEX_LS_VERSION not set"
+            exit 1
+          fi
+
+            LTEX_LS_IS_PRERELEASE="$(python -u -c "import semver; print('true' if semver.VersionInfo.parse('${LTEX_LS_VERSION}').prerelease is not None else 'false', end='')")"
+
+            echo "ltex_ls_version=$LTEX_LS_VERSION" >> "$GITHUB_OUTPUT"
+            echo "ltex_ls_is_prerelease=$LTEX_LS_IS_PRERELEASE" >> "$GITHUB_OUTPUT"
+
   deploy:
     name: "CI - Deploy Job"
     needs:
       - "build"
       - "validate"
+      - "get-version"
     if: "${{ startsWith(github.ref, 'refs/tags/') }}"
     runs-on: "ubuntu-latest"
     permissions:
@@ -106,20 +139,15 @@ jobs:
       - name: "Install Python Dependencies"
         run: "python -u -m pip install --upgrade pip && pip install semver"
 
-      - name: "Set LTEX_LS_VERSION"
-        run: "echo \"LTEX_LS_VERSION=$(python -u -c \"import re; print(re.search(r'<version>(.*?)</version>', open('pom.xml', 'r').read()).group(1), end='')\")\" >> $GITHUB_ENV"
-
-      - name: "Check LTEX_LS_VERSION"
-        run: "if [[ -z \"$LTEX_LS_VERSION\" ]]; then echo 'Error: LTEX_LS_VERSION not set!'; (exit 1); fi; echo \"LTEX_LS_VERSION set to '$LTEX_LS_VERSION'\""
-
-      - name: "Set LTEX_LS_IS_PRERELEASE"
-        run: "if [[ -z \"$LTEX_LS_VERSION\" ]]; then echo 'Error: LTEX_LS_VERSION not set!'; (exit 1); fi; echo \"LTEX_LS_IS_PRERELEASE=$(python -u -c \"import semver; print('true' if semver.VersionInfo.parse('$LTEX_LS_VERSION').prerelease is not None else 'false', end='')\")\" >> $GITHUB_ENV"
-
-      - name: "Check LTEX_LS_IS_PRERELEASE"
-        run: "if [[ -z \"$LTEX_LS_IS_PRERELEASE\" ]]; then echo 'Error: LTEX_LS_IS_PRERELEASE not set!'; (exit 1); fi; echo \"LTEX_LS_IS_PRERELEASE set to '$LTEX_LS_IS_PRERELEASE'\""
-
       - name: "Set LTEX_LS_CHANGELOG"
-        run: "if [ \"$LTEX_LS_IS_PRERELEASE\" = \"false\" ]; then echo \"LTEX_LS_CHANGELOG<<EOF\" >> $GITHUB_ENV; python -u tools/convertChangelog.py --xml-file changelog.xml --version latest >> $GITHUB_ENV; echo \"EOF\" >> $GITHUB_ENV; else echo \"LTEX_LS_CHANGELOG=This is a pre-release. Use at your own risk.\" >> $GITHUB_ENV; fi"
+        run: |
+          if [ "${{ needs.get-version.outputs.ltex_ls_is_prerelease }}" = "false" ]; then
+            echo "LTEX_LS_CHANGELOG<<EOF" >> "$GITHUB_ENV"
+            python -u tools/convertChangelog.py --xml-file changelog.xml --version latest >> "$GITHUB_ENV"
+            echo "EOF" >> "$GITHUB_ENV"
+          else
+            echo "LTEX_LS_CHANGELOG=This is a pre-release. Use at your own risk." >> "$GITHUB_ENV"
+          fi
 
       - name: "Build LTeX+ LS"
         run: "mvn -B -e package"
@@ -130,15 +158,15 @@ jobs:
       - name: "Create GitHub Release"
         run: >
           gh release create ${{ github.ref_name }}
-          --prerelease=${{ env.LTEX_LS_IS_PRERELEASE }}
-          --title='${{ env.LTEX_LS_VERSION }}'
+          --prerelease=${{ needs.get-version.outputs.ltex_ls_is_prerelease }}
+          --title='${{ needs.get-version.outputs.ltex_ls_version }}'
           --notes='${{ env.LTEX_LS_CHANGELOG }}'
-          'target/ltex-ls-plus-${{ env.LTEX_LS_VERSION }}.tar.gz'
-          'target/ltex-ls-plus-${{ env.LTEX_LS_VERSION }}-linux-x64.tar.gz'
-          'target/ltex-ls-plus-${{ env.LTEX_LS_VERSION }}-mac-x64.tar.gz'
-          'target/ltex-ls-plus-${{ env.LTEX_LS_VERSION }}-windows-x64.zip'
-          'target/ltex-ls-plus-${{ env.LTEX_LS_VERSION }}-linux-aarch64.tar.gz'
-          'target/ltex-ls-plus-${{ env.LTEX_LS_VERSION }}-mac-aarch64.tar.gz'
-          'target/ltex-ls-plus-${{ env.LTEX_LS_VERSION }}-windows-aarch64.zip'
+          'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}.tar.gz'
+          'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-linux-x64.tar.gz'
+          'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-mac-x64.tar.gz'
+          'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-windows-x64.zip'
+          'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-linux-aarch64.tar.gz'
+          'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-mac-aarch64.tar.gz'
+          'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-windows-aarch64.zip'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
