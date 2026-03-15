@@ -170,3 +170,55 @@ jobs:
           'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-windows-aarch64.zip'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker:
+    name: "CI - Deploy Container Image Job"
+    needs:
+      - "build"
+      - "validate"
+      - "get-version"
+    if: "${{ startsWith(github.ref, 'refs/tags/') }}"
+    runs-on: "ubuntu-latest"
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: "Checkout Repository"
+        uses: "actions/checkout@v6"
+
+      - name: "Set up QEMU"
+        uses: "docker/setup-qemu-action@v4"
+        with:
+          platforms: "amd64,arm64"
+
+      - name: "Set up Buildx"
+        uses: "docker/setup-buildx-action@v4"
+
+      - name: "Log in to GHCR"
+        uses: "docker/login-action@v4"
+        with:
+          registry: "ghcr.io"
+          username: "${{ github.actor }}"
+          password: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: "Compute Tags and Labels"
+        id: "meta"
+        uses: "docker/metadata-action@v6"
+        with:
+          images: "ghcr.io/${{ github.repository_owner }}/ltex-ls-plus"
+          tags: |
+            type=ref,event=tag
+
+      - name: "Build and Push"
+        uses: "docker/build-push-action@v6"
+        with:
+          platforms: linux/amd64,linux/arm64
+          context: "."
+          file: "./Dockerfile"
+          push: true
+          build-args: |
+            LTEX_VERSION=${{ needs.get-version.outputs.ltex_ls_version }}
+            SOURCE_MODE=from-local
+          tags: "${{ steps.meta.outputs.tags }}"
+          labels: "${{ steps.meta.outputs.labels }}"
