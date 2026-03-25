@@ -23,6 +23,12 @@
       <action type="add" issue="ltex-plus/ltex-ls-plus#128">
         Spell check content blocks in Typst
       </action>
+      <action type="add" issue="ltex-plus/ltex-ls-plus#131" due-to="@demenik">
+        Add code language aliases for neovim support 
+      </action>
+      <action type="add" issue="ltex-plus/ltex-ls-plus#142" due-to="Malik Tuwebti (@Tuwebti)">
+        Create official docker images on release#142
+      </action>
     </release>
     <release version="18.6.1" date="2025-10-19">
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#165">
