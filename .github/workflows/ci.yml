@@ -222,7 +222,7 @@ jobs:
             type=raw,value=${{ format('{0}-test-image', needs.get-version.outputs.ltex_ls_version) }},enable=${{ github.event_name == 'workflow_dispatch' }}
 
       - name: "Build and Push"
-        uses: "docker/build-push-action@v6"
+        uses: "docker/build-push-action@v7"
         with:
           platforms: linux/amd64,linux/arm64
           context: "."
