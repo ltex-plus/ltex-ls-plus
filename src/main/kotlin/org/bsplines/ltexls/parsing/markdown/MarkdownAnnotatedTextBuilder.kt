@@ -151,7 +151,10 @@ class MarkdownAnnotatedTextBuilder(
 
     for ((index, markup) in markups.withIndex()) {
       fullCode += markup.first + code[index]
-      clearCode += code[index] + "\n"
+      clearCode += code[index]
+      if (index < markups.lastIndex) {
+        clearCode += "\n"
+      }
     }
 
     this.code = fullCode
@@ -224,9 +227,10 @@ class MarkdownAnnotatedTextBuilder(
         super.addMarkup(shadowMarkup.first, "\n")
 
         val offset = shadowMarkup.third - shadowMarkup.second
+        val firstChar = shadowMarkup.first.firstOrNull()
         // we add new line in markdown code
         shadowOffset +=
-          if (shadowMarkup.first.firstOrNull() == '\n') {
+          if (firstChar == '\n' || firstChar == '\r') {
             offset - 1
           } else {
             offset

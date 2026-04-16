@@ -256,6 +256,47 @@ class ProgramAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("") {
   }
 
   @Test
+  fun testJavaCrlf() {
+    val lfInput =
+      """
+      Sentence 1 - no check // Sentence 2 - no check
+      //Sentence 3 - no check
+      // Sentence 4 -
+      // check
+
+      Sentence 5 - no check /* Sentence 6 - no check */
+      /* Sentence 7 - no check */ Sentence 8 - no check
+      /*Sentence 9 - no check */
+      /* Sentence 10 - check */
+      /** Sentence 11 -
+        * check */
+
+      """.trimIndent()
+    assertPlainText(
+      lfInput.replace("\n", "\r\n"),
+      "\n\n\nSentence 4 -\ncheck\n\n\nSentence 10 - check\n\n\nSentence 11 -\ncheck",
+      "java",
+    )
+  }
+
+  @Test
+  fun testLispCrlf() {
+    val lfInput =
+      """
+      Sentence 1 - no check ; Sentence 2 - no check
+      ;Sentence 3 - no check
+      ;; Sentence 4 -
+      ;; check
+
+      """.trimIndent()
+    assertPlainText(
+      lfInput.replace("\n", "\r\n"),
+      "\n\n\nSentence 4 -\ncheck",
+      "lisp",
+    )
+  }
+
+  @Test
   fun testRust() {
     assertPlainText(
       """
