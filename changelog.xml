@@ -14,6 +14,9 @@
   </properties>
   <body>
     <release version="18.7.0" date="upcoming">
+      <action type="fix" due-to="Andrea Alberti (@alberti42)">
+        Fix `StringIndexOutOfBoundsException` crash when checking comments inside source files with CRLF line endings or certain multi-line content. Two independent off-by-one bugs in `MarkdownAnnotatedTextBuilder` — a stray trailing `\n` in `addComment`'s reconstructed `clearCode`, and `removeComment` only detecting `\n` boundaries while ignoring `\r` — combined to push a substring index two characters past the end of the source comment, aborting the whole document's check. Applies to every programming language routed through `ProgramAnnotatedTextBuilder` (C, Java, Kotlin, Rust, Go, JS/TS, Lisp/Clojure, Lua, Haskell, …); Python comments go through a different path and were not affected. Plain Markdown, LaTeX, BibTeX, etc. were never affected.
+      </action>
       <action type="add" due-to="Andrea Alberti (@alberti42)">
         Accept `elisp` and `emacs-lisp` as `codeLanguageId`s alongside the existing `lisp`. Editors and LSP clients that natively label `.el` buffers with one of these names (modern `lsp-mode`, Neovim's built-in LSP, some VS Code Elisp extensions) now work out of the box without users having to remap to `lisp`. Behavior is identical to `lisp` — same `;` / `;;` line-comment regex, no block comments — so this is purely an ergonomic alias. The standalone CLI (`lsp-cli-plus`) also maps the `.el` file extension to `elisp` when checking files by path.
       </action>

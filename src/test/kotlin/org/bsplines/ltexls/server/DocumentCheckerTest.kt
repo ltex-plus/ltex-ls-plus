@@ -468,6 +468,34 @@ class DocumentCheckerTest {
   }
 
   @Test
+  fun testJavaCrlfCommentProducesDiagnostic() {
+    val code =
+      "public class Foo {\r\n" +
+        "  /** This is an test.\r\n" +
+        "    * Second line of comment.\r\n" +
+        "    */\r\n" +
+        "  void bar() {}\r\n" +
+        "}\r\n"
+    val document = createDocument("java", code)
+    val matches = checkDocument(document, Settings(_enabled = setOf("java"))).first
+    assertEquals(1, matches.size)
+    assertEquals("EN_A_VS_AN", matches[0].ruleId)
+    assertEquals("an", code.substring(matches[0].fromPos, matches[0].toPos))
+  }
+
+  @Test
+  fun testLispCrlfCommentProducesDiagnostic() {
+    val code =
+      ";; This is an test.\r\n" +
+        ";; Second line of comment.\r\n"
+    val document = createDocument("lisp", code)
+    val matches = checkDocument(document, Settings(_enabled = setOf("lisp"))).first
+    assertEquals(1, matches.size)
+    assertEquals("EN_A_VS_AN", matches[0].ruleId)
+    assertEquals("an", code.substring(matches[0].fromPos, matches[0].toPos))
+  }
+
+  @Test
   fun testCodeActionGenerator() {
     val document: LtexTextDocumentItem =
       createDocument(
