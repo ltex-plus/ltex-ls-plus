@@ -282,6 +282,12 @@ Result: {
                 "_ltex.checkDocument",
                 "_ltex.getServerStatus"
             ]
+        },
+        "workspace": {
+            "workspaceFolders": {
+                "supported": true,
+                "changeNotifications": true
+            }
         }
     }
 }

@@ -23,6 +23,8 @@ import org.eclipse.lsp4j.InitializeResult
 import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import org.eclipse.lsp4j.WindowClientCapabilities
+import org.eclipse.lsp4j.WorkspaceFoldersOptions
+import org.eclipse.lsp4j.WorkspaceServerCapabilities
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageClientAware
@@ -103,6 +105,11 @@ class LtexLanguageServer :
     serverCapabilities.executeCommandProvider =
       ExecuteCommandOptions(LtexWorkspaceService.getCommandNames())
     serverCapabilities.textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
+
+    val workspaceFoldersOptions = WorkspaceFoldersOptions()
+    workspaceFoldersOptions.supported = true
+    workspaceFoldersOptions.setChangeNotifications(Either.forRight(true))
+    serverCapabilities.workspace = WorkspaceServerCapabilities(workspaceFoldersOptions)
 
     return CompletableFuture.completedFuture(InitializeResult(serverCapabilities))
   }
