@@ -133,6 +133,8 @@ class OrgAnnotatedTextBuilder(
       this.elementTypeStack.addLast(ElementType.Headline)
       this.appendAtEndOfLine = "\n"
       addMarkup(matchResult?.value, "\n")
+    } else if (matchFromPosition(CAPTION_PREFIX_REGEX)?.also { matchResult = it } != null) {
+      addMarkup(matchResult?.value)
     } else if (
       matchFromPosition(AFFILIATED_KEYWORDS_REGEX)?.also { matchResult = it } != null
     ) {
@@ -525,10 +527,16 @@ class OrgAnnotatedTextBuilder(
         RegexOption.IGNORE_CASE,
       )
 
+    private val CAPTION_PREFIX_REGEX =
+      Regex(
+        "^#\\+CAPTION(\\[[^\r\n]*?])?: ",
+        RegexOption.IGNORE_CASE,
+      )
+
     private val AFFILIATED_KEYWORDS_REGEX =
       Regex(
-        "^#\\+((CAPTION|HEADER|NAME|PLOT|RESULTS)|" +
-          "((CAPTION|RESULTS)\\[[^\r\n]*?])|ATTR_[-0-9A-Z_a-z]+): [^\r\n]*(?=\r?\n|$)",
+        "^#\\+((HEADER|NAME|PLOT|RESULTS)|" +
+          "(RESULTS\\[[^\r\n]*?])|ATTR_[-0-9A-Z_a-z]+): [^\r\n]*(?=\r?\n|$)",
         RegexOption.IGNORE_CASE,
       )
 
