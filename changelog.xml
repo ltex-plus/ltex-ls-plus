@@ -29,6 +29,9 @@
       <action type="add" issue="ltex-plus/ltex-ls-plus#142" due-to="Malik Tuwebti (@Tuwebti)">
         Create official docker images on release#142
       </action>
+      <action type="fix" issue="ltex-plus/ltex-ls-plus#149" due-to="Andrea Alberti (@alberti42)">
+        Fix: spell-check text in org-mode `#+CAPTION` affiliated keyword
+      </action>
     </release>
     <release version="18.6.1" date="2025-10-19">
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#165">

@@ -37,7 +37,7 @@ class OrgAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("org") {
       This is a test.
 
       #+HEADER: test
-      #+CAPTION[abc]: def
+      #+NAME: some-name
       Second sentence.
 
         #+ATTR_foo01_bar: BOOM
@@ -45,6 +45,36 @@ class OrgAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("org") {
 
       """.trimIndent(),
       "This is a test.\n\n\n\nSecond sentence.\n\n\nFinal sentence.\n",
+    )
+  }
+
+  @Test
+  fun testCaptions() {
+    assertPlainText(
+      """
+      This is a test.
+      #+CAPTION: A short caption.
+      This is another test.
+
+      """.trimIndent(),
+      "This is a test.\nA short caption.\nThis is another test.\n",
+    )
+    assertPlainText(
+      """
+      This is a test.
+      #+CAPTION[short]: A longer caption description.
+      This is another test.
+
+      """.trimIndent(),
+      "This is a test.\nA longer caption description.\nThis is another test.\n",
+    )
+    assertPlainText(
+      "This is a test.\n#+CAPTION: A caption with *bold* and [[https://example.com][a link]].\n",
+      "This is a test.\nA caption with bold and a link.\n",
+    )
+    assertPlainText(
+      "#+CAPTION[short alt]: Here is an example [code] with square brackets in it.\n",
+      "Here is an example [code] with square brackets in it.\n",
     )
   }
 
