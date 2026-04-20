@@ -14,6 +14,9 @@
   </properties>
   <body>
     <release version="18.7.0" date="upcoming">
+      <action type="fix">
+        Normalize `ltex.language` input so regional variants (e.g. `fr-FR`, `it-IT`, `es-ES`) are mapped to the registered LanguageTool tag rather than silently disabling checking. Also accepts case variants of the `"auto"` sentinel (`"Auto"`, `"AUTO"`) and trims leading/trailing whitespace.
+      </action>
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#170">
         Fix spelling errors for Polish dummies
       </action>

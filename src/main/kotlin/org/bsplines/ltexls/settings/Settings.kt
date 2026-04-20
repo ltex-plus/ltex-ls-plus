@@ -13,7 +13,10 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import org.bsplines.ltexls.tools.FileIo
+import org.bsplines.ltexls.tools.I18n
+import org.bsplines.ltexls.tools.Logging
 import org.eclipse.lsp4j.DiagnosticSeverity
+import org.languagetool.Languages
 import java.util.logging.Level
 
 data class Settings(
@@ -206,7 +209,8 @@ data class Settings(
       val jsonWorkspaceSpecificSettings2 = jsonWorkspaceSpecificSettings ?: jsonSettings
 
       val enabled: Set<String>? = getEnabledFromJson(jsonSettings)
-      val languageShortCode: String? = getSettingFromJsonAsString(jsonSettings, "language")
+      val languageShortCode: String? =
+        getSettingFromJsonAsString(jsonSettings, "language")?.let { normalizeLanguageShortCode(it) }
       val allDictionaries: Map<String, Set<String>>? =
         mergeMapOfListsIntoMapOfSets(
           convertJsonObjectToMapOfLists(
@@ -342,6 +346,41 @@ data class Settings(
         clearDiagnosticsWhenClosingFile,
       )
     }
+
+    fun normalizeLanguageShortCode(raw: String): String {
+      val trimmed = raw.trim()
+      if (trimmed.equals("auto", ignoreCase = true)) return "auto"
+
+      val canonical =
+        LANGUAGE_TAG_REGEX.matchEntire(trimmed)?.destructured?.let { (lang, region, rest) ->
+          val regionPart = if (region.isEmpty()) "" else "-${region.uppercase()}"
+          "${lang.lowercase()}$regionPart$rest"
+        } ?: trimmed
+
+      if (Languages.isLanguageSupported(canonical)) return canonical
+
+      // The user asked for a regional variant (e.g. "fr-FR") that the bundled
+      // LanguageTool does not register as a distinct tag, but it does register
+      // the bare language (e.g. "fr"). This is the normal case for languages
+      // that LT ships without regional splits (French, Italian, Spanish,
+      // Swedish, ...): the bare code IS the full checker and provides both
+      // spelling and grammar — the user loses nothing.
+      //
+      // The edge case is a typo on a language that DOES have registered
+      // variants (e.g. "en-YZ" -> "en", "de-XX" -> "de"): there the bare code
+      // is a grammar-only umbrella class with no spell dictionary. The log
+      // line covers both cases neutrally so the user can tell what was used.
+      val base = canonical.substringBefore("-")
+      if (base != canonical && Languages.isLanguageSupported(base)) {
+        Logging.LOGGER.info(I18n.format("demotedLanguageToBase", canonical, base))
+        return base
+      }
+
+      return canonical
+    }
+
+    private val LANGUAGE_TAG_REGEX: Regex =
+      Regex("""^([A-Za-z]{2,3})(?:-([A-Za-z]{2}))?(-.*)?$""")
 
     private fun getEnabledFromJson(jsonSettings: JsonElement): Set<String>? {
       val jsonElement: JsonElement? = getSettingFromJsonAsJsonElement(jsonSettings, "enabled")
