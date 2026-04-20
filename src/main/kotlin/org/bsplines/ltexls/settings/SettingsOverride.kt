@@ -133,7 +133,7 @@ class SettingsOverride(
 
   fun updateLanguageShortCode(code: String?) {
     // code / default
-    languageShortCode = code
+    languageShortCode = code?.let { Settings.normalizeLanguageShortCode(it) }
   }
 
   fun updateCurrentDictionary(

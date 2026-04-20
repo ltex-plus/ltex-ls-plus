@@ -138,6 +138,29 @@ class SettingsTest {
     assertNotEquals(originalDirPath, expandedDirPath)
   }
 
+  @Test
+  fun testNormalizeLanguageShortCode() {
+    assertEquals("auto", Settings.normalizeLanguageShortCode("auto"))
+    assertEquals("auto", Settings.normalizeLanguageShortCode("Auto"))
+    assertEquals("auto", Settings.normalizeLanguageShortCode("AUTO"))
+
+    assertEquals("en-US", Settings.normalizeLanguageShortCode("en-US"))
+    assertEquals("en-US", Settings.normalizeLanguageShortCode("en-us"))
+    assertEquals("en-US", Settings.normalizeLanguageShortCode("EN-US"))
+    assertEquals("de-DE", Settings.normalizeLanguageShortCode("de-de"))
+
+    assertEquals("fr", Settings.normalizeLanguageShortCode("fr-FR"))
+    assertEquals("fr", Settings.normalizeLanguageShortCode("FR-fr"))
+    assertEquals("it", Settings.normalizeLanguageShortCode("it-IT"))
+
+    assertEquals("ca-ES-valencia", Settings.normalizeLanguageShortCode("CA-es-valencia"))
+
+    assertEquals("en-US", Settings.normalizeLanguageShortCode("  en-US  "))
+    assertEquals("auto", Settings.normalizeLanguageShortCode("  Auto  "))
+
+    assertEquals("zz-ZZ", Settings.normalizeLanguageShortCode("zz-ZZ"))
+  }
+
   companion object {
     private fun compareSettings(
       settings: Settings,
