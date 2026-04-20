@@ -15,6 +15,7 @@ import org.junit.jupiter.api.TestInstance
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.net.ConnectException
 import java.net.Socket
 import java.net.UnknownHostException
 import java.util.concurrent.ExecutionException
@@ -57,9 +58,17 @@ class LtexLanguageServerLauncherTcpSocketTest {
     launcherThread.start()
     this.launcherThread = launcherThread
 
-    // wait until server is listening for connections
-    Thread.sleep(2000)
-    val socket = Socket(HOST, PORT)
+    // poll until the server is listening for connections (Windows runners can be slow to bind)
+    val deadline = System.currentTimeMillis() + CONNECT_TIMEOUT_MS
+    var socket: Socket? = null
+    while (socket == null) {
+      try {
+        socket = Socket(HOST, PORT)
+      } catch (e: ConnectException) {
+        if (System.currentTimeMillis() > deadline) throw e
+        Thread.sleep(CONNECT_RETRY_INTERVAL_MS)
+      }
+    }
     this.inputStream = socket.getInputStream()
     this.outputStream = socket.getOutputStream()
     this.socket = socket
@@ -86,5 +95,7 @@ class LtexLanguageServerLauncherTcpSocketTest {
   companion object {
     private const val HOST = "localhost"
     private const val PORT = 52714
+    private const val CONNECT_TIMEOUT_MS = 30_000L
+    private const val CONNECT_RETRY_INTERVAL_MS = 100L
   }
 }
