@@ -126,7 +126,16 @@ data class LanguageToolRuleMatch(
               ruleId.endsWith("_SPELLING_RULE") ||
               (ruleId == "MUZSKY_ROD_NEZIV_A") ||
               (ruleId == "ZENSKY_ROD_A") ||
-              (ruleId == "STREDNY_ROD_A")
+              (ruleId == "STREDNY_ROD_A") ||
+              // Premium/HTTP rule families emitted by api.languagetoolplus.com that
+              // don't use the legacy MORFOLOGIK_/HUNSPELL_ prefixes but consistently
+              // carry ORTHOGRAPHY in the rule id for spell-check matches (e.g.
+              // QB_NEW_EN_ORTHOGRAPHY_ERROR_IDS_1,
+              // QB_NEW_DE_OTHER_ERROR_IDS_REPLACEMENT_ORTHOGRAPHY_SPELLING,
+              // AI_DE_GGEC_REPLACEMENT_ORTHOGRAPHY_SPELL).
+              ruleId.contains("ORTHOGRAPHY") ||
+              // Anonymous-tier common-typo rules such as ES_SIMPLE_REPLACE_SIMPLE_ESTAVA.
+              ruleId.contains("_SIMPLE_REPLACE_")
           )
       )
   }
