@@ -161,6 +161,11 @@ class SettingsTest {
     assertEquals("it", Settings.normalizeLanguageShortCode("it-IT"))
 
     assertEquals("ca-ES-valencia", Settings.normalizeLanguageShortCode("CA-es-valencia"))
+    // The rest-tail (third component, e.g. a variant subtag like `valencia`) is
+    // lowercased to match LanguageTool's registered form — otherwise LT's
+    // tag-matching could miss the Valencian variant.
+    assertEquals("ca-ES-valencia", Settings.normalizeLanguageShortCode("CA-ES-VALENCIA"))
+    assertEquals("ca-ES-valencia", Settings.normalizeLanguageShortCode("ca-ES-Valencia"))
 
     assertEquals("en-US", Settings.normalizeLanguageShortCode("  en-US  "))
     assertEquals("auto", Settings.normalizeLanguageShortCode("  Auto  "))
@@ -177,6 +182,11 @@ class SettingsTest {
     assertEquals("en-US", Settings.canonicalizeLanguageTag("  EN-us  "))
     assertEquals("fr-FR", Settings.canonicalizeLanguageTag("fr-fr"))
     assertEquals("fr-FR", Settings.canonicalizeLanguageTag("FR-FR"))
+    // Three-component tags: lang lowercase, region uppercase, rest lowercase.
+    // Matches LT's registered form for Valencian (ca-ES-valencia).
+    assertEquals("ca-ES-valencia", Settings.canonicalizeLanguageTag("ca-ES-valencia"))
+    assertEquals("ca-ES-valencia", Settings.canonicalizeLanguageTag("CA-ES-VALENCIA"))
+    assertEquals("ca-ES-valencia", Settings.canonicalizeLanguageTag("ca-es-Valencia"))
     // Non-matching input is returned unchanged after trimming.
     assertEquals("not a tag", Settings.canonicalizeLanguageTag("  not a tag  "))
   }
