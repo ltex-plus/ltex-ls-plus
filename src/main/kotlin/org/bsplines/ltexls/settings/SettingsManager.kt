@@ -85,6 +85,7 @@ class SettingsManager {
           this.settings.languageToolHttpServerUri,
           this.settings.languageShortCode,
           this.settings.motherTongueShortCode,
+          this.settings.preferredVariants,
         )
       }
 

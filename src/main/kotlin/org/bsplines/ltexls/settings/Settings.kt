@@ -32,6 +32,7 @@ data class Settings(
   private val _markdownNodes: Map<String, String>? = null,
   private val _enablePickyRules: Boolean? = null,
   private val _motherTongueShortCode: String? = null,
+  private val _preferredVariants: List<String>? = null,
   private val _languageModelRulesDirectory: String? = null,
   private val _languageToolHttpServerUri: String? = null,
   private val _languageToolOrgUsername: String? = null,
@@ -67,6 +68,8 @@ data class Settings(
     get() = (this._enablePickyRules ?: false)
   val motherTongueShortCode: String
     get() = (this._motherTongueShortCode ?: "")
+  val preferredVariants: List<String>
+    get() = (this._preferredVariants ?: DEFAULT_PREFERRED_VARIANTS)
   val languageModelRulesDirectory: String
     get() = FileIo.normalizePath(this._languageModelRulesDirectory ?: "")
   val languageToolHttpServerUri: String
@@ -110,6 +113,16 @@ data class Settings(
           "additionalRules.motherTongue",
           this.motherTongueShortCode,
           other.motherTongueShortCode,
+        ),
+      )
+    }
+
+    if (preferredVariants != other.preferredVariants) {
+      differences.add(
+        SettingsDifference(
+          "preferredVariants",
+          this.preferredVariants,
+          other.preferredVariants,
         ),
       )
     }
@@ -200,6 +213,7 @@ data class Settings(
     private const val DEFAULT_SENTENCE_CACHE_SIZE = 2000L
     private val DEFAULT_DIAGNOSTIC_SEVERITY: Map<String, DiagnosticSeverity> =
       mapOf(Pair("default", DiagnosticSeverity.Information))
+    val DEFAULT_PREFERRED_VARIANTS: List<String> = listOf("en-US", "de-DE", "pt-BR")
 
     @Suppress("LongMethod")
     fun fromJson(
@@ -251,6 +265,12 @@ data class Settings(
         getSettingFromJsonAsBoolean(jsonSettings, "additionalRules.enablePickyRules")
       val motherTongueShortCode: String? =
         getSettingFromJsonAsString(jsonSettings, "additionalRules.motherTongue")
+      val preferredVariants: List<String>? =
+        getSettingFromJsonAsJsonElement(jsonSettings, "preferredVariants")
+          ?.takeIf { it.isJsonArray }
+          ?.asJsonArray
+          ?.let { convertJsonArrayToList(it) }
+          ?.map { canonicalizeLanguageTag(it) }
       val languageModelRulesDirectory: String? =
         getSettingFromJsonAsString(jsonSettings, "additionalRules.languageModel")
 
@@ -334,6 +354,7 @@ data class Settings(
         markdownNodes,
         enablePickyRules,
         motherTongueShortCode,
+        preferredVariants,
         languageModelRulesDirectory,
         languageToolHttpServerUri,
         languageToolOrgUsername,
@@ -351,11 +372,7 @@ data class Settings(
       val trimmed = raw.trim()
       if (trimmed.equals("auto", ignoreCase = true)) return "auto"
 
-      val canonical =
-        LANGUAGE_TAG_REGEX.matchEntire(trimmed)?.destructured?.let { (lang, region, rest) ->
-          val regionPart = if (region.isEmpty()) "" else "-${region.uppercase()}"
-          "${lang.lowercase()}$regionPart$rest"
-        } ?: trimmed
+      val canonical = canonicalizeLanguageTag(trimmed)
 
       if (Languages.isLanguageSupported(canonical)) return canonical
 
@@ -377,6 +394,31 @@ data class Settings(
       }
 
       return canonical
+    }
+
+    // Canonicalises a BCP-47-ish tag to `<lang-lowercase>[-<REGION-uppercase>][rest]`
+    // but does NOT apply any "is this supported by LanguageTool" demotion. Use this
+    // for inputs where variant form must be preserved (e.g. ltex.preferredVariants
+    // entries that are sent to the LT server for post-detection disambiguation).
+    fun canonicalizeLanguageTag(raw: String): String {
+      val trimmed = raw.trim()
+      return LANGUAGE_TAG_REGEX.matchEntire(trimmed)?.destructured?.let { (lang, region, rest) ->
+        val regionPart = if (region.isEmpty()) "" else "-${region.uppercase()}"
+        "${lang.lowercase()}$regionPart$rest"
+      } ?: trimmed
+    }
+
+    // If `shortCode` is a bare language (no region), returns the first element of
+    // `preferredVariants` whose base language matches. Otherwise returns `shortCode`
+    // unchanged. Used to recover a concrete variant when ltex.language="auto" and the
+    // local LanguageTool detector returned only a bare code like "en" — without a
+    // variant, LT's spell-checker silently does nothing for English/German/Portuguese.
+    fun promoteToPreferredVariant(
+      shortCode: String,
+      preferredVariants: List<String>,
+    ): String {
+      if (shortCode.contains('-')) return shortCode
+      return preferredVariants.firstOrNull { it.substringBefore('-') == shortCode } ?: shortCode
     }
 
     private val LANGUAGE_TAG_REGEX: Regex =

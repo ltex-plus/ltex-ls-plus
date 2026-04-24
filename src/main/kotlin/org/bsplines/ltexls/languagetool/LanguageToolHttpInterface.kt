@@ -13,6 +13,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import org.bsplines.ltexls.parsing.AnnotatedTextFragment
+import org.bsplines.ltexls.settings.Settings
 import org.bsplines.ltexls.tools.I18n
 import org.bsplines.ltexls.tools.Logging
 import org.languagetool.markup.AnnotatedText
@@ -33,6 +34,7 @@ class LanguageToolHttpInterface(
   uriString: String,
   private val languageShortCode: String,
   private val motherTongueShortCode: String,
+  private val preferredVariants: List<String> = emptyList(),
 ) : LanguageToolInterface() {
   private val enabledRules: MutableList<String> = ArrayList()
   private val httpClient: HttpClient = HttpClient.newHttpClient()
@@ -97,6 +99,33 @@ class LanguageToolHttpInterface(
 
     val responseBody: String = httpResponse.body()
     val jsonResponse: JsonObject = JsonParser.parseString(responseBody).asJsonObject
+
+    // When language=auto, the server reports the language it picked as
+    // jsonResponse.language.code. Record it on the CodeFragment so downstream consumers —
+    // LanguageToolRuleMatch.fromLanguageTool, CodeActionProvider (add-to-dictionary,
+    // disable-rule, hide-false-positive) — key per-language correctly instead of under
+    // the literal "auto". The public endpoints (api.languagetool.org /
+    // api.languagetoolplus.com) ship with the ngram/fasttext detector and always return
+    // a concrete variant for Category 1 bases. A self-hosted languagetool-server without
+    // the ngram language-data download falls back to a weaker detector and may return
+    // the bare base "en"/"de"/"pt" — that would re-introduce the Category 1 silent-
+    // disable. promoteToPreferredVariant is a no-op when the returned code already has
+    // a region (every public-endpoint response) and otherwise promotes via the user's
+    // preferredVariants, mirroring what the Java backend does at detection time.
+    if (annotatedTextFragment.codeFragment.languageShortCode == "auto") {
+      jsonResponse
+        .get("language")
+        ?.takeIf { it.isJsonObject }
+        ?.asJsonObject
+        ?.get("code")
+        ?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }
+        ?.asString
+        ?.let {
+          annotatedTextFragment.codeFragment.languageShortCode =
+            Settings.promoteToPreferredVariant(it, this.preferredVariants)
+        }
+    }
+
     val jsonMatches: JsonArray = jsonResponse.get("matches").asJsonArray
     val result = ArrayList<LanguageToolRuleMatch>()
 
@@ -115,6 +144,9 @@ class LanguageToolHttpInterface(
 
     val requestEntries = HashMap<String, String>()
     requestEntries["language"] = this.languageShortCode
+    if (this.languageShortCode == "auto" && this.preferredVariants.isNotEmpty()) {
+      requestEntries["preferredVariants"] = this.preferredVariants.joinToString(",")
+    }
     requestEntries["data"] = jsonData.toString()
     Logging.LOGGER.finer("requestEntries[\"data\"].length = " + requestEntries["data"]!!.length)
 
