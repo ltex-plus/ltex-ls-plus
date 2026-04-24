@@ -396,15 +396,18 @@ data class Settings(
       return canonical
     }
 
-    // Canonicalises a BCP-47-ish tag to `<lang-lowercase>[-<REGION-uppercase>][rest]`
-    // but does NOT apply any "is this supported by LanguageTool" demotion. Use this
-    // for inputs where variant form must be preserved (e.g. ltex.preferredVariants
-    // entries that are sent to the LT server for post-detection disambiguation).
+    // Canonicalises a BCP-47-ish tag to
+    // `<lang-lowercase>[-<REGION-uppercase>][-<rest-lowercase>]` but does NOT apply any
+    // "is this supported by LanguageTool" demotion. Use this for inputs where variant
+    // form must be preserved (e.g. ltex.preferredVariants entries that are sent to the
+    // LT server for post-detection disambiguation). The rest-tail is lowercased to
+    // match the registered LanguageTool form for variant subtags like `valencia` in
+    // `ca-ES-valencia`.
     fun canonicalizeLanguageTag(raw: String): String {
       val trimmed = raw.trim()
       return LANGUAGE_TAG_REGEX.matchEntire(trimmed)?.destructured?.let { (lang, region, rest) ->
         val regionPart = if (region.isEmpty()) "" else "-${region.uppercase()}"
-        "${lang.lowercase()}$regionPart$rest"
+        "${lang.lowercase()}$regionPart${rest.lowercase()}"
       } ?: trimmed
     }
 
