@@ -116,6 +116,61 @@ class LanguageToolHttpInterfaceTest {
   }
 
   @Test
+  fun testAutoLanguageHonoursUserOverrideWithinCategory1() {
+    // Tripwire: asserts the LT server still honours `preferredVariants` for swapping
+    // within Category 1 bases. User has overridden the default en-US with en-GB; the
+    // server must pick en-GB for English text and fire the British-English spell dict.
+    // If this goes red, LT's /check has stopped respecting preferredVariants (or
+    // changed how it iterates the list) — re-read CLAUDE.md's "LanguageTool language-
+    // tag quirks" section and TextChecker.detectLanguageOfString before touching the
+    // assertion.
+    val result =
+      checkAutoWithPreferredVariants(
+        preferredVariants = listOf("en-GB"),
+        text = "This is a testt sentence with a mispeling.\n",
+      )
+    assertTrue(
+      result.first.any { it.ruleId == "MORFOLOGIK_RULE_EN_GB" },
+      "Expected MORFOLOGIK_RULE_EN_GB match; got rule ids: " +
+        result.first.mapNotNull { it.ruleId },
+    )
+    assertEquals(
+      "en-GB",
+      result.second
+        .first()
+        .codeFragment.languageShortCode,
+    )
+  }
+
+  @Test
+  fun testAutoLanguageBareCategory2StillRunsSpellCheck() {
+    // Tripwire: asserts LT's Category 2 contract — bare codes like `es` / `fr` / `it`
+    // are full spell + grammar checkers, so we don't need to ship variants for them in
+    // DEFAULT_PREFERRED_VARIANTS. Here preferredVariants contains no es-*; the server
+    // returns bare `es`; MORFOLOGIK_RULE_ES must still fire. If this goes red, LT has
+    // reclassified Spanish as Category 1 (bare-insufficient) and DEFAULT_PREFERRED_-
+    // VARIANTS needs an es-XX entry — otherwise every Spanish user silently loses
+    // spell-check, same bug we fixed for en/de/pt. See CLAUDE.md for the Category 1/2/3
+    // taxonomy.
+    val result =
+      checkAutoWithPreferredVariants(
+        preferredVariants = null, // -> merged to DEFAULT_PREFERRED_VARIANTS
+        text = "El gatitto persigue a una maripossa en el jardín.\n",
+      )
+    assertTrue(
+      result.first.any { it.ruleId == "MORFOLOGIK_RULE_ES" },
+      "Expected MORFOLOGIK_RULE_ES match (bare es is expected to be a full checker); " +
+        "got rule ids: " + result.first.mapNotNull { it.ruleId },
+    )
+    assertEquals(
+      "es",
+      result.second
+        .first()
+        .codeFragment.languageShortCode,
+    )
+  }
+
+  @Test
   fun testAutoLanguageMagicCommentSwitchesFragmentToAuto() {
     // A magic comment like "% ltex: language=auto" must switch *subsequent* fragments
     // to auto-detection while leaving the prior block under its explicit language. This
@@ -158,5 +213,43 @@ class LanguageToolHttpInterfaceTest {
       "Expected a de-DE fragment from the auto-tagged German block (back-filled by the " +
         "server under default preferredVariants); got: $checkedLanguages",
     )
+  }
+
+  @Test
+  fun testAutoLanguageCategory2OptInVariantIsRouted() {
+    // Tripwire: asserts Category 2 opt-in variants (e.g. es-AR for Argentinian voseo
+    // grammar) are still routed through the server when the user adds them to
+    // preferredVariants alongside the merged defaults. A user writing Argentinian
+    // Spanish adds "es-AR"; mergePreferredVariants appends it to the Cat 1 defaults;
+    // the server must pick es-AR for Spanish text. If this goes red, either LT dropped
+    // the es-AR variant registration, or our merge ordering / wire format stopped
+    // matching LT's iteration semantics in TextChecker.detectLanguageOfString.
+    val result =
+      checkAutoWithPreferredVariants(
+        preferredVariants = listOf("es-AR"),
+        text = "El gatito persigue a una mariposa en el jardín.\n",
+      )
+    assertEquals(
+      "es-AR",
+      result.second
+        .first()
+        .codeFragment.languageShortCode,
+    )
+  }
+
+  private fun checkAutoWithPreferredVariants(
+    preferredVariants: List<String>?,
+    text: String,
+  ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> {
+    val settings: Settings =
+      this.defaultSettings.copy(
+        _languageShortCode = "auto",
+        _preferredVariants = preferredVariants,
+      )
+    val settingsManager = SettingsManager(settings)
+    val documentChecker = DocumentChecker(settingsManager)
+    val document: LtexTextDocumentItem =
+      DocumentCheckerTest.createDocument("latex", text)
+    return documentChecker.check(document)
   }
 }
