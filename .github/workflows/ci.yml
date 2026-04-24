@@ -88,6 +88,8 @@ jobs:
   get-version:
     name: "CI - Get Version Job"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       ltex_ls_version: ${{ steps.meta.outputs.ltex_ls_version }}
       ltex_ls_is_prerelease: ${{ steps.meta.outputs.ltex_ls_is_prerelease }}
