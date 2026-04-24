@@ -87,8 +87,11 @@ class SettingsTest {
     assertEquals("motherTongueShortCode", settings.motherTongueShortCode)
     settings2 = compareSettings(settings, settings2, true)
 
+    // User entries merge with DEFAULT_PREFERRED_VARIANTS keyed by base language
+    // (last-wins per base). The user-provided en-GB and de-AT override en-US and de-DE
+    // respectively; pt-BR is not overridden so it is preserved.
     settings = settings.copy(_preferredVariants = listOf("en-GB", "de-AT"))
-    assertEquals(listOf("en-GB", "de-AT"), settings.preferredVariants)
+    assertEquals(listOf("en-GB", "de-AT", "pt-BR"), settings.preferredVariants)
     settings2 = compareSettings(settings, settings2, true)
 
     settings = settings.copy(_languageModelRulesDirectory = "languageModelRulesDirectory")
@@ -201,6 +204,46 @@ class SettingsTest {
   @Test
   fun testDefaultPreferredVariants() {
     assertEquals(listOf("en-US", "de-DE", "pt-BR"), Settings().preferredVariants)
+  }
+
+  @Test
+  fun testMergePreferredVariants() {
+    // Null / missing user input -> defaults unchanged.
+    assertEquals(listOf("en-US", "de-DE", "pt-BR"), Settings.mergePreferredVariants(null))
+
+    // Empty user list still yields defaults (explicit "[]" does not mean "strip all" —
+    // users cannot lose variant coverage for spell-check-requiring bases).
+    assertEquals(listOf("en-US", "de-DE", "pt-BR"), Settings.mergePreferredVariants(emptyList()))
+
+    // Override at the base-language level; unrelated defaults are preserved in order.
+    assertEquals(
+      listOf("en-GB", "de-DE", "pt-BR"),
+      Settings.mergePreferredVariants(listOf("en-GB")),
+    )
+
+    // Two overrides at once, third default preserved.
+    assertEquals(
+      listOf("en-GB", "de-AT", "pt-BR"),
+      Settings.mergePreferredVariants(listOf("en-GB", "de-AT")),
+    )
+
+    // New base language is appended after defaults.
+    assertEquals(
+      listOf("en-US", "de-DE", "pt-BR", "nl-NL"),
+      Settings.mergePreferredVariants(listOf("nl-NL")),
+    )
+
+    // Last user entry wins per base — matches LT server's iteration semantics.
+    assertEquals(
+      listOf("en-GB", "de-DE", "pt-BR"),
+      Settings.mergePreferredVariants(listOf("en-US", "en-GB")),
+    )
+
+    // Bare entries are dropped — LT's /check rejects them with BadRequestException.
+    assertEquals(
+      listOf("en-US", "de-DE", "pt-BR"),
+      Settings.mergePreferredVariants(listOf("en")),
+    )
   }
 
   companion object {
@@ -393,7 +436,10 @@ class SettingsTest {
     preferredVariantsArray.add("DE-at")
     jsonSettings.add("preferredVariants", preferredVariantsArray)
     settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
-    // Each entry is canonicalised (lang lowercase + region uppercase), variant preserved.
-    assertEquals(listOf("en-GB", "de-AT"), settings.preferredVariants)
+    // Each entry is canonicalised (lang lowercase + region uppercase, variant preserved)
+    // and merged with DEFAULT_PREFERRED_VARIANTS: en-GB and de-AT override the default
+    // en-US and de-DE; the default pt-BR is kept since the user did not specify a
+    // Portuguese variant.
+    assertEquals(listOf("en-GB", "de-AT", "pt-BR"), settings.preferredVariants)
   }
 }
