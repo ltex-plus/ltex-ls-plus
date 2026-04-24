@@ -141,15 +141,24 @@ class DocumentChecker(
     val codeFragment: CodeFragment = annotatedTextFragment.codeFragment
     var settings: Settings = codeFragment.settings
 
-    if (settings.languageShortCode == "auto") {
+    // On the HTTP path we let "auto" propagate to the server, which has a better
+    // (ngram/fasttext) detector and honours preferredVariants. LanguageToolHttpInterface
+    // back-fills codeFragment.languageShortCode from the response. Only the Java backend
+    // needs local resolution, because LT does not support language=auto in-process.
+    if (settings.languageShortCode == "auto" && settings.languageToolHttpServerUri.isEmpty()) {
       val cleanText: String =
         this.simpleLanguageIdentifier.cleanAndShortenText(
           annotatedTextFragment.annotatedText.plainText,
         )
       val detectedLanguage: DetectedLanguage? =
         this.simpleLanguageIdentifier.detectLanguage(cleanText, emptyList(), emptyList())
-      val languageShortCode: String =
+      val detectedCode: String =
         detectedLanguage?.detectedLanguage?.shortCodeWithCountryAndVariant ?: "en-US"
+      // SimpleLanguageIdentifier only returns bare codes (e.g. "en"); promote to the
+      // first matching ltex.preferredVariants entry so LT's variant-specific spell-check
+      // dictionary is activated rather than silently skipped.
+      val languageShortCode: String =
+        Settings.promoteToPreferredVariant(detectedCode, settings.preferredVariants)
       annotatedTextFragment.codeFragment.languageShortCode = languageShortCode
       settings = settings.copy(_languageShortCode = languageShortCode)
     }

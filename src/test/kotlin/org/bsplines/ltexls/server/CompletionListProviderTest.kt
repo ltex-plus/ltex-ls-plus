@@ -59,6 +59,44 @@ class CompletionListProviderTest {
   }
 
   @Test
+  fun testAutoLanguageReturnsCompletionsForCategory1Base() {
+    // Regression test for empty word-completion lists under ltex.language="auto" for
+    // Category 1 bases. SimpleLanguageIdentifier returns bare codes like "en", but the
+    // bundled resources only ship per variant (completionList.en-US.txt, …) — there is
+    // no completionList.en.txt — so the lookup used to miss and the list came back
+    // empty for English / German / Portuguese. CompletionListProvider now applies
+    // Settings.promoteToPreferredVariant to the detected code, so a detected "en" is
+    // promoted to "en-US" before the resource lookup and the bundled English word list
+    // is found.
+    val languageServer = LtexLanguageServer()
+    languageServer.settingsManager.settings =
+      languageServer.settingsManager.settings.copy(
+        _languageShortCode = "auto",
+      )
+    val document =
+      LtexTextDocumentItem(
+        languageServer,
+        "untitled:test.md",
+        "markdown",
+        1,
+        "This is a test paragraph with several English words for detection.\n",
+      )
+    val completionList: CompletionList =
+      languageServer.completionListProvider.createCompletionList(document, Position(0, 14))
+
+    assertTrue(
+      completionList.items.isNotEmpty(),
+      "Auto-detected English text should yield non-empty completions; got 0 items. " +
+        "If the detector locked onto a different language the bundled wordlist for that " +
+        "variant should still produce non-empty results — an empty list means the bare-to-" +
+        "variant promotion regressed.",
+    )
+    for (completionItem: CompletionItem in completionList.items) {
+      assertTrue(completionItem.label.startsWith("test"))
+    }
+  }
+
+  @Test
   fun testCompletionItemsCarryTextKind() {
     // Regression: items used to be returned with a null `kind`, which made
     // clients render them with a generic / unknown icon. Dictionary entries

@@ -12,6 +12,7 @@ import org.bsplines.ltexls.parsing.AnnotatedTextFragment
 import org.bsplines.ltexls.parsing.CodeAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.CodeFragment
 import org.bsplines.ltexls.parsing.CodeFragmentizer
+import org.bsplines.ltexls.settings.Settings
 import org.bsplines.ltexls.settings.SettingsManager
 import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionItemKind
@@ -139,18 +140,23 @@ class CompletionListProvider(
     return AnnotatedTextFragment(annotatedText, codeFragment, document)
   }
 
-  private fun getLanguageShortCode(annotatedTextFragment: AnnotatedTextFragment): String? =
-    if (annotatedTextFragment.codeFragment.settings.languageShortCode == "auto") {
-      val cleanText: String =
-        this.simpleLanguageIdentifier.cleanAndShortenText(
-          annotatedTextFragment.annotatedText.plainText,
-        )
-      val detectedLanguage: DetectedLanguage? =
-        this.simpleLanguageIdentifier.detectLanguage(cleanText, emptyList(), emptyList())
-      detectedLanguage?.detectedLanguage?.shortCodeWithCountryAndVariant
-    } else {
-      annotatedTextFragment.codeFragment.settings.languageShortCode
-    }
+  private fun getLanguageShortCode(annotatedTextFragment: AnnotatedTextFragment): String? {
+    val settings = annotatedTextFragment.codeFragment.settings
+    if (settings.languageShortCode != "auto") return settings.languageShortCode
+
+    val cleanText: String =
+      this.simpleLanguageIdentifier.cleanAndShortenText(
+        annotatedTextFragment.annotatedText.plainText,
+      )
+    val detectedLanguage: DetectedLanguage? =
+      this.simpleLanguageIdentifier.detectLanguage(cleanText, emptyList(), emptyList())
+    val detectedCode: String =
+      detectedLanguage?.detectedLanguage?.shortCodeWithCountryAndVariant ?: return null
+    // SimpleLanguageIdentifier only returns bare codes. The bundled completion word-
+    // lists are all variant-specific (completionList.en-US.txt, completionList.de-DE.txt,
+    // …) so a bare "en" finds nothing. Promote using the user's preferredVariants.
+    return Settings.promoteToPreferredVariant(detectedCode, settings.preferredVariants)
+  }
 
   private fun getPrefixFromPosition(
     code: String,

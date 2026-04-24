@@ -87,6 +87,10 @@ class SettingsTest {
     assertEquals("motherTongueShortCode", settings.motherTongueShortCode)
     settings2 = compareSettings(settings, settings2, true)
 
+    settings = settings.copy(_preferredVariants = listOf("en-GB", "de-AT"))
+    assertEquals(listOf("en-GB", "de-AT"), settings.preferredVariants)
+    settings2 = compareSettings(settings, settings2, true)
+
     settings = settings.copy(_languageModelRulesDirectory = "languageModelRulesDirectory")
     assertEquals(
       "languageModelRulesDirectory",
@@ -159,6 +163,44 @@ class SettingsTest {
     assertEquals("auto", Settings.normalizeLanguageShortCode("  Auto  "))
 
     assertEquals("zz-ZZ", Settings.normalizeLanguageShortCode("zz-ZZ"))
+  }
+
+  @Test
+  fun testCanonicalizeLanguageTag() {
+    // Variant form must be preserved even when LT does not register that exact variant,
+    // because preferredVariants values are forwarded to the LT HTTP server, not resolved
+    // locally against Languages.isLanguageSupported.
+    assertEquals("en-US", Settings.canonicalizeLanguageTag("en-us"))
+    assertEquals("en-US", Settings.canonicalizeLanguageTag("  EN-us  "))
+    assertEquals("fr-FR", Settings.canonicalizeLanguageTag("fr-fr"))
+    assertEquals("fr-FR", Settings.canonicalizeLanguageTag("FR-FR"))
+    // Non-matching input is returned unchanged after trimming.
+    assertEquals("not a tag", Settings.canonicalizeLanguageTag("  not a tag  "))
+  }
+
+  @Test
+  fun testPromoteToPreferredVariant() {
+    val variants = listOf("en-US", "de-DE", "pt-BR")
+    // Bare -> matching variant.
+    assertEquals("en-US", Settings.promoteToPreferredVariant("en", variants))
+    assertEquals("de-DE", Settings.promoteToPreferredVariant("de", variants))
+    assertEquals("pt-BR", Settings.promoteToPreferredVariant("pt", variants))
+    // Bare without a match stays bare.
+    assertEquals("fr", Settings.promoteToPreferredVariant("fr", variants))
+    // Already a variant -> untouched (even if a different variant is in the list).
+    assertEquals("en-GB", Settings.promoteToPreferredVariant("en-GB", variants))
+    // Empty list -> no-op.
+    assertEquals("en", Settings.promoteToPreferredVariant("en", emptyList()))
+    // First match wins.
+    assertEquals(
+      "en-GB",
+      Settings.promoteToPreferredVariant("en", listOf("en-GB", "en-US")),
+    )
+  }
+
+  @Test
+  fun testDefaultPreferredVariants() {
+    assertEquals(listOf("en-US", "de-DE", "pt-BR"), Settings().preferredVariants)
   }
 
   companion object {
@@ -345,5 +387,13 @@ class SettingsTest {
     jsonSettings.addProperty("checkFrequency", "manual")
     settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
     assertEquals(Settings.CheckFrequency.Manual, settings.checkFrequency)
+
+    val preferredVariantsArray = JsonArray()
+    preferredVariantsArray.add("en-gb")
+    preferredVariantsArray.add("DE-at")
+    jsonSettings.add("preferredVariants", preferredVariantsArray)
+    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
+    // Each entry is canonicalised (lang lowercase + region uppercase), variant preserved.
+    assertEquals(listOf("en-GB", "de-AT"), settings.preferredVariants)
   }
 }
