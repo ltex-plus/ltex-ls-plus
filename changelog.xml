@@ -38,6 +38,9 @@
       <action type="fix" due-to="Andrea Alberti (@alberti42)">
         Offer the "Add to dictionary" code action for spell-check matches produced by LanguageTool's `QB_NEW_*_ORTHOGRAPHY_*`, `AI_*_GGEC_REPLACEMENT_ORTHOGRAPHY_*`, and `ES_SIMPLE_REPLACE_*` rule families (Premium/HTTP tier plus Spanish common-typo rules). Also split multi-word collapsed match spans on whitespace so each misspelled word is added to the user dictionary individually instead of as a single phrase.
       </action>
+      <action type="update">
+        Update to lsp-cli-plus 2.2.2. See [lsp-cli-plus release notes](https://github.com/ltex-plus/lsp-cli-plus/releases/tag/2.2.2).
+      </action>
     </release>
     <release version="18.6.1" date="2025-10-19">
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#165">
