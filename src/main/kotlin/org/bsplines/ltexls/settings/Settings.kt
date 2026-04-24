@@ -69,7 +69,7 @@ data class Settings(
   val motherTongueShortCode: String
     get() = (this._motherTongueShortCode ?: "")
   val preferredVariants: List<String>
-    get() = (this._preferredVariants ?: DEFAULT_PREFERRED_VARIANTS)
+    get() = mergePreferredVariants(this._preferredVariants)
   val languageModelRulesDirectory: String
     get() = FileIo.normalizePath(this._languageModelRulesDirectory ?: "")
   val languageToolHttpServerUri: String
@@ -419,6 +419,28 @@ data class Settings(
     ): String {
       if (shortCode.contains('-')) return shortCode
       return preferredVariants.firstOrNull { it.substringBefore('-') == shortCode } ?: shortCode
+    }
+
+    // Merge semantics for ltex.preferredVariants: user entries override defaults at the
+    // base-language level (last-wins within the merged result), new bases are appended.
+    // This prevents a user from accidentally dropping a variant for a spell-check-
+    // requiring language (en/de/pt) by writing a narrower list — e.g. setting
+    // `["en-GB"]` gives them `["en-GB", "de-DE", "pt-BR"]` rather than stripping
+    // German/Portuguese coverage and inviting bare codes in the server response. Bare
+    // user entries (no dash) are dropped because LT's /check endpoint rejects them with
+    // a BadRequestException.
+    fun mergePreferredVariants(user: List<String>?): List<String> {
+      val byBase = LinkedHashMap<String, String>()
+      for (variant in DEFAULT_PREFERRED_VARIANTS) {
+        byBase[variant.substringBefore('-')] = variant
+      }
+      if (user != null) {
+        for (variant in user) {
+          if (!variant.contains('-')) continue
+          byBase[variant.substringBefore('-')] = variant
+        }
+      }
+      return byBase.values.toList()
     }
 
     private val LANGUAGE_TAG_REGEX: Regex =
