@@ -56,6 +56,12 @@ data class Settings(
     get() = (this._allEnabledRules?.get(this.languageShortCode) ?: setOf())
   val hiddenFalsePositives: Set<HiddenFalsePositive>
     get() = (this._allHiddenFalsePositives?.get(this.languageShortCode) ?: setOf())
+  val allDictionaries: Map<String, Set<String>>
+    get() = (this._allDictionaries ?: emptyMap())
+  val allDisabledRules: Map<String, Set<String>>
+    get() = (this._allDisabledRules ?: emptyMap())
+  val allHiddenFalsePositives: Map<String, Set<HiddenFalsePositive>>
+    get() = (this._allHiddenFalsePositives ?: emptyMap())
   val bibtexFields: Map<String, Boolean>
     get() = (this._bibtexFields ?: mapOf())
   val latexCommands: Map<String, String>
