@@ -45,8 +45,8 @@ class SettingsManager {
           this.languageToolInterface
         }
 
-      languageToolInterface?.dictionary = value.dictionary
-      languageToolInterface?.disabledRules = value.disabledRules
+      languageToolInterface?.allDictionaries = value.allDictionaries
+      languageToolInterface?.allDisabledRules = value.allDisabledRules
       languageToolInterface?.languageToolOrgUsername = value.languageToolOrgUsername
       languageToolInterface?.languageToolOrgApiKey = value.languageToolOrgApiKey
       this.languageToolInterface = languageToolInterface

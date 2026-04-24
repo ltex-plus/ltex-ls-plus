@@ -12,6 +12,7 @@ import org.bsplines.ltexls.parsing.AnnotatedTextFragment
 import org.bsplines.ltexls.server.DocumentChecker
 import org.bsplines.ltexls.server.DocumentCheckerTest
 import org.bsplines.ltexls.server.LtexTextDocumentItem
+import org.bsplines.ltexls.settings.HiddenFalsePositive
 import org.bsplines.ltexls.settings.Settings
 import org.bsplines.ltexls.settings.SettingsManager
 import org.junit.jupiter.api.AfterAll
@@ -165,6 +166,168 @@ class LanguageToolHttpInterfaceTest {
     assertEquals(
       "es",
       result.second
+        .first()
+        .codeFragment.languageShortCode,
+    )
+  }
+
+  @Test
+  fun testAutoLanguageDictionarySuppressesMatchOnFirstCheck() {
+    // Regression test for the per-language filter bug in auto+HTTP mode:
+    // settings.languageShortCode stays at the literal "auto" (the HTTP path lets the
+    // server detect the language), so a settings.dictionary lookup keyed off
+    // languageShortCode used to return _allDictionaries["auto"] = empty — meaning a word
+    // the user had explicitly added under e.g. "en-US" was *never* filtered.
+    //
+    // The fix moves the lookup from settings-level to fragment-level: the bucket is
+    // keyed by `annotatedTextFragment.codeFragment.languageShortCode`, which by the time
+    // checkMatchValidity runs has been back-filled to the variant the server picked.
+    //
+    // Symmetric-by-construction: disabledRules and hiddenFalsePositives flow through the
+    // same fragment-keyed lookup (in LanguageToolInterface.checkMatchValidity and
+    // DocumentChecker.removeIgnoredMatches respectively), so verifying the dictionary
+    // path here covers all three.
+    val settings: Settings =
+      this.defaultSettings.copy(
+        _languageShortCode = "auto",
+        _preferredVariants = listOf("en-US"),
+        _allDictionaries = mapOf("en-US" to setOf("testt", "mispeling")),
+      )
+    val settingsManager = SettingsManager(settings)
+    val documentChecker = DocumentChecker(settingsManager)
+    val document: LtexTextDocumentItem =
+      DocumentCheckerTest.createDocument(
+        "latex",
+        "This is a testt sentence with a mispeling.\n",
+      )
+    val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
+      documentChecker.check(document)
+    val matches: List<LanguageToolRuleMatch> = checkingResult.first
+    assertFalse(
+      matches.any { it.isUnknownWordRule() },
+      "Dictionary entries 'testt' and 'mispeling' under en-US should suppress the spell-" +
+        "check matches, but got: " +
+        matches.mapNotNull { it.ruleId } +
+        " on tokens " +
+        matches.map { it.fromPos.toString() + ".." + it.toPos.toString() },
+    )
+  }
+
+  @Test
+  fun testAutoLanguageDictionarySuppressesGermanMatchOnFirstCheck() {
+    // German variant of testAutoLanguageDictionarySuppressesMatchOnFirstCheck — the
+    // user-reported flow was a German document, so cover de-DE explicitly. Uses default
+    // preferredVariants so the merged list contains de-DE and the server picks it for
+    // German text. Dictionary entries are keyed under "de-DE" (the variant the server
+    // back-fills onto the fragment), and both German misspellings must be suppressed
+    // on the first check.
+    //
+    // Sentence carries unambiguous German signal (Gestern, Schwester, München) so the
+    // server's ngram detector locks onto German rather than Dutch, which it can mistake
+    // when a typo happens to look like a Dutch word (e.g. "Pakket"). Misspellings are
+    // chosen to be uniquely German-shaped to avoid the same trap.
+    val settings: Settings =
+      this.defaultSettings.copy(
+        _languageShortCode = "auto",
+        _allDictionaries = mapOf("de-DE" to setOf("gegesssen", "wunderschöön")),
+      )
+    val settingsManager = SettingsManager(settings)
+    val documentChecker = DocumentChecker(settingsManager)
+    val document: LtexTextDocumentItem =
+      DocumentCheckerTest.createDocument(
+        "latex",
+        "Gestern Abend habe ich mit meiner Schwester in München zusammen gegesssen " +
+          "und es war wunderschöön.\n",
+      )
+    val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
+      documentChecker.check(document)
+    val matches: List<LanguageToolRuleMatch> = checkingResult.first
+    assertEquals(
+      "de-DE",
+      checkingResult.second
+        .first()
+        .codeFragment.languageShortCode,
+      "Server should have detected de-DE for German text under default preferredVariants",
+    )
+    assertFalse(
+      matches.any { it.isUnknownWordRule() },
+      "Dictionary entries 'gegesssen' and 'wunderschöön' under de-DE should suppress the " +
+        "spell-check matches, but got: " +
+        matches.mapNotNull { it.ruleId } +
+        " on tokens " +
+        matches.map { it.fromPos.toString() + ".." + it.toPos.toString() },
+    )
+  }
+
+  @Test
+  fun testAutoLanguageDisabledRulesSuppressMatchOnFirstCheck() {
+    // Companion to testAutoLanguageDictionarySuppressesMatchOnFirstCheck for
+    // ltex.disabledRules. The fix moves the lookup from settings.languageShortCode
+    // (which stays "auto" forever on the HTTP path) to the fragment's resolved
+    // language code; if that lookup were still keyed on the session, the EN_A_VS_AN
+    // entry under "en-US" would never be consulted and the grammar match would still
+    // fire. Without this explicit test, the "by construction" argument only covers
+    // dictionary suppression — a future refactor could silently break disabledRules
+    // suppression while leaving dictionary working.
+    val settings: Settings =
+      this.defaultSettings.copy(
+        _languageShortCode = "auto",
+        _preferredVariants = listOf("en-US"),
+        _allDisabledRules = mapOf("en-US" to setOf("EN_A_VS_AN")),
+      )
+    val settingsManager = SettingsManager(settings)
+    val documentChecker = DocumentChecker(settingsManager)
+    val document: LtexTextDocumentItem =
+      DocumentCheckerTest.createDocument(
+        "latex",
+        "This is a apple in the garden today.\n",
+      )
+    val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
+      documentChecker.check(document)
+    val matches: List<LanguageToolRuleMatch> = checkingResult.first
+    assertFalse(
+      matches.any { it.ruleId == "EN_A_VS_AN" },
+      "EN_A_VS_AN under en-US should suppress the grammar match, but got rule ids: " +
+        matches.mapNotNull { it.ruleId },
+    )
+    assertEquals(
+      "en-US",
+      checkingResult.second
+        .first()
+        .codeFragment.languageShortCode,
+    )
+  }
+
+  @Test
+  fun testAutoLanguageHiddenFalsePositivesSuppressMatchOnFirstCheck() {
+    // Companion to testAutoLanguageDictionarySuppressesMatchOnFirstCheck for
+    // ltex.hiddenFalsePositives. Suppression happens in DocumentChecker.removeIgnoredMatches,
+    // which now reads settings.allHiddenFalsePositives by the fragment's resolved
+    // language rather than by settings.languageShortCode. Mirrors the disabled-rules
+    // test but exercises the second filter path.
+    val sentence = "This is a apple in the garden today."
+    val settings: Settings =
+      this.defaultSettings.copy(
+        _languageShortCode = "auto",
+        _preferredVariants = listOf("en-US"),
+        _allHiddenFalsePositives =
+          mapOf("en-US" to setOf(HiddenFalsePositive("EN_A_VS_AN", "^\\Q$sentence\\E$"))),
+      )
+    val settingsManager = SettingsManager(settings)
+    val documentChecker = DocumentChecker(settingsManager)
+    val document: LtexTextDocumentItem =
+      DocumentCheckerTest.createDocument("latex", "$sentence\n")
+    val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
+      documentChecker.check(document)
+    val matches: List<LanguageToolRuleMatch> = checkingResult.first
+    assertFalse(
+      matches.any { it.ruleId == "EN_A_VS_AN" },
+      "HiddenFalsePositive entry under en-US should suppress the grammar match, " +
+        "but got rule ids: " + matches.mapNotNull { it.ruleId },
+    )
+    assertEquals(
+      "en-US",
+      checkingResult.second
         .first()
         .codeFragment.languageShortCode,
     )

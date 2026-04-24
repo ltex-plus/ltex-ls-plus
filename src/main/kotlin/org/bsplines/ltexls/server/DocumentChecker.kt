@@ -178,7 +178,7 @@ class DocumentChecker(
     if (shouldSkipCheck(codeLanguageId, settings, rangeStartPos)) {
       Logging.LOGGER.fine(I18n.format("skippingTextCheckAsLtexHasBeenDisabled", codeLanguageId))
       return emptyList()
-    } else if (settings.dictionary.contains("BsPlInEs")) {
+    } else if (settings.allDictionaries.values.any { it.contains("BsPlInEs") }) {
       languageToolInterface.enableEasterEgg()
     }
 
@@ -210,7 +210,7 @@ class DocumentChecker(
         I18n.format("obtainedRuleMatches", matches.size)
       },
     )
-    removeIgnoredMatches(matches)
+    removeIgnoredMatches(matches, annotatedTextFragment)
 
     val result = ArrayList<LanguageToolRuleMatch>()
 
@@ -290,11 +290,18 @@ class DocumentChecker(
     return false
   }
 
-  private fun removeIgnoredMatches(matches: MutableList<LanguageToolRuleMatch>) {
+  private fun removeIgnoredMatches(
+    matches: MutableList<LanguageToolRuleMatch>,
+    annotatedTextFragment: AnnotatedTextFragment,
+  ) {
     val settings: Settings = this.settingsManager.settings
+    // Look up hiddenFalsePositives by the *fragment's* detected language rather than
+    // settings.languageShortCode. On the auto+HTTP path the latter stays at the literal
+    // "auto", so a settings.hiddenFalsePositives lookup would always miss the user's
+    // per-language entries. The fragment carries the variant the server back-filled.
+    val fragmentLanguage: String = annotatedTextFragment.codeFragment.languageShortCode
     val hiddenFalsePositives: MutableSet<HiddenFalsePositive> =
-      settings.hiddenFalsePositives
-        .toMutableSet()
+      (settings.allHiddenFalsePositives[fragmentLanguage] ?: emptySet()).toMutableSet()
     hiddenFalsePositives.add(
       HiddenFalsePositive("MORFOLOGIK_RULE_NL_NL", "(?:Dummy|Dummy's)\\+[0-9]+-\\w+"),
     )

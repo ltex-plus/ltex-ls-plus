@@ -11,22 +11,30 @@ package org.bsplines.ltexls.languagetool
 import org.bsplines.ltexls.parsing.AnnotatedTextFragment
 
 abstract class LanguageToolInterface {
-  // The user dictionary is stored verbatim. The add path (CodeActionProvider)
-  // sends bare words to the client in the "Add to dictionary" command — for
-  // matches from rule families that emit punctuation-adjacent spans (Premium
-  // QB_NEW_* / AI_*) the matched substring is stripped via
-  // DictionaryWord.normalize before being persisted, so the on-disk entry is
-  // the bare word. For every other rule family the substring is already bare
-  // and is persisted as-is. The server cannot enforce what the client
-  // actually writes to disk, but the reference clients write what we send.
+  // Per-language buckets, keyed by `<lang>` or `<lang>-<REGION>`. The match-time
+  // filter looks these up using `annotatedTextFragment.codeFragment.languageShortCode`
+  // so that dictionary / disabled-rule suppression keys correctly under the
+  // *detected* language when ltex.language="auto" — including the HTTP path,
+  // where detection happens server-side and the session-wide
+  // settings.languageShortCode stays at the literal "auto".
+  //
+  // The user dictionary buckets are stored verbatim. The add path
+  // (CodeActionProvider) sends bare words to the client in the "Add to
+  // dictionary" command — for matches from rule families that emit
+  // punctuation-adjacent spans (Premium QB_NEW_* / AI_*) the matched
+  // substring is stripped via DictionaryWord.normalize before being persisted,
+  // so the on-disk entry is the bare word. For every other rule family the
+  // substring is already bare and is persisted as-is. The server cannot
+  // enforce what the client actually writes to disk, but the reference
+  // clients write what we send.
   //
   // Hand-edited entries are intentionally left untouched at load time: the
   // file on disk is the user's data and may carry punctuation or whitespace
   // by deliberate choice. Normalization on the check side happens only when
   // the match's rule id falls into the Premium punctuation-adjacent family —
   // see isCoveredByDictionary below.
-  var dictionary: Set<String> = emptySet()
-  var disabledRules: Set<String> = emptySet()
+  var allDictionaries: Map<String, Set<String>> = emptyMap()
+  var allDisabledRules: Map<String, Set<String>> = emptyMap()
 
   var languageToolOrgUsername = ""
   var languageToolOrgApiKey = ""
@@ -44,11 +52,18 @@ abstract class LanguageToolInterface {
   protected fun checkMatchValidity(
     annotatedTextFragment: AnnotatedTextFragment,
     match: LanguageToolRuleMatch,
-  ): Boolean =
-    !this.disabledRules.contains(match.ruleId) &&
-      (!match.isUnknownWordRule() || !isCoveredByDictionary(annotatedTextFragment, match))
+  ): Boolean {
+    val fragmentLanguage: String = annotatedTextFragment.codeFragment.languageShortCode
+    val dictionary: Set<String> = this.allDictionaries[fragmentLanguage] ?: emptySet()
+    val disabledRules: Set<String> = this.allDisabledRules[fragmentLanguage] ?: emptySet()
+    return !disabledRules.contains(match.ruleId) &&
+      (
+        !match.isUnknownWordRule() ||
+          !isCoveredByDictionary(annotatedTextFragment, match, dictionary)
+      )
+  }
 
-  // Suppress a match if the user's dictionary contains the flagged word.
+  // Suppress a match if the per-language dictionary contains the flagged word.
   //
   // The lookup key depends on which rule family fired the match. Premium's
   // QB_NEW_* / AI_* families sometimes emit spans that include adjacent
@@ -74,6 +89,7 @@ abstract class LanguageToolInterface {
   private fun isCoveredByDictionary(
     annotatedTextFragment: AnnotatedTextFragment,
     match: LanguageToolRuleMatch,
+    dictionary: Set<String>,
   ): Boolean {
     val span: String = annotatedTextFragment.getSubstringOfPlainText(match.fromPos, match.toPos)
     val lookupKey: String =
@@ -82,7 +98,7 @@ abstract class LanguageToolInterface {
       } else {
         span
       }
-    return lookupKey.isNotEmpty() && this.dictionary.contains(lookupKey)
+    return lookupKey.isNotEmpty() && dictionary.contains(lookupKey)
   }
 
   abstract fun isInitialized(): Boolean
