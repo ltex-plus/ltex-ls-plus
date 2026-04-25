@@ -18,15 +18,7 @@ import urllib.request
 
 
 
-def getGitHubOrganizationRepository() -> Tuple[str, str]:
-  output = subprocess.run(["git", "remote", "get-url", "origin"],
-      stdout=subprocess.PIPE).stdout.decode()
-  regexMatch = re.search(r"github.com[:/](.*?)/(.*?)(?:\.git)?$", output)
-  assert regexMatch is not None, output
-  organization, repository = regexMatch.group(1), regexMatch.group(2)
-  return organization, repository
-
-organization, repository = getGitHubOrganizationRepository()
+organization, repository = "ltex-plus", "ltex-ls-plus"
 
 
 
