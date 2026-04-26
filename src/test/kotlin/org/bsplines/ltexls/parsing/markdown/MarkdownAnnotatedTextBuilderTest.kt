@@ -51,6 +51,27 @@ class MarkdownAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("markdown"
   }
 
   @Test
+  fun testAngleBracketedLinkUrlWithSpaces() {
+    // CommonMark allows spaces (and slashes) inside angle-bracketed link
+    // destinations. The link text must replace the whole `[text](<url>)` so
+    // surrounding punctuation does not leak into spell-checked text.
+    assertPlainText(
+      "- Quantum mechanics ([notes](<01 Lectures/Lecture notes 04 - Schroedinger equation.pdf>))\n",
+      "Quantum mechanics (notes)\n",
+    )
+    assertPlainText(
+      "See [the file](<path with spaces.pdf>) for details.\n",
+      "See the file for details.\n",
+    )
+    // Windows-style backslash paths: backslashes before non-punctuation
+    // characters are preserved literally per CommonMark, so the link parses.
+    assertPlainText(
+      "Open [the report](<C:\\Users\\My Documents\\report.pdf>) please.\n",
+      "Open the report please.\n",
+    )
+  }
+
+  @Test
   fun testDefinitionExtension() {
     assertPlainText(
       """
