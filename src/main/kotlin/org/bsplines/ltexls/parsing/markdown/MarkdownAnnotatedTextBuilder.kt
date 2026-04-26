@@ -276,16 +276,22 @@ class MarkdownAnnotatedTextBuilder(
 
   companion object {
     private val PARSER_OPTIONS: DataHolder =
-      MutableDataSet().set(
-        Parser.EXTENSIONS,
-        listOf(
-          DefinitionExtension.create(),
-          GitLabExtension.create(),
-          LtexMarkdownExtension.create(),
-          StrikethroughExtension.create(),
-          TablesExtension.create(),
-          YamlFrontMatterExtension.create(),
-        ),
-      )
+      MutableDataSet()
+        // CommonMark allows spaces inside angle-bracketed link destinations
+        // (e.g. `[text](<file with spaces.pdf>)`). Flexmark gates this behind
+        // an off-by-default option; without it the link is not recognized
+        // and the surrounding `[` / `(` leak into spell-checked text.
+        .set(Parser.SPACE_IN_LINK_URLS, true)
+        .set(
+          Parser.EXTENSIONS,
+          listOf(
+            DefinitionExtension.create(),
+            GitLabExtension.create(),
+            LtexMarkdownExtension.create(),
+            StrikethroughExtension.create(),
+            TablesExtension.create(),
+            YamlFrontMatterExtension.create(),
+          ),
+        )
   }
 }
