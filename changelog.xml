@@ -41,6 +41,12 @@
       <action type="fix" due-to="Andrea Alberti (@alberti42)">
         Markdown: accept spaces and backslashes inside angle-bracketed link destinations (e.g. `[text](&lt;path with spaces.pdf&gt;)` or Windows-style `[text](&lt;C:\Users\My Documents\file.pdf&gt;)`), so the link is recognized and surrounding punctuation does not leak into spell-checked text.
       </action>
+      <action type="fix" due-to="Andrea Alberti (@alberti42)">
+        Set `CompletionItemKind.Text` on dictionary completion items. Previously items carried only a `label`, leaving `kind` null; clients that map kinds to icons (VS Code, lsp-mode + Corfu, others) fell through to a generic placeholder icon, making LTEX+ word completions look distinct from every other text-based completion source.
+      </action>
+      <action type="fix" due-to="Andrea Alberti (@alberti42)">
+        Allow `textDocument/completion` at the very last position of a document. The fragment lookup and prefix scan both used a strict `&lt;` against `code.length`, so a cursor sitting one past the last character (an unterminated document with no trailing whitespace) produced an empty list. Loosened both checks to treat the position immediately after the last character as a valid completion site.
+      </action>
       <action type="update">
         Update to lsp-cli-plus 2.2.2. See [lsp-cli-plus release notes](https://github.com/ltex-plus/lsp-cli-plus/releases/tag/2.2.2).
       </action>
