@@ -14,6 +14,7 @@ import org.bsplines.ltexls.parsing.CodeFragment
 import org.bsplines.ltexls.parsing.CodeFragmentizer
 import org.bsplines.ltexls.settings.SettingsManager
 import org.eclipse.lsp4j.CompletionItem
+import org.eclipse.lsp4j.CompletionItemKind
 import org.eclipse.lsp4j.CompletionList
 import org.eclipse.lsp4j.Position
 import org.languagetool.DetectedLanguage
@@ -75,14 +76,23 @@ class CompletionListProvider(
     val completionList = ArrayList<CompletionItem>()
 
     for (entry: String in annotatedTextFragment.codeFragment.settings.dictionary) {
-      if (entry.startsWith(prefix)) completionList.add(CompletionItem(entry))
+      if (entry.startsWith(prefix)) completionList.add(buildCompletionItem(entry))
     }
 
     for (entry: String in fullCompletionList) {
-      if (entry.startsWith(prefix)) completionList.add(CompletionItem(entry))
+      if (entry.startsWith(prefix)) completionList.add(buildCompletionItem(entry))
     }
 
     return CompletionList(completionList)
+  }
+
+  private fun buildCompletionItem(label: String): CompletionItem {
+    val item = CompletionItem(label)
+    // Tag dictionary entries as Text so clients can render them with the
+    // appropriate icon; without a kind, clients typically fall back to a
+    // generic placeholder.
+    item.kind = CompletionItemKind.Text
+    return item
   }
 
   private fun getCodeFragmentFromPosition(
