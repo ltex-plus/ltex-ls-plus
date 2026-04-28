@@ -39,4 +39,20 @@ class CompletionListProviderTest {
 
     assertTrue(containsDictionaryWord)
   }
+
+  @Test
+  fun testCreateCompletionListAtEndOfDocument() {
+    // Regression: a cursor at the very last position of a document (no
+    // trailing whitespace) used to return an empty list.
+    val languageServer = LtexLanguageServer()
+    val document =
+      LtexTextDocumentItem(languageServer, "untitled:test.md", "markdown", 1, "wonder")
+    val completionList: CompletionList =
+      languageServer.completionListProvider.createCompletionList(document, Position(0, 6))
+
+    assertTrue(completionList.items.isNotEmpty())
+    for (completionItem: CompletionItem in completionList.items) {
+      assertTrue(completionItem.label.startsWith("wonder"))
+    }
+  }
 }
