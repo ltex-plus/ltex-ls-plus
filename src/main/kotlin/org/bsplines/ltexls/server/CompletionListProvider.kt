@@ -99,7 +99,7 @@ class CompletionListProvider(
 
     for (codeFragment: CodeFragment in codeFragments) {
       if (
-        (codeFragment.fromPos <= pos) && (pos < codeFragment.fromPos + codeFragment.code.length)
+        (codeFragment.fromPos <= pos) && (pos <= codeFragment.fromPos + codeFragment.code.length)
       ) {
         if (
           (matchingCodeFragment == null) ||
@@ -146,7 +146,7 @@ class CompletionListProvider(
     code: String,
     pos: Int,
   ): String {
-    if (pos >= code.length) return ""
+    if (pos > code.length) return ""
 
     for (curPos: Int in pos - 1 downTo 0) {
       val character: Char = code[curPos]
