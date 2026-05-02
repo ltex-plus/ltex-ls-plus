@@ -41,15 +41,21 @@ class LtexTextDocumentService(
   override fun completion(
     params: CompletionParams,
   ): CompletableFuture<Either<List<CompletionItem>, CompletionList>> {
+    // Empty results are returned as `CompletionList(isIncomplete=false, items=[])` rather than a
+    // bare `[]`. Per the LSP spec an empty array is already complete, but some clients (notably
+    // outside VS Code) misread it as incomplete and keep re-requesting; the explicit object form
+    // is unambiguous.
     return if (this.languageServer.settingsManager.settings.completionEnabled) {
       val uri: String =
         params.textDocument?.uri ?: return CompletableFuture.completedFuture(
-          Either.forLeft(emptyList()),
+          Either.forRight(CompletionList(emptyList())),
         )
       val document: LtexTextDocumentItem =
         getDocument(uri) ?: run {
           Logging.LOGGER.warning(I18n.format("couldNotFindDocumentWithUri", uri))
-          return CompletableFuture.completedFuture(Either.forLeft(emptyList()))
+          return CompletableFuture.completedFuture(
+            Either.forRight(CompletionList(emptyList())),
+          )
         }
 
       CompletableFuture.completedFuture(
@@ -61,7 +67,7 @@ class LtexTextDocumentService(
         ),
       )
     } else {
-      CompletableFuture.completedFuture(Either.forLeft(emptyList()))
+      CompletableFuture.completedFuture(Either.forRight(CompletionList(emptyList())))
     }
   }
 
