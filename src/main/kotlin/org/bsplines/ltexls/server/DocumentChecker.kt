@@ -27,6 +27,7 @@ import org.eclipse.lsp4j.Range
 import org.languagetool.DetectedLanguage
 import org.languagetool.language.identifier.SimpleLanguageIdentifier
 import org.languagetool.markup.AnnotatedText
+import org.languagetool.markup.AnnotatedTextBuilder
 import org.languagetool.markup.TextPart
 import java.io.OutputStream
 import java.io.PrintStream
@@ -82,11 +83,25 @@ class DocumentChecker(
   private fun buildAnnotatedTextFragments(
     codeFragments: List<CodeFragment>,
     document: LtexTextDocumentItem,
-    hasRange: Boolean = false,
+    rangeStartPos: Int? = null,
   ): List<AnnotatedTextFragment> {
     val annotatedTextFragments = ArrayList<AnnotatedTextFragment>()
+    val hasRange: Boolean = (rangeStartPos != null)
 
     for (codeFragment: CodeFragment in codeFragments) {
+      if (
+        shouldSkipCheck(codeFragment.codeLanguageId, codeFragment.settings, rangeStartPos)
+      ) {
+        // Fragment will be skipped at the check phase (e.g., region after
+        // "# ltex: enabled=false"). Skip parsing too — running the
+        // CodeAnnotatedTextBuilder over a large disabled region is pure
+        // overhead, and on big files (>100KB) it dominates request latency.
+        annotatedTextFragments.add(
+          AnnotatedTextFragment(AnnotatedTextBuilder().build(), codeFragment, document),
+        )
+        continue
+      }
+
       val builder: CodeAnnotatedTextBuilder =
         if (
           hasRange && ProgramCommentRegexs.isSupportedCodeLanguageId(codeFragment.codeLanguageId)
@@ -313,7 +328,7 @@ class DocumentChecker(
     try {
       val codeFragments: List<CodeFragment> = fragmentizeDocument(document, range)
       val annotatedTextFragments: List<AnnotatedTextFragment> =
-        buildAnnotatedTextFragments(codeFragments, document, (range != null))
+        buildAnnotatedTextFragments(codeFragments, document, rangeStartPos)
       val matches: List<LanguageToolRuleMatch> =
         checkAnnotatedTextFragments(annotatedTextFragments, rangeStartPos)
       return Pair(matches, annotatedTextFragments)
