@@ -11,6 +11,7 @@ package org.bsplines.ltexls.parsing.org
 import org.bsplines.ltexls.parsing.CodeAnnotatedTextBuilderTest
 import kotlin.test.Test
 
+@Suppress("LargeClass")
 class OrgAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("org") {
   @Test
   fun testHeadlinesAndSections() {
@@ -261,7 +262,44 @@ class OrgAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("org") {
          - Test tag :: Test 3.
 
       """.trimIndent(),
-      "\nTest 1.\n\n\nTest 2.\n\n\nTest 3.\n\n",
+      "\nTest 1.\n\n\nTest 2.\n\n\nTest tag\nTest 3.\n\n",
+    )
+  }
+
+  @Test
+  fun testDescriptionListTerm() {
+    // The term in "- Term :: body" must reach LanguageTool as text so that
+    // typos in the term get caught.
+    assertPlainText(
+      "- Apple :: a red fruit\n",
+      "\nApple\na red fruit\n\n",
+    )
+    assertPlainText(
+      "- [X] Mitochondria :: the powerhouse of the cell\n",
+      "\nMitochondria\nthe powerhouse of the cell\n\n",
+    )
+    // Bullet without a description term still works.
+    assertPlainText(
+      "- a plain bullet\n",
+      "\na plain bullet\n\n",
+    )
+    // The same fix must apply to every other bullet type org accepts:
+    // "+", indented "*", numbered, and alphabetical bullets.
+    assertPlainText(
+      "+ Apple :: a red fruit\n",
+      "\nApple\na red fruit\n\n",
+    )
+    assertPlainText(
+      "  * Apple :: a red fruit\n",
+      "\nApple\na red fruit\n\n",
+    )
+    assertPlainText(
+      "1. Apple :: a red fruit\n",
+      "\nApple\na red fruit\n\n",
+    )
+    assertPlainText(
+      "a) Apple :: a red fruit\n",
+      "\nApple\na red fruit\n\n",
     )
   }
 

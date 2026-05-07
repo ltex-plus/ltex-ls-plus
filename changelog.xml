@@ -56,6 +56,9 @@
       <action type="fix" due-to="Andrea Alberti (@alberti42)">
         Org: don't flag the wrapped half of a list item for "first letter not uppercase". Previously every list-item line emitted a paragraph break at end-of-line, so a continuation line indented to the bullet body (e.g. `+ A long sentence that wraps\n  onto the next line.`) was sent to LanguageTool as a fresh paragraph and its lowercase first word was flagged. The parser now tracks the bullet body column and, when the next line is a true wrap (indented past the bullet and not itself a new bullet), suppresses the paragraph break so the wrap stays in the same paragraph.
       </action>
+      <action type="fix" due-to="Andrea Alberti (@alberti42)">
+        Org: spell-check the term in description lists. The prefix of a description-list item (e.g. `- Apple :: a red fruit`) used to be consumed as one chunk of markup, which silently dropped the term ("Apple") on the floor — typos in it went unnoticed. The parser now splits the prefix into bullet, **term (text)**, and ` ::` separator, so the term reaches LanguageTool and is spell- and grammar-checked like any other word. A single `\n` separator keeps the term in the same LanguageTool paragraph as the description, so the description's lowercase first word ("a red fruit") is not flagged.
+      </action>
       <action type="update">
         Update to lsp-cli-plus 2.2.2. See [lsp-cli-plus release notes](https://github.com/ltex-plus/lsp-cli-plus/releases/tag/2.2.2).
       </action>
