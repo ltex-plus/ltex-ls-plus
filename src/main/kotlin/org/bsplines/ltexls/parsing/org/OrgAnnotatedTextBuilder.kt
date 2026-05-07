@@ -203,7 +203,7 @@ class OrgAnnotatedTextBuilder(
       val bulletLength: Int = bulletGroup?.value?.length ?: 1
       this.itemBodyIndent = this.indentation + bulletLength + 1
       this.appendAtEndOfLine = "\n"
-      addMarkup(matchResult?.value, "\n")
+      addItemPrefixMarkup(matchResult)
     } else if (matchFromPosition(BABEL_CALL_REGEX)?.also { matchResult = it } != null) {
       addMarkup(matchResult?.value)
     } else if (matchFromPosition(CLOCK_REGEX)?.also { matchResult = it } != null) {
@@ -439,6 +439,33 @@ class OrgAnnotatedTextBuilder(
     }
   }
 
+  private fun addItemPrefixMarkup(matchResult: MatchResult?) {
+    val matchValue: String = matchResult?.value ?: ""
+    val descriptionGroup: MatchGroup? = matchResult?.groups?.get(ITEM_DESCRIPTION_TERM_GROUP)
+
+    if (descriptionGroup != null) {
+      // Description list item: "- Term :: body". Emit the term as plain text
+      // so LanguageTool can spell-check it; keep the bullet, " ::" and
+      // surrounding whitespace as markup. A single "\n" replacement on the
+      // separator keeps term and body in the same LT paragraph, so the body's
+      // first letter isn't flagged for not being uppercase.
+      val termMatch: MatchResult? = DESCRIPTION_TERM_REGEX.find(descriptionGroup.value)
+      val term: String? = termMatch?.groupValues?.get(2)
+
+      if (!term.isNullOrEmpty()) {
+        val leadingWsLen: Int = termMatch.groupValues[1].length
+        val termStart: Int = descriptionGroup.range.first + leadingWsLen
+        val termEnd: Int = termStart + term.length
+        addMarkup(matchValue.substring(0, termStart), "\n")
+        addText(term)
+        addMarkup(matchValue.substring(termEnd), "\n")
+        return
+      }
+    }
+
+    addMarkup(matchValue, "\n")
+  }
+
   private fun isNextLineItemContinuation(): Boolean {
     var p: Int = this.pos + 1
     var indent = 0
@@ -621,6 +648,15 @@ class OrgAnnotatedTextBuilder(
       Regex(
         "^(\\*|-|\\+|([0-9]+|[A-Za-z])[.)])(?=[ \t]|$)([ \t]+\\[@([0-9]+|[A-Za-z])])?" +
           "([ \t]+\\[[- \tX]])?([ \t]+[^\r\n]*?[ \t]+::)?[ \t]*",
+        RegexOption.IGNORE_CASE,
+      )
+
+    // Capture-group index in ITEM_REGEX of the optional description term
+    // (the "<term> ::" portion of "- term :: body").
+    private const val ITEM_DESCRIPTION_TERM_GROUP = 6
+    private val DESCRIPTION_TERM_REGEX =
+      Regex(
+        "^([ \t]+)(.*?)([ \t]+)::$",
         RegexOption.IGNORE_CASE,
       )
 
