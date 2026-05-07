@@ -16,6 +16,7 @@ class OrgAnnotatedTextBuilder(
 ) : CharacterBasedCodeAnnotatedTextBuilder(codeLanguageId) {
   private var indentation = -1
   private var appendAtEndOfLine = ""
+  private var itemBodyIndent = -1
   private val elementTypeStack: ArrayDeque<ElementType> = ArrayDeque(listOf(ElementType.Paragraph))
   private var latexEnvironmentName: String? = null
   private val objectTypeStack = ArrayDeque<ObjectType>()
@@ -198,6 +199,9 @@ class OrgAnnotatedTextBuilder(
       this.appendAtEndOfLine = "\n"
       addMarkup(matchResult?.value, "\n")
     } else if (matchFromPosition(ITEM_REGEX)?.also { matchResult = it } != null) {
+      val bulletGroup: MatchGroup? = matchResult?.groups?.get(1)
+      val bulletLength: Int = bulletGroup?.value?.length ?: 1
+      this.itemBodyIndent = this.indentation + bulletLength + 1
       this.appendAtEndOfLine = "\n"
       addMarkup(matchResult?.value, "\n")
     } else if (matchFromPosition(BABEL_CALL_REGEX)?.also { matchResult = it } != null) {
@@ -229,7 +233,7 @@ class OrgAnnotatedTextBuilder(
     return elementFound
   }
 
-  @Suppress("ComplexMethod", "LongMethod")
+  @Suppress("ComplexMethod", "LongMethod", "NestedBlockDepth")
   private fun processCharacterInternal() {
     var matchResult: MatchResult? = null
 
@@ -365,6 +369,17 @@ class OrgAnnotatedTextBuilder(
         addText(textMarkupMarker)
       }
     } else if (this.curChar == '\n') {
+      if (this.itemBodyIndent >= 0) {
+        if (isNextLineItemContinuation()) {
+          // Wrapped continuation of the current list item: don't insert a
+          // paragraph break, otherwise LanguageTool sees the continuation as a
+          // fresh sentence and flags it (e.g., for not starting with uppercase).
+          this.appendAtEndOfLine = ""
+        } else {
+          this.itemBodyIndent = -1
+          if (this.appendAtEndOfLine.isEmpty()) this.appendAtEndOfLine = "\n"
+        }
+      }
       addMarkup("\n", "\n" + this.appendAtEndOfLine)
       this.appendAtEndOfLine = ""
       if (this.elementTypeStack.contains(ElementType.Headline)) popElementType()
@@ -422,6 +437,29 @@ class OrgAnnotatedTextBuilder(
     } else {
       null
     }
+  }
+
+  private fun isNextLineItemContinuation(): Boolean {
+    var p: Int = this.pos + 1
+    var indent = 0
+
+    while (p < this.code.length) {
+      val c: Char = this.code[p]
+      if ((c == ' ') || (c == '\t')) {
+        indent++
+        p++
+      } else if ((c == '\n') || (c == '\r')) {
+        return false
+      } else {
+        if (indent < this.itemBodyIndent) return false
+        // A new bullet on the next line starts a fresh item (possibly nested),
+        // not a wrapped continuation.
+        val matchResult: MatchResult? = ITEM_REGEX.find(this.code.substring(p))
+        return (matchResult == null) || (matchResult.range.first != 0)
+      }
+    }
+
+    return false
   }
 
   private fun isInIgnoredElementType(): Boolean =

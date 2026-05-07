@@ -266,6 +266,77 @@ class OrgAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("org") {
   }
 
   @Test
+  fun testWrappedListItems() {
+    // Continuation lines indented to the bullet's body column belong to the
+    // same item — they must not be split into a new paragraph, otherwise
+    // LanguageTool flags the wrapped sentence as not starting with uppercase.
+    assertPlainText(
+      """
+      + A long sentence that wraps. A long sentence
+        that wraps.
+
+      """.trimIndent(),
+      "\nA long sentence that wraps. A long sentence\nthat wraps.\n\n",
+    )
+    assertPlainText(
+      """
+      + first
+        continuation
+      + second
+
+      """.trimIndent(),
+      "\nfirst\ncontinuation\n\n\nsecond\n\n",
+    )
+    assertPlainText(
+      """
+      + first
+        continuation
+
+      after
+
+      """.trimIndent(),
+      "\nfirst\ncontinuation\n\n\nafter\n",
+    )
+    // Same wrap behaviour must hold for every bullet type org accepts.
+    // "-" (1-char body, continuation indent 2):
+    assertPlainText(
+      """
+      - first
+        continuation
+
+      """.trimIndent(),
+      "\nfirst\ncontinuation\n\n",
+    )
+    // Indented "*" (1-char body, continuation indent 4 because the bullet
+    // itself is indented at column 2). Cannot use trimIndent here because it
+    // would strip the leading whitespace and turn "  * first" into "* first",
+    // which the parser would correctly classify as a headline rather than an
+    // (indented) list item.
+    assertPlainText(
+      "  * first\n    continuation\n",
+      "\nfirst\ncontinuation\n\n",
+    )
+    // Numbered bullet "1." (2-char body, continuation indent 3):
+    assertPlainText(
+      """
+      1. first
+         continuation
+
+      """.trimIndent(),
+      "\nfirst\ncontinuation\n\n",
+    )
+    // Alphabetical bullet "a)" (2-char body, continuation indent 3):
+    assertPlainText(
+      """
+      a) first
+         continuation
+
+      """.trimIndent(),
+      "\nfirst\ncontinuation\n\n",
+    )
+  }
+
+  @Test
   fun testTables() {
     assertPlainText(
       """
