@@ -47,6 +47,9 @@
       <action type="fix" due-to="Andrea Alberti (@alberti42)">
         Allow `textDocument/completion` at the very last position of a document. The fragment lookup and prefix scan both used a strict `&lt;` against `code.length`, so a cursor sitting one past the last character (an unterminated document with no trailing whitespace) produced an empty list. Loosened both checks to treat the position immediately after the last character as a valid completion site.
       </action>
+      <action type="fix" due-to="Andrea Alberti (@alberti42)">
+        Make the markup parser linear instead of quadratic in document length. The shared character-driven loop in `CharacterBasedCodeAnnotatedTextBuilder` tries on the order of 20–25 anchored regexes per character; the previous implementation called `regex.find(this.code.substring(pos))` on every attempt, allocating a fresh String of `(code.length − pos)` bytes solely to give the leading `^` a position-0 to anchor against. On large documents this byte-copying cost dominated parse time. Replaced the substring with `Matcher.region(pos, code.length).lookingAt()`, which anchors at `pos` directly via the JDK's region API, and wrapped the result in a small adapter that preserves the existing `MatchResult` semantics so no caller had to change. Measured on a 135 KB org file with all fragments enabled: warm latency drops from ~3.1 s to ~0.23 s (~14× faster). Every fragmentized language (LaTeX, Markdown, HTML, AsciiDoc, reStructuredText, Typst, org, …) shares the base class and benefits.
+      </action>
       <action type="update">
         Update to lsp-cli-plus 2.2.2. See [lsp-cli-plus release notes](https://github.com/ltex-plus/lsp-cli-plus/releases/tag/2.2.2).
       </action>
