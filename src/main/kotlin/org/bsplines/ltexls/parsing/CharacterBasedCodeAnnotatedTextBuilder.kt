@@ -136,8 +136,104 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
     regex: Regex,
     pos: Int = this.pos,
   ): MatchResult? {
-    val matchResult: MatchResult? = regex.find(this.code.substring(pos))
-    return if ((matchResult != null) && matchResult.value.isNotEmpty()) matchResult else null
+    // Anchor the regex at `pos` via Matcher.region(...) instead of allocating
+    // a fresh substring of (code.length - pos) bytes on every call. The driving
+    // loop in addCode() invokes matchFromPosition tens of times per character,
+    // so the previous "regex.find(this.code.substring(pos))" was O(N²) in the
+    // document length. With region() we stay O(N).
+    //
+    // The regexes used by every CharacterBasedCodeAnnotatedTextBuilder subclass
+    // begin with "^"; with the default useAnchoringBounds(true), "^" matches
+    // at the region start (i.e., at `pos`), preserving the original semantics.
+    if (pos < 0 || pos >= this.code.length) return null
+    val matcher: java.util.regex.Matcher = regex.toPattern().matcher(this.code)
+    matcher.region(pos, this.code.length)
+    if (!matcher.lookingAt()) return null
+    if (matcher.end() == matcher.start()) return null
+    return AnchoredMatchResult.snapshot(matcher, this.code)
+  }
+
+  /**
+   * Adapter that exposes a [java.util.regex.Matcher] match as a Kotlin
+   * [MatchResult] using coordinates **relative to the match start**, so that
+   * existing callers — which were written against `regex.find(substring)` and
+   * therefore see "0" as the match start — continue to work unchanged.
+   */
+  private class AnchoredMatchResult(
+    private val input: CharSequence,
+    private val matchAbsoluteStart: Int,
+    private val groupStarts: IntArray,
+    private val groupEnds: IntArray,
+  ) : MatchResult {
+    override val range: IntRange
+      get() = groupStarts[0] until groupEnds[0]
+
+    override val value: String
+      get() =
+        input.substring(
+          matchAbsoluteStart + groupStarts[0],
+          matchAbsoluteStart + groupEnds[0],
+        )
+
+    override val groups: MatchGroupCollection =
+      object : MatchGroupCollection {
+        override val size: Int
+          get() = groupStarts.size
+
+        override fun isEmpty(): Boolean = false
+
+        override fun iterator(): Iterator<MatchGroup?> =
+          (0 until size).asSequence().map { get(it) }.iterator()
+
+        override fun contains(element: MatchGroup?): Boolean = throw UnsupportedOperationException()
+
+        override fun containsAll(elements: Collection<MatchGroup?>): Boolean =
+          throw UnsupportedOperationException()
+
+        override fun get(index: Int): MatchGroup? {
+          val s: Int = groupStarts[index]
+          val e: Int = groupEnds[index]
+          return if (s < 0) {
+            null
+          } else {
+            MatchGroup(
+              input.substring(matchAbsoluteStart + s, matchAbsoluteStart + e),
+              s until e,
+            )
+          }
+        }
+      }
+
+    override val groupValues: List<String> by lazy {
+      List(groupStarts.size) { i ->
+        val s: Int = groupStarts[i]
+        val e: Int = groupEnds[i]
+        if (s < 0) "" else input.substring(matchAbsoluteStart + s, matchAbsoluteStart + e)
+      }
+    }
+
+    override fun next(): MatchResult? = null
+
+    companion object {
+      fun snapshot(
+        matcher: java.util.regex.Matcher,
+        input: CharSequence,
+      ): AnchoredMatchResult {
+        val matchStart: Int = matcher.start()
+        val groupCount: Int = matcher.groupCount()
+        val starts = IntArray(groupCount + 1)
+        val ends = IntArray(groupCount + 1)
+
+        for (i in 0..groupCount) {
+          val s: Int = matcher.start(i)
+          val e: Int = matcher.end(i)
+          starts[i] = if (s < 0) -1 else s - matchStart
+          ends[i] = if (e < 0) -1 else e - matchStart
+        }
+
+        return AnchoredMatchResult(input, matchStart, starts, ends)
+      }
+    }
   }
 
   open fun generateDummy(): String =
