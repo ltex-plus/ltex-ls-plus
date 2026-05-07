@@ -53,6 +53,9 @@
       <action type="fix" due-to="Andrea Alberti (@alberti42)">
         Don't parse regions of the document the user has disabled with a magic comment (e.g. `# ltex: enabled=false` in org, `% ltex: enabled=false` in LaTeX, etc.). Previously the language-specific parser ran over every fragment, including disabled ones, and the result was discarded just before the LanguageTool check. On documents where most of the body sits behind such a directive this dominated request latency: a 135 KB org file with ~130 KB hidden behind `enabled=false` took ~3 s warm and now takes ~25–55 ms — about the same as if the disabled tail weren't there at all. The optimization lives in the shared check pipeline and benefits every fragmentized language (LaTeX, Markdown, HTML, AsciiDoc, reStructuredText, Typst, org, gitcommit, BibTeX, …).
       </action>
+      <action type="fix" due-to="Andrea Alberti (@alberti42)">
+        Org: don't flag the wrapped half of a list item for "first letter not uppercase". Previously every list-item line emitted a paragraph break at end-of-line, so a continuation line indented to the bullet body (e.g. `+ A long sentence that wraps\n  onto the next line.`) was sent to LanguageTool as a fresh paragraph and its lowercase first word was flagged. The parser now tracks the bullet body column and, when the next line is a true wrap (indented past the bullet and not itself a new bullet), suppresses the paragraph break so the wrap stays in the same paragraph.
+      </action>
       <action type="update">
         Update to lsp-cli-plus 2.2.2. See [lsp-cli-plus release notes](https://github.com/ltex-plus/lsp-cli-plus/releases/tag/2.2.2).
       </action>
