@@ -47,6 +47,9 @@
       <action type="fix" due-to="Andrea Alberti (@alberti42)">
         Allow `textDocument/completion` at the very last position of a document. The fragment lookup and prefix scan both used a strict `&lt;` against `code.length`, so a cursor sitting one past the last character (an unterminated document with no trailing whitespace) produced an empty list. Loosened both checks to treat the position immediately after the last character as a valid completion site.
       </action>
+      <action type="fix" due-to="Andrea Alberti (@alberti42)">
+        Don't parse regions of the document the user has disabled with a magic comment (e.g. `# ltex: enabled=false` in org, `% ltex: enabled=false` in LaTeX, etc.). Previously the language-specific parser ran over every fragment, including disabled ones, and the result was discarded just before the LanguageTool check. On documents where most of the body sits behind such a directive this dominated request latency: a 135 KB org file with ~130 KB hidden behind `enabled=false` took ~3 s warm and now takes ~25–55 ms — about the same as if the disabled tail weren't there at all. The optimization lives in the shared check pipeline and benefits every fragmentized language (LaTeX, Markdown, HTML, AsciiDoc, reStructuredText, Typst, org, gitcommit, BibTeX, …).
+      </action>
       <action type="update">
         Update to lsp-cli-plus 2.2.2. See [lsp-cli-plus release notes](https://github.com/ltex-plus/lsp-cli-plus/releases/tag/2.2.2).
       </action>
