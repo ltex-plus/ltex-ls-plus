@@ -101,7 +101,7 @@ class LtexLanguageServer :
 
     serverCapabilities.codeActionProvider =
       Either.forRight(CodeActionOptions(CodeActionProvider.getCodeActionKinds()))
-    serverCapabilities.completionProvider = CompletionOptions()
+    serverCapabilities.completionProvider = CompletionOptions().apply { resolveProvider = false }
     serverCapabilities.executeCommandProvider =
       ExecuteCommandOptions(LtexWorkspaceService.getCommandNames())
     serverCapabilities.textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
