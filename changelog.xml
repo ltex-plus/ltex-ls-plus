@@ -42,7 +42,7 @@
         Fix: spell-check text in org-mode `#+CAPTION` affiliated keyword
       </action>
       <action type="fix" due-to="Andrea Alberti (@alberti42)">
-        Offer the "Add to dictionary" code action for spell-check matches produced by LanguageTool's `QB_NEW_*_ORTHOGRAPHY_*`, `AI_*_GGEC_REPLACEMENT_ORTHOGRAPHY_*`, and `ES_SIMPLE_REPLACE_*` rule families (Premium/HTTP tier plus Spanish common-typo rules). Also split multi-word collapsed match spans on whitespace so each misspelled word is added to the user dictionary individually instead of as a single phrase.
+        Offer the "Add to dictionary" code action for spell-check matches produced by LanguageTool's `QB_NEW_*_ORTHOGRAPHY_*`, `AI_*_GGEC_REPLACEMENT_ORTHOGRAPHY_*`, and `ES_SIMPLE_REPLACE_*` rule families (Premium/HTTP tier plus Spanish common-typo rules).
       </action>
       <action type="fix" due-to="Andrea Alberti (@alberti42)">
         Markdown: accept spaces and backslashes inside angle-bracketed link destinations (e.g. `[text](&lt;path with spaces.pdf&gt;)` or Windows-style `[text](&lt;C:\Users\My Documents\file.pdf&gt;)`), so the link is recognized and surrounding punctuation does not leak into spell-checked text.
