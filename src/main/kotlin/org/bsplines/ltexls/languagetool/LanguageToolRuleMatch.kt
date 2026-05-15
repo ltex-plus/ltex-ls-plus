@@ -150,5 +150,22 @@ data class LanguageToolRuleMatch(
               ruleId.contains("_SIMPLE_REPLACE_")
           )
       )
+
+    // Premium HTTP rule families (QB_NEW_*, AI_*) sometimes emit spell-check
+    // spans that include adjacent punctuation, e.g. `amazng!` (length 7),
+    // `"amazng"` (length 8), or multi-word collapses like `recieved teh`.
+    // MORFOLOGIK_*, HUNSPELL_*, and *_SPELLER_RULE always emit bare
+    // single-word spans, so for those rule families a stored bare-word entry
+    // already matches verbatim and no normalization is needed.
+    //
+    // The dictionary add path (CodeActionProvider.getAddWordToDictionaryCodeAction)
+    // and check path (LanguageToolInterface.isCoveredByDictionary) consult this
+    // predicate to decide whether to normalize the span before persisting or
+    // looking up. Mirrors the rule-family allowlist convention used by
+    // isUnknownWordRule above; if Premium adds new rule families that include
+    // adjacent punctuation, extend this allowlist accordingly.
+    fun isPremiumPunctuationAdjacentSpanRule(ruleId: String?): Boolean =
+      (ruleId != null) &&
+        (ruleId.startsWith("QB_NEW_") || ruleId.startsWith("AI_"))
   }
 }

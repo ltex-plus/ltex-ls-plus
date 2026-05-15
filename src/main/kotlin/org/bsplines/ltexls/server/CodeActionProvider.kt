@@ -11,6 +11,7 @@ package org.bsplines.ltexls.server
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
+import org.bsplines.ltexls.languagetool.DictionaryWord
 import org.bsplines.ltexls.languagetool.LanguageToolRuleMatch
 import org.bsplines.ltexls.parsing.AnnotatedTextFragment
 import org.bsplines.ltexls.parsing.CodeFragment
@@ -118,15 +119,15 @@ class CodeActionProvider(
     }
 
     if (addToDictionaryMatches.isNotEmpty()) {
-      result.add(
-        Either.forRight(
-          getAddWordToDictionaryCodeAction(
-            document,
-            addToDictionaryMatches,
-            annotatedTextFragments,
-          ),
-        ),
-      )
+      val addWordToDictionaryCodeAction: CodeAction? =
+        getAddWordToDictionaryCodeAction(
+          document,
+          addToDictionaryMatches,
+          annotatedTextFragments,
+        )
+      if (addWordToDictionaryCodeAction != null) {
+        result.add(Either.forRight(addWordToDictionaryCodeAction))
+      }
     }
 
     if (hideFalsePositivesMatches.isNotEmpty()) {
@@ -186,11 +187,12 @@ class CodeActionProvider(
     return codeAction
   }
 
+  @Suppress("LoopWithTooManyJumpStatements")
   private fun getAddWordToDictionaryCodeAction(
     document: LtexTextDocumentItem,
     addToDictionaryMatches: List<LanguageToolRuleMatch>,
     annotatedTextFragments: List<AnnotatedTextFragment>,
-  ): CodeAction {
+  ): CodeAction? {
     val unknownWordsMap = HashMap<String, MutableList<String>>()
     val unknownWordsJsonObject = JsonObject()
     val diagnostics = ArrayList<Diagnostic>()
@@ -207,15 +209,34 @@ class CodeActionProvider(
       val codeFragment: CodeFragment = annotatedTextFragment.codeFragment
       val language: String = codeFragment.languageShortCode
       val offset: Int = codeFragment.fromPos
-      val word: String =
+      val matchedText: String =
         annotatedTextFragment.getSubstringOfPlainText(
           match.fromPos - offset,
           match.toPos - offset,
         )
 
+      // Strip leading/trailing punctuation only when the match's rule family
+      // is known to emit punctuation-adjacent spans (Premium's QB_NEW_* /
+      // AI_*); for everyone else the span is already bare and we persist it
+      // verbatim. Same gate runs on the check path
+      // (LanguageToolInterface.isCoveredByDictionary) so the round-trip is
+      // symmetric — a word added under one rule family looks up correctly
+      // when seen again under the same family. Skip the match if the
+      // normalized form is empty (entirely-punctuation span — should never
+      // happen for a real spell-check rule).
+      val word: String =
+        if (LanguageToolRuleMatch.isPremiumPunctuationAdjacentSpanRule(match.ruleId)) {
+          DictionaryWord.normalize(matchedText)
+        } else {
+          matchedText
+        }
+      if (word.isEmpty()) continue
+
       addToMap(language, word, unknownWordsMap, unknownWordsJsonObject)
       diagnostics.add(createDiagnostic(match, document))
     }
+
+    if (unknownWordsMap.isEmpty()) return null
 
     val arguments = JsonObject()
     arguments.addProperty("uri", document.uri)
