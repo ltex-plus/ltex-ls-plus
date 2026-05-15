@@ -45,6 +45,9 @@
         Offer the "Add to dictionary" code action for spell-check matches produced by LanguageTool's `QB_NEW_*_ORTHOGRAPHY_*`, `AI_*_GGEC_REPLACEMENT_ORTHOGRAPHY_*`, and `ES_SIMPLE_REPLACE_*` rule families (Premium/HTTP tier plus Spanish common-typo rules).
       </action>
       <action type="fix" due-to="Andrea Alberti (@alberti42)">
+        Trim surrounding punctuation from "Add to dictionary" entries and from the check-path lookup key for matches from rule families known to emit punctuation-adjacent spans (LanguageTool Premium's `QB_NEW_*` / `AI_*`), so a span like `amazng!` (length 7) is persisted as the bare word `amazng` and every later occurrence — `amazng,`, `"amazng"`, `(amazng)` — suppresses against the same single entry. Free LT, the bundled Java backend, and the Spanish `_SIMPLE_REPLACE_` / Slovak gender-suffix rules always emit bare single-word spans and bypass the normalization entirely; no behavior change for those users.
+      </action>
+      <action type="fix" due-to="Andrea Alberti (@alberti42)">
         Markdown: accept spaces and backslashes inside angle-bracketed link destinations (e.g. `[text](&lt;path with spaces.pdf&gt;)` or Windows-style `[text](&lt;C:\Users\My Documents\file.pdf&gt;)`), so the link is recognized and surrounding punctuation does not leak into spell-checked text.
       </action>
       <action type="fix" due-to="Andrea Alberti (@alberti42)">
