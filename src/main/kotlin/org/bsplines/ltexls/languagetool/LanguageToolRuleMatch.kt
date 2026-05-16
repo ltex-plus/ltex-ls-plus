@@ -116,6 +116,18 @@ data class LanguageToolRuleMatch(
       )
     }
 
+    // Name parses as "is this a rule [that flags an] unknown word", not
+    // "is this an unknown [word rule]". The "unknown" refers to the *word*
+    // being unknown to LanguageTool (i.e. a spell-check match) — not to the
+    // rule being unknown to us. Returns true for spell-check rule families
+    // (Morfologik, Hunspell, language-specific _SPELLER_/_SPELLING_ rules,
+    // Slovak gender-suffix rules, Premium ORTHOGRAPHY rules, common-typo
+    // _SIMPLE_REPLACE_ rules); false for grammar/style/punctuation rules.
+    //
+    // A clearer name would be `isSpellCheckRule` — not renamed because it
+    // would touch every call site and review burden outweighs the
+    // readability gain. Leaving the rename as a note in case someone has
+    // reason to revisit naming in this file.
     fun isUnknownWordRule(ruleId: String?): Boolean =
       (
         (ruleId != null) &&
