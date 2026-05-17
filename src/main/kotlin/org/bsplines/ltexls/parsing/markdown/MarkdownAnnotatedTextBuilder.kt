@@ -92,6 +92,7 @@ class MarkdownAnnotatedTextBuilder(
       val tmpShadowOffset = shadowOffset
       if (removeComment()) {
         newPos += (shadowOffset - tmpShadowOffset)
+        if (newPos > this.code.length) newPos = this.code.length
       } else {
         super.addMarkup(this.code.substring(curPos, curPos + 1), (if (inParagraph) " " else "\n"))
         this.pos += 1

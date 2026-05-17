@@ -189,6 +189,22 @@ class ProgramAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("") {
   }
 
   @Test
+  fun testElispBareCommentLine() {
+    // Regression: a ';;' content line followed by a bare ';;' line produced
+    // an empty trailing code segment in MarkdownAnnotatedTextBuilder.addComment,
+    // causing addMarkup(code.length) to bump newPos past code.length and throw
+    // StringIndexOutOfBoundsException. The executor in
+    // LtexTextDocumentService.didOpen only catches ExecutionException /
+    // InterruptedException, so the exception was silently dropped and the LSP
+    // server hung waiting on publishDiagnostics that never came.
+    assertPlainText(
+      ";; Hello world.\n;;\n",
+      "\n\n\nHello world.\n",
+      "elisp",
+    )
+  }
+
+  @Test
   fun testMatlab() {
     assertPlainText(
       """
