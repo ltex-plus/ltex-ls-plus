@@ -124,7 +124,7 @@ data class ProgramCommentRegexs(
           lineCommentRegexString = "---?"
         }
 
-        "clojure", "lisp" -> {
+        "clojure", "elisp", "emacs-lisp", "lisp" -> {
           lineCommentRegexString = ";;?"
         }
 
