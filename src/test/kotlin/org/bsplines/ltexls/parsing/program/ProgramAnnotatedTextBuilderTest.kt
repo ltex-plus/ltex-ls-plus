@@ -151,10 +151,40 @@ class ProgramAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("") {
       ;Sentence 3 - no check
       ;; Sentence 4 -
       ;; check
-      
+
       """.trimIndent(),
       "\n\n\nSentence 4 -\ncheck",
       "lisp",
+    )
+  }
+
+  @Test
+  fun testElisp() {
+    assertPlainText(
+      """
+      Sentence 1 - no check ; Sentence 2 - no check
+      ;Sentence 3 - no check
+      ;; Sentence 4 -
+      ;; check
+
+      """.trimIndent(),
+      "\n\n\nSentence 4 -\ncheck",
+      "elisp",
+    )
+  }
+
+  @Test
+  fun testEmacsLisp() {
+    assertPlainText(
+      """
+      Sentence 1 - no check ; Sentence 2 - no check
+      ;Sentence 3 - no check
+      ;; Sentence 4 -
+      ;; check
+
+      """.trimIndent(),
+      "\n\n\nSentence 4 -\ncheck",
+      "emacs-lisp",
     )
   }
 

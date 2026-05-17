@@ -98,6 +98,8 @@ object FileIo {
       "dart"
     } else if (fileName.endsWith(".ex")) {
       "elixir"
+    } else if (fileName.endsWith(".el")) {
+      "elisp"
     } else if (fileName.endsWith(".elm")) {
       "elm"
     } else if (fileName.endsWith(".erl")) {
