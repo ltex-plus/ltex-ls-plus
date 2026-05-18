@@ -30,6 +30,21 @@ import java.util.logging.Level
 @Suppress("TooManyFunctions")
 class MarkdownAnnotatedTextBuilder(
   codeLanguageId: String,
+  // When true, `addComment` rewrites Emacs-style quoted-identifier markers
+  // `` `name' `` to Markdown inline-code markers `` `name` `` in the
+  // flexmark input. The substitution is length-preserving (`'` → `` ` ``,
+  // one char for one char) so source-position arithmetic and the shadow-
+  // markup mapping are unchanged. Flexmark then emits a Code node covering
+  // the region, which the visit() pipeline replaces with a Dummy token in
+  // plain text, so LanguageTool never sees the surrounding quote
+  // characters and stops flagging the trailing `'` as an unpaired quote
+  // (EN_UNPAIRED_QUOTES) or otherwise corrupting matches that overlap the
+  // identifier. Opt-in: callers wrapping Markdown around a Lisp-family
+  // comment block where the convention is canonical (currently
+  // ProgramAnnotatedTextBuilder for elisp / emacs-lisp) set this true;
+  // pure Markdown documents leave it false so a literal `` `foo' `` keeps
+  // its original meaning.
+  private val enableEmacsQuoteRewriting: Boolean = false,
 ) : CodeAnnotatedTextBuilder(codeLanguageId) {
   private val parser: Parser = Parser.builder(PARSER_OPTIONS).build()
   private var code = ""
@@ -152,7 +167,7 @@ class MarkdownAnnotatedTextBuilder(
 
     for ((index, markup) in markups.withIndex()) {
       fullCode += markup.first + code[index]
-      clearCode += code[index]
+      clearCode += rewriteEmacsQuotesIfEnabled(code[index])
       if (index < markups.lastIndex) {
         clearCode += "\n"
       }
@@ -169,6 +184,21 @@ class MarkdownAnnotatedTextBuilder(
 
     return this
   }
+
+  // Length-preserving substitution: rewrites `name' as `name` (backtick-and-
+  // apostrophe → matched-backticks) so flexmark recognises the region as
+  // inline code. Only touches `clearCode`; `fullCode` and the shadow-markup
+  // mapping continue to reference the original source unchanged. The regex
+  // is conservative: identifier body cannot contain backticks, apostrophes,
+  // or whitespace, matching the Emacs convention of using this form only
+  // around bare symbol names (`lsp-mode'`, `pp-buffer'`, …) and not around
+  // longer phrases.
+  private fun rewriteEmacsQuotesIfEnabled(segment: String): String =
+    if (this.enableEmacsQuoteRewriting) {
+      segment.replace(EMACS_QUOTED_IDENTIFIER_REGEX, "`$1`")
+    } else {
+      segment
+    }
 
   private fun visit(node: Node) {
     val nodeType: String = node.javaClass.simpleName
@@ -280,6 +310,12 @@ class MarkdownAnnotatedTextBuilder(
   }
 
   companion object {
+    // Matches Emacs-style quoted identifiers: a backtick, an identifier-like
+    // body (no whitespace, no backticks, no apostrophes), and a closing
+    // straight apostrophe. The body group is captured so the rewrite can
+    // wrap it in matched backticks for flexmark.
+    private val EMACS_QUOTED_IDENTIFIER_REGEX: Regex = Regex("`([^`'\\s]+)'")
+
     private val PARSER_OPTIONS: DataHolder =
       MutableDataSet()
         // CommonMark allows spaces inside angle-bracketed link destinations
