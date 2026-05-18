@@ -14,6 +14,8 @@ import org.bsplines.ltexls.parsing.AnnotatedTextFragment
 import org.bsplines.ltexls.server.LtexTextDocumentItem
 import org.bsplines.ltexls.tools.Tools
 import org.eclipse.lsp4j.Range
+import org.languagetool.markup.AnnotatedText
+import org.languagetool.markup.TextPart
 import org.languagetool.rules.RuleMatch
 
 data class LanguageToolRuleMatch(
@@ -93,11 +95,29 @@ data class LanguageToolRuleMatch(
       type: RuleMatch.Type,
       annotatedTextFragment: AnnotatedTextFragment,
     ): LanguageToolRuleMatch {
+      // Premium QB_NEW_*_ORTHOGRAPHY (and sibling AI_*) rules occasionally
+      // extend the reported match span past the misspelled word, through any
+      // intervening markup, up to the start of the next TEXT segment in the
+      // annotated text. The intent on LT's side is to enforce sentence
+      // termination; the side effect on ours is a diagnostic range that spans
+      // many lines of source code, and a quickfix whose TextEdit replaces all
+      // that intervening content. Clamp the reported `toPos` to the end of
+      // the TEXT segment that contains `fromPos` so the range stays within
+      // the prose the user actually wrote. Gated on the same rule-family
+      // predicate as the dictionary-normalization path (cadea8a4) so
+      // non-Premium traffic is bit-for-bit unchanged.
+      val clampedToPos: Int =
+        if (isPremiumPunctuationAdjacentSpanRule(ruleId)) {
+          clampToPosToTextSegmentEnd(annotatedTextFragment.annotatedText, fromPos, toPos)
+        } else {
+          toPos
+        }
+
       val messageBuilder = StringBuilder()
 
       if (isUnknownWordRule(ruleId)) {
         messageBuilder.append("'")
-        messageBuilder.append(annotatedTextFragment.getSubstringOfPlainText(fromPos, toPos))
+        messageBuilder.append(annotatedTextFragment.getSubstringOfPlainText(fromPos, clampedToPos))
         messageBuilder.append("': ")
       }
 
@@ -108,12 +128,36 @@ data class LanguageToolRuleMatch(
         ruleId,
         sentence,
         fromPos,
-        toPos,
+        clampedToPos,
         message,
         suggestedReplacements,
         type,
         annotatedTextFragment.codeFragment.languageShortCode,
       )
+    }
+
+    // Walks the annotated text's parts in document order, accumulating source
+    // offsets. If `fromPos` falls inside a TEXT part, returns
+    // `min(toPos, endOfThatTextPart)`. Otherwise (fromPos is inside markup, or
+    // past the end) returns `toPos` unchanged. TEXT and MARKUP parts each
+    // contribute their literal length to source offsets; FAKE_CONTENT exists
+    // only in plain text and contributes zero. The walk costs O(parts) per
+    // match but only runs on the gated Premium rule families.
+    internal fun clampToPosToTextSegmentEnd(
+      annotatedText: AnnotatedText,
+      fromPos: Int,
+      toPos: Int,
+    ): Int {
+      var sourcePos = 0
+      for (part: TextPart in annotatedText.parts) {
+        val sourceLen: Int = if (part.type == TextPart.Type.FAKE_CONTENT) 0 else part.part.length
+        val nextSourcePos: Int = sourcePos + sourceLen
+        if ((part.type == TextPart.Type.TEXT) && (fromPos in sourcePos until nextSourcePos)) {
+          return if (toPos > nextSourcePos) nextSourcePos else toPos
+        }
+        sourcePos = nextSourcePos
+      }
+      return toPos
     }
 
     // Name parses as "is this a rule [that flags an] unknown word", not
