@@ -8,7 +8,10 @@
 
 package org.bsplines.ltexls.languagetool
 
+import org.languagetool.markup.AnnotatedText
+import org.languagetool.markup.AnnotatedTextBuilder
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -113,6 +116,89 @@ class LanguageToolRuleMatchTest {
     assertFalse(LanguageToolRuleMatch.isUnknownWordRule("VERB_COMMA_CONJUNCTION"))
     assertFalse(LanguageToolRuleMatch.isUnknownWordRule("AUX_ETRE_VCONJ"))
     assertFalse(LanguageToolRuleMatch.isUnknownWordRule("ZWEI_INFORMATIONSEINHEITEN_PRO_SATZ"))
+  }
+
+  // Build an AnnotatedText matching what ProgramAnnotatedTextBuilder produces for
+  //   /*\n\nThis is a mistace\n\n*/\n
+  // followed by a block of plain code, then another comment with prose. The
+  // structure is what triggers Premium's QB orthography rule to extend its
+  // match span into the trailing markup until the next TEXT segment.
+  private fun buildAnnotatedTextLikeProgramFragment(): AnnotatedText {
+    val builder = AnnotatedTextBuilder()
+    builder.addMarkup("/*\n\n", "\n\n\n\n\n")
+    builder.addText("This is a mistace")
+    builder.addMarkup(
+      "\n\n*/\n\n#include <config.h>\n\n#include \"lisp.h\"\n",
+      "\n\n",
+    )
+    builder.addMarkup("/* ", "\n\n")
+    builder.addText("Marker used within call-interactively to refer to point.")
+    builder.addMarkup("  */\n", "\n\n")
+    return builder.build()
+  }
+
+  @Test
+  fun testClampToPosToTextSegmentEndTrimsOverextendedSpan() {
+    // The exact bug from Premium QB_NEW_*_ORTHOGRAPHY: LT returns offset/length
+    // that map to source[14..190] — covering "mistace" plus all the intervening
+    // markup up to just before the next TEXT segment "Marker…". Clamp should
+    // trim toPos back to the end of the TEXT segment containing fromPos
+    // (mistace's segment ends at source offset 21 = 4 + len("This is a mistace")).
+    val annotatedText: AnnotatedText = buildAnnotatedTextLikeProgramFragment()
+    val clamped: Int = LanguageToolRuleMatch.clampToPosToTextSegmentEnd(annotatedText, 14, 190)
+    assertEquals(21, clamped)
+  }
+
+  @Test
+  fun testClampToPosToTextSegmentEndLeavesInSegmentRangeUnchanged() {
+    // Legitimate multi-word match entirely inside a TEXT segment, e.g.
+    // "a mistace" at source[12..21] within "This is a mistace". No clamping
+    // should occur because the toPos doesn't cross the segment boundary.
+    val annotatedText: AnnotatedText = buildAnnotatedTextLikeProgramFragment()
+    val clamped: Int = LanguageToolRuleMatch.clampToPosToTextSegmentEnd(annotatedText, 12, 21)
+    assertEquals(21, clamped)
+  }
+
+  @Test
+  fun testClampToPosToTextSegmentEndDoesNotShrinkBelowToPos() {
+    // toPos already smaller than segment end: clamp must not extend it.
+    val annotatedText: AnnotatedText = buildAnnotatedTextLikeProgramFragment()
+    val clamped: Int = LanguageToolRuleMatch.clampToPosToTextSegmentEnd(annotatedText, 14, 17)
+    assertEquals(17, clamped)
+  }
+
+  @Test
+  fun testClampToPosToTextSegmentEndFromPosInMarkupIsNoOp() {
+    // If fromPos lands inside a MARKUP part (shouldn't happen for a real
+    // spell-check match against user prose, but the helper should be defensive
+    // and not produce surprising clamps). The trailing markup begins at
+    // source[21] — pick a fromPos inside it.
+    val annotatedText: AnnotatedText = buildAnnotatedTextLikeProgramFragment()
+    val clamped: Int = LanguageToolRuleMatch.clampToPosToTextSegmentEnd(annotatedText, 25, 190)
+    assertEquals(190, clamped)
+  }
+
+  @Test
+  fun testClampToPosToTextSegmentEndClampsToNearestTextSegment() {
+    // fromPos in the second TEXT segment ("Marker used…") — clamp should snap
+    // to that segment's end, not to the first one. Segment "Marker…" starts at
+    // source offset 21 + 39 + 3 = 63 (markup len 39 + opening "/* " len 3) and
+    // is 56 chars long, ending at source[119]. A toPos beyond that gets
+    // clamped to 119.
+    val annotatedText: AnnotatedText = buildAnnotatedTextLikeProgramFragment()
+    val markerSegmentStart =
+      4 + "This is a mistace".length +
+        "\n\n*/\n\n#include <config.h>\n\n#include \"lisp.h\"\n".length + "/* ".length
+    val markerSegmentEnd =
+      markerSegmentStart +
+        "Marker used within call-interactively to refer to point.".length
+    val clamped: Int =
+      LanguageToolRuleMatch.clampToPosToTextSegmentEnd(
+        annotatedText,
+        markerSegmentStart + 1,
+        markerSegmentEnd + 50,
+      )
+    assertEquals(markerSegmentEnd, clamped)
   }
 
   @Test
