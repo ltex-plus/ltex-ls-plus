@@ -20,8 +20,22 @@ class ProgramAnnotatedTextBuilder(
 ) : CodeAnnotatedTextBuilder(codeLanguageId) {
   private val annotatedTextBuilder =
     when (codeLanguageId) {
-      "python" -> RestructuredtextAnnotatedTextBuilder("restructuredtext")
-      else -> MarkdownAnnotatedTextBuilder("markdown")
+      "python" -> {
+        RestructuredtextAnnotatedTextBuilder("restructuredtext")
+      }
+
+      else -> {
+        MarkdownAnnotatedTextBuilder(
+          "markdown",
+          // Only the Emacs / Emacs-Lisp branch documents `name' as a canonical
+          // quoted-identifier marker. Common Lisp and Clojure do not use this
+          // convention (Common Lisp varies; Clojure uses Markdown-style
+          // matched backticks), so they keep the default of false to avoid
+          // surprising users whose source legitimately contains the same
+          // character sequence with a different meaning.
+          enableEmacsQuoteRewriting = (codeLanguageId in EMACS_QUOTE_LANGUAGES),
+        )
+      }
     }
 
   private val commentRegexs = ProgramCommentRegexs.fromCodeLanguageId(codeLanguageId)
@@ -129,5 +143,14 @@ class ProgramAnnotatedTextBuilder(
   companion object {
     private val LINE_SEPARATOR_REGEX = Regex("\r?\n")
     private val FIRST_CHARACTER_REGEX = Regex("^[ \t]*(?:([#$%*+\\-/])|(.))")
+
+    // Languages whose comment / docstring convention uses ``name'` (backtick
+    // opener, straight-apostrophe closer) for quoted identifiers, inherited
+    // from Texinfo via Emacs. Restricted to elisp / emacs-lisp because
+    // Common Lisp has no standardised convention and Clojure uses
+    // Markdown-style matched backticks. Extend cautiously: any language
+    // added here will see literal `name'` sequences in its comments
+    // silently reinterpreted as inline code.
+    private val EMACS_QUOTE_LANGUAGES: Set<String> = setOf("elisp", "emacs-lisp")
   }
 }

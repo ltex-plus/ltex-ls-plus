@@ -189,6 +189,46 @@ class ProgramAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("") {
   }
 
   @Test
+  fun testElispEmacsQuotedIdentifierRewritten() {
+    // Emacs convention: `name' is a quoted symbol reference (Texinfo legacy).
+    // Without the rewrite, LanguageTool sees the trailing `'` as an unpaired
+    // quote and the identifier as a misspelled word. The MarkdownAnnotatedText-
+    // Builder's enableEmacsQuoteRewriting flag substitutes the closing `'`
+    // with a backtick before flexmark parses, so the region is recognized as
+    // inline code and replaced with a Dummy token. Same shape as the existing
+    // markdown inline-code tests (cf. testBasicMarkdown's `inline code`
+    // → Dummy0 case).
+    assertPlainText(
+      ";; LSP clients in Emacs need `lsp-mode' to work.\n",
+      "\n\n\nLSP clients in Emacs need Dummy0 to work.",
+      "elisp",
+    )
+    assertPlainText(
+      ";; LSP clients in Emacs need `lsp-mode' to work.\n",
+      "\n\n\nLSP clients in Emacs need Dummy0 to work.",
+      "emacs-lisp",
+    )
+  }
+
+  @Test
+  fun testLispDoesNotRewriteEmacsQuotedIdentifier() {
+    // Common Lisp has no standardised `name' convention, so the rewrite is
+    // not enabled for "lisp" / "clojure". The literal characters survive
+    // through to the plain text so LT can do whatever it would normally do.
+    // Regression guard for the gate.
+    assertPlainText(
+      ";; LSP clients in Emacs need `lsp-mode' to work.\n",
+      "\n\n\nLSP clients in Emacs need `lsp-mode' to work.",
+      "lisp",
+    )
+    assertPlainText(
+      ";; LSP clients in Emacs need `lsp-mode' to work.\n",
+      "\n\n\nLSP clients in Emacs need `lsp-mode' to work.",
+      "clojure",
+    )
+  }
+
+  @Test
   fun testElispBareCommentLine() {
     // Regression: a ';;' content line followed by a bare ';;' line produced
     // an empty trailing code segment in MarkdownAnnotatedTextBuilder.addComment,
