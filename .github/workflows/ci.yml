@@ -162,6 +162,9 @@ jobs:
 
       - name: "Build LTeX+ LS"
         run: "mvn -B -e package"
+        env:
+          LANGUAGETOOL_USERNAME: ${{ secrets.LANGUAGETOOL_USERNAME }}
+          LANGUAGETOOL_API_KEY: ${{ secrets.LANGUAGETOOL_API_KEY }}
 
       - name: "Create Binary Archives"
         run: "python -u tools/createBinaryArchives.py"
