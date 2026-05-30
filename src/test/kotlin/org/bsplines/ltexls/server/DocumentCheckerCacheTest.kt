@@ -203,11 +203,40 @@ class DocumentCheckerCacheTest {
     )
   }
 
+  // Org safety guarantee: identical diagnostics whether checked as one fragment
+  // or block-split. The #+BEGIN_SRC block (typo + internal blank line) must stay
+  // ignored in both modes — proving block splitting never cuts a source block.
+  @Test
+  fun testOrgBlockSplittingPreservesDiagnostics() {
+    val code =
+      "This is an eror in prose.\n\n#+BEGIN_SRC python\nteh eror lives in code\n\nmore code\n" +
+        "#+END_SRC\n\nAnother mistteak appears here.\n"
+
+    val whole: List<Triple<String?, Int, Int>> = matchKeys(check("org", code, 1_000_000))
+    val split: List<Triple<String?, Int, Int>> = matchKeys(check("org", code, 1))
+
+    assertEquals(whole, split)
+    assertTrue(whole.isNotEmpty(), "prose typos should be flagged")
+    val srcStart: Int = code.indexOf("#+BEGIN_SRC")
+    val srcEnd: Int = code.indexOf("#+END_SRC") + "#+END_SRC".length
+    assertTrue(
+      whole.none { it.second in srcStart until srcEnd },
+      "source-block text must not be flagged",
+    )
+  }
+
   companion object {
     private fun sharedChecker(): DocumentChecker =
       DocumentChecker(SettingsManager(Settings(_logLevel = Level.FINEST)), FragmentCache())
 
     private fun checkMarkdown(
+      code: String,
+      minFragmentSize: Int,
+    ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
+      check("markdown", code, minFragmentSize)
+
+    private fun check(
+      codeLanguageId: String,
       code: String,
       minFragmentSize: Int,
     ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> {
@@ -216,7 +245,7 @@ class DocumentCheckerCacheTest {
           SettingsManager(Settings(_minFragmentSize = minFragmentSize, _logLevel = Level.FINEST)),
           FragmentCache(),
         )
-      return checker.check(createDocument("untitled:safety.md", "markdown", code))
+      return checker.check(createDocument("untitled:safety.$codeLanguageId", codeLanguageId, code))
     }
 
     private fun matchKeys(
