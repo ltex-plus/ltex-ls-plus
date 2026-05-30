@@ -12,6 +12,10 @@ import org.bsplines.ltexls.parsing.restructuredtext.RestructuredtextFragmentizer
 import org.bsplines.ltexls.settings.Settings
 import kotlin.test.Test
 
+// OrgFragmentizer splits only at "# ltex:" magic comments. Paragraph subdivision
+// for incremental checking happens after the build, in AnnotatedTextSlicer (see
+// AnnotatedTextSlicerTest), and its block-safety is covered end-to-end by
+// DocumentCheckerCacheTest.testOrgBlockSplittingPreservesDiagnostics.
 class OrgFragmentizerTest {
   @Test
   fun testFragmentizer() {

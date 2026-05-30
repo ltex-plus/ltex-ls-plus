@@ -13,6 +13,11 @@ import org.bsplines.ltexls.parsing.RegexCodeFragmentizer
 class OrgFragmentizer(
   codeLanguageId: String,
 ) : RegexCodeFragmentizer(codeLanguageId, REGEX) {
+  // Splits only at "# ltex:" magic comments (language/setting regions). Paragraph
+  // subdivision for incremental checking happens after the build, in
+  // AnnotatedTextSlicer: the built plain text has markup, blocks, and drawers
+  // already stripped, so a blank line there is unambiguously a prose paragraph
+  // break — no Org-specific block tracking is needed here.
   companion object {
     private val REGEX =
       Regex(
