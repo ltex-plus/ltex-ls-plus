@@ -12,6 +12,7 @@ import org.apache.commons.text.StringEscapeUtils
 import org.bsplines.ltexls.languagetool.LanguageToolInterface
 import org.bsplines.ltexls.languagetool.LanguageToolRuleMatch
 import org.bsplines.ltexls.parsing.AnnotatedTextFragment
+import org.bsplines.ltexls.parsing.AnnotatedTextSlicer
 import org.bsplines.ltexls.parsing.CachedFragment
 import org.bsplines.ltexls.parsing.CodeAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.CodeFragment
@@ -38,6 +39,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.logging.Level
 
+@Suppress("TooManyFunctions")
 class DocumentChecker(
   val settingsManager: SettingsManager,
   // Reuses per-fragment results across edits via the fragment cache. The
@@ -364,10 +366,13 @@ class DocumentChecker(
     }
   }
 
-  // Full-document check with per-fragment result reuse. For each fragment, a
-  // cache hit skips both the AnnotatedText build and the LanguageTool call;
-  // a miss computes and stores fragment-relative matches. Offsets are projected
-  // to absolute positions on every iteration (hit or miss).
+  // Full-document check with per-paragraph result reuse. Each language region is
+  // built once (the build understands the markup), then sliced into paragraphs by
+  // AnnotatedTextSlicer. The cache is keyed per paragraph on its source substring
+  // + settings (not its position), so a paragraph that merely shifted is still a
+  // hit. A hit returns the cached AnnotatedText and matches, skipping the
+  // LanguageTool call; a miss checks and stores. Offsets are projected to absolute
+  // positions on every iteration (hit or miss).
   private fun checkCodeFragmentsWithCache(
     codeFragments: List<CodeFragment>,
     document: LtexTextDocumentItem,
@@ -376,36 +381,76 @@ class DocumentChecker(
     val matches = ArrayList<LanguageToolRuleMatch>()
 
     for (codeFragment: CodeFragment in codeFragments) {
-      val key: FragmentCacheKey = FragmentCache.makeKey(document.uri, codeFragment)
-      val cached: CachedFragment? = this.fragmentCache.get(key)
-      val annotatedTextFragment: AnnotatedTextFragment
-      val relativeMatches: List<LanguageToolRuleMatch>
+      for (paragraph: AnnotatedTextFragment in sliceRegionIntoParagraphs(codeFragment, document)) {
+        val paragraphCodeFragment: CodeFragment = paragraph.codeFragment
+        val key: FragmentCacheKey = FragmentCache.makeKey(document.uri, paragraphCodeFragment)
+        val cached: CachedFragment? = this.fragmentCache.get(key)
+        val annotatedTextFragment: AnnotatedTextFragment
+        val relativeMatches: List<LanguageToolRuleMatch>
 
-      if (cached != null) {
-        // Restore the language the fragment was checked under (matters for
-        // "auto") before rebuilding the wrapper; the cached matches already
-        // carry the correct per-match languageShortCode.
-        codeFragment.languageShortCode = cached.detectedLanguageShortCode
-        annotatedTextFragment = AnnotatedTextFragment(cached.annotatedText, codeFragment, document)
-        relativeMatches = cached.relativeMatches
-      } else {
-        annotatedTextFragment = buildAnnotatedTextFragment(codeFragment, document, null)
-        relativeMatches = checkAnnotatedTextFragmentRelative(annotatedTextFragment, null)
-        this.fragmentCache.put(
-          key,
-          CachedFragment(
-            annotatedTextFragment.annotatedText,
-            relativeMatches,
-            codeFragment.languageShortCode,
-          ),
-        )
+        if (cached != null) {
+          // Restore the language the paragraph was checked under (matters for
+          // "auto"); the cached matches already carry the correct per-match
+          // languageShortCode.
+          paragraphCodeFragment.languageShortCode = cached.detectedLanguageShortCode
+          annotatedTextFragment =
+            AnnotatedTextFragment(cached.annotatedText, paragraphCodeFragment, document)
+          relativeMatches = cached.relativeMatches
+        } else {
+          annotatedTextFragment = paragraph
+          relativeMatches = checkAnnotatedTextFragmentRelative(annotatedTextFragment, null)
+          this.fragmentCache.put(
+            key,
+            CachedFragment(
+              annotatedTextFragment.annotatedText,
+              relativeMatches,
+              paragraphCodeFragment.languageShortCode,
+            ),
+          )
+        }
+
+        annotatedTextFragments.add(annotatedTextFragment)
+        matches.addAll(shiftMatchesToAbsolute(relativeMatches, paragraphCodeFragment, null))
       }
-
-      annotatedTextFragments.add(annotatedTextFragment)
-      matches.addAll(shiftMatchesToAbsolute(relativeMatches, codeFragment, null))
     }
 
     return Pair(matches, annotatedTextFragments)
+  }
+
+  // Builds a region's AnnotatedText once, then slices it into one
+  // AnnotatedTextFragment per prose paragraph (see AnnotatedTextSlicer). Each
+  // paragraph gets a synthetic CodeFragment whose code is its source substring
+  // and whose fromPos is the region's fromPos plus the paragraph's source offset,
+  // so cache keys are position-independent and matches reproject correctly.
+  // A skipped region (e.g. after "ltex: enabled=false") is not sliced: its build
+  // is empty by design, so it passes through as a single fragment.
+  private fun sliceRegionIntoParagraphs(
+    region: CodeFragment,
+    document: LtexTextDocumentItem,
+  ): List<AnnotatedTextFragment> {
+    val regionFragment: AnnotatedTextFragment = buildAnnotatedTextFragment(region, document, null)
+    if (shouldSkipCheck(region.codeLanguageId, region.settings, null)) {
+      return listOf(regionFragment)
+    }
+
+    return AnnotatedTextSlicer.slice(regionFragment.annotatedText).map { slice ->
+      // Source length of the slice = sum of TEXT and MARKUP part lengths;
+      // FAKE_CONTENT exists only in the plain text and contributes zero source
+      // characters. Recovers the paragraph's source substring from its region.
+      val sourceLength: Int =
+        slice.annotatedText.parts.sumOf {
+          if (it.type == TextPart.Type.FAKE_CONTENT) 0 else it.part.length
+        }
+      val paragraphCodeFragment =
+        CodeFragment(
+          region.codeLanguageId,
+          region.code.substring(slice.sourceFromPos, slice.sourceFromPos + sourceLength),
+          region.fromPos + slice.sourceFromPos,
+          region.settings,
+          region.languageShortCode,
+        )
+      AnnotatedTextFragment(slice.annotatedText, paragraphCodeFragment, document)
+    }
   }
 
   companion object {
