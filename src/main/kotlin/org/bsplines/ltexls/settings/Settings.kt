@@ -44,6 +44,7 @@ data class Settings(
   private val _checkFrequency: CheckFrequency? = null,
   private val _clearDiagnosticsWhenClosingFile: Boolean? = null,
   private val _fragmentCacheTtlMinutes: Long? = null,
+  private val _minFragmentSize: Int? = null,
 ) {
   val enabled: Set<String>
     get() = (this._enabled ?: DEFAULT_ENABLED)
@@ -99,6 +100,8 @@ data class Settings(
     get() = (this._clearDiagnosticsWhenClosingFile ?: true)
   val fragmentCacheTtlMinutes: Long
     get() = (this._fragmentCacheTtlMinutes ?: DEFAULT_FRAGMENT_CACHE_TTL_MINUTES)
+  val minFragmentSize: Int
+    get() = (this._minFragmentSize ?: DEFAULT_MIN_FRAGMENT_SIZE)
 
   /**
    * Returns differences between `this` and `other` that call for
@@ -221,6 +224,7 @@ data class Settings(
       )
     private const val DEFAULT_SENTENCE_CACHE_SIZE = 2000L
     private const val DEFAULT_FRAGMENT_CACHE_TTL_MINUTES = 30L
+    private const val DEFAULT_MIN_FRAGMENT_SIZE = 4000
     private val DEFAULT_DIAGNOSTIC_SEVERITY: Map<String, DiagnosticSeverity> =
       mapOf(Pair("default", DiagnosticSeverity.Information))
     val DEFAULT_PREFERRED_VARIANTS: List<String> = listOf("en-US", "de-DE", "pt-BR")
@@ -352,6 +356,8 @@ data class Settings(
         getSettingFromJsonAsBoolean(jsonSettings, "clearDiagnosticsWhenClosingFile")
       val fragmentCacheTtlMinutes: Long? =
         getSettingFromJsonAsLong(jsonSettings, "fragmentCacheTtlMinutes")
+      val minFragmentSize: Int? =
+        getSettingFromJsonAsLong(jsonSettings, "minFragmentSize")?.toInt()
 
       return Settings(
         enabled,
@@ -378,6 +384,7 @@ data class Settings(
         checkFrequency,
         clearDiagnosticsWhenClosingFile,
         fragmentCacheTtlMinutes,
+        minFragmentSize,
       )
     }
 

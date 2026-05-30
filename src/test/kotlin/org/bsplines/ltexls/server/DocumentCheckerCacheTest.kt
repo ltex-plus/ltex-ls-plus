@@ -126,6 +126,33 @@ class DocumentCheckerCacheTest {
     assertEquals(sizeBefore, server.fragmentCache.size)
   }
 
+  // A plaintext document split into paragraphs where editing one paragraph
+  // reuses the others' cached results, with offsets reprojected for the shifted
+  // survivors.
+  @Test
+  fun testPlaintextParagraphIncrementalReuse() {
+    val checker =
+      DocumentChecker(
+        SettingsManager(Settings(_minFragmentSize = 1, _logLevel = Level.FINEST)),
+        FragmentCache(),
+      )
+    val uri = "untitled:para.txt"
+    val tail = "\n\nSecond paragraph stays the same.\n"
+
+    val before = checker.check(createDocument(uri, "plaintext", "First paragraph.$tail"))
+    val after =
+      checker.check(createDocument(uri, "plaintext", "First paragraph, now much longer.$tail"))
+
+    assertTrue(before.second.size >= 2)
+    val secondBefore = before.second.first { it.codeFragment.code.contains("Second") }
+    val secondAfter = after.second.first { it.codeFragment.code.contains("Second") }
+    assertSame(
+      secondBefore.annotatedText,
+      secondAfter.annotatedText,
+      "the unchanged second paragraph must be reused after editing the first",
+    )
+  }
+
   companion object {
     private fun sharedChecker(): DocumentChecker =
       DocumentChecker(SettingsManager(Settings(_logLevel = Level.FINEST)), FragmentCache())
