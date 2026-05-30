@@ -225,6 +225,54 @@ class DocumentCheckerCacheTest {
     )
   }
 
+  // LaTeX safety guarantee: identical diagnostics whether checked as one fragment
+  // or block-split, for a full document (\begin{document}...) containing a
+  // verbatim block. The verbatim text (typo + internal blank line) stays ignored
+  // in both modes — proving splitting never cuts the verbatim open and that
+  // splitting inside `document` is sound.
+  @Test
+  fun testLatexBlockSplittingPreservesDiagnostics() {
+    val code =
+      "\\documentclass{article}\n\\begin{document}\n\nThis is an eror in prose.\n\n" +
+        "\\begin{verbatim}\nteh eror lives in code\n\nmore code\n\\end{verbatim}\n\n" +
+        "Another mistteak appears here.\n\n\\end{document}\n"
+
+    val whole: List<Triple<String?, Int, Int>> = matchKeys(check("latex", code, 1_000_000))
+    val split: List<Triple<String?, Int, Int>> = matchKeys(check("latex", code, 1))
+
+    assertEquals(whole, split)
+    assertTrue(whole.isNotEmpty(), "prose typos should be flagged")
+    val verbatimStart: Int = code.indexOf("\\begin{verbatim}")
+    val verbatimEnd: Int = code.indexOf("\\end{verbatim}") + "\\end{verbatim}".length
+    assertTrue(
+      whole.none { it.second in verbatimStart until verbatimEnd },
+      "verbatim text must not be flagged",
+    )
+  }
+
+  @Test
+  fun testLatexBlockIncrementalReuse() {
+    val checker =
+      DocumentChecker(
+        SettingsManager(Settings(_minFragmentSize = 1, _logLevel = Level.FINEST)),
+        FragmentCache(),
+      )
+    val uri = "untitled:doc.tex"
+    val tail = "\n\nSecond paragraph stays the same.\n"
+
+    val before = checker.check(createDocument(uri, "latex", "First paragraph.$tail"))
+    val after =
+      checker.check(createDocument(uri, "latex", "First paragraph, now much longer.$tail"))
+
+    val secondBefore = before.second.first { it.codeFragment.code.contains("Second") }
+    val secondAfter = after.second.first { it.codeFragment.code.contains("Second") }
+    assertSame(
+      secondBefore.annotatedText,
+      secondAfter.annotatedText,
+      "the unchanged second paragraph must be reused after editing the first",
+    )
+  }
+
   companion object {
     private fun sharedChecker(): DocumentChecker =
       DocumentChecker(SettingsManager(Settings(_logLevel = Level.FINEST)), FragmentCache())
