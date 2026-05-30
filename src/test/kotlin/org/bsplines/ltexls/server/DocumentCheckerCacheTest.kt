@@ -153,9 +153,76 @@ class DocumentCheckerCacheTest {
     )
   }
 
+  // Safety guarantee for Markdown block fragmentation: the diagnostics for a
+  // document must be identical whether it is checked as one fragment or split at
+  // block boundaries. The fenced code block (with a typo and an internal blank
+  // line) must stay ignored in both modes — proving block splitting never cuts a
+  // block open.
+  @Test
+  fun testMarkdownBlockSplittingPreservesDiagnostics() {
+    val code =
+      "This is an eror in prose.\n\n```\nthis is also an eror but in code\n```\n\n" +
+        "Another mistteak appears here.\n"
+
+    val whole: List<Triple<String?, Int, Int>> = matchKeys(checkMarkdown(code, 1_000_000))
+    val split: List<Triple<String?, Int, Int>> = matchKeys(checkMarkdown(code, 1))
+
+    assertEquals(whole, split)
+    assertTrue(whole.isNotEmpty(), "prose typos should be flagged")
+    // None of the matches fall inside the fenced code block.
+    val fenceStart: Int = code.indexOf("```")
+    val fenceEnd: Int = code.lastIndexOf("```") + 3
+    assertTrue(
+      whole.none {
+        it.second in fenceStart until fenceEnd
+      },
+      "code-block text must not be flagged",
+    )
+  }
+
+  @Test
+  fun testMarkdownBlockIncrementalReuse() {
+    val checker =
+      DocumentChecker(
+        SettingsManager(Settings(_minFragmentSize = 1, _logLevel = Level.FINEST)),
+        FragmentCache(),
+      )
+    val uri = "untitled:blocks.md"
+    val tail = "\n\nSecond paragraph stays the same.\n"
+
+    val before = checker.check(createDocument(uri, "markdown", "First paragraph.$tail"))
+    val after =
+      checker.check(createDocument(uri, "markdown", "First paragraph, now much longer.$tail"))
+
+    val secondBefore = before.second.first { it.codeFragment.code.contains("Second") }
+    val secondAfter = after.second.first { it.codeFragment.code.contains("Second") }
+    assertSame(
+      secondBefore.annotatedText,
+      secondAfter.annotatedText,
+      "the unchanged second block must be reused after editing the first",
+    )
+  }
+
   companion object {
     private fun sharedChecker(): DocumentChecker =
       DocumentChecker(SettingsManager(Settings(_logLevel = Level.FINEST)), FragmentCache())
+
+    private fun checkMarkdown(
+      code: String,
+      minFragmentSize: Int,
+    ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> {
+      val checker =
+        DocumentChecker(
+          SettingsManager(Settings(_minFragmentSize = minFragmentSize, _logLevel = Level.FINEST)),
+          FragmentCache(),
+        )
+      return checker.check(createDocument("untitled:safety.md", "markdown", code))
+    }
+
+    private fun matchKeys(
+      result: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>>,
+    ): List<Triple<String?, Int, Int>> =
+      result.first.map { Triple(it.ruleId, it.fromPos, it.toPos) }.sortedBy { it.second }
 
     private fun createDocument(
       uri: String,
