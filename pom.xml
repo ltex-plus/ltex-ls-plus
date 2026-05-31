@@ -44,6 +44,15 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.jupiter.version>6.0.3</junit.jupiter.version>
     <languagetool.version>6.8</languagetool.version>
+    <!-- Base version for the stamped Implementation-Version, e.g.
+         ${ltex.release.label}.<commitsSinceLastReleaseTag>+<commitDate>.g<hash>
+         (see git-commit-id-maven-plugin and the maven-jar-plugin manifestEntries below);
+         tagged releases use the clean ${project.version} via the "release" profile.
+         Defaults to ${project.version} so it needs no manual upkeep: dev/release builds
+         pick up the artifact version automatically. The nightly CI job rewrites <version>
+         to the full build string, so it passes -Dltex.release.label=<clean base> to keep
+         this from double-stamping. -->
+    <ltex.release.label>${project.version}</ltex.release.label>
   </properties>
   <dependencies>
     <dependency>
@@ -266,6 +275,41 @@
         </executions>
       </plugin>
       <plugin>
+        <!-- Exposes Git metadata (git.closest.tag.commit.count, git.commit.id.abbrev, ...) as
+             Maven properties so the JAR manifest can self-stamp the version at build time.
+             Anchored to release tags via gitDescribe.match so the moving "nightly" tag is
+             ignored and the count reflects commits since the last X.Y.Z release. -->
+        <groupId>io.github.git-commit-id</groupId>
+        <artifactId>git-commit-id-maven-plugin</artifactId>
+        <version>9.0.1</version>
+        <executions>
+          <execution>
+            <id>get-the-git-infos</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <offline>true</offline>
+          <failOnNoGitDirectory>false</failOnNoGitDirectory>
+          <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
+          <generateGitPropertiesFile>false</generateGitPropertiesFile>
+          <!-- Use the git binary: the bundled JGit backend does not populate
+               git.closest.tag.commit.count when gitDescribe.match is a glob. -->
+          <useNativeGit>true</useNativeGit>
+          <abbrevLength>8</abbrevLength>
+          <!-- git.commit.time as a plain UTC date for the build-metadata field. -->
+          <dateFormat>yyyy-MM-dd</dateFormat>
+          <dateFormatTimeZone>UTC</dateFormatTimeZone>
+          <gitDescribe>
+            <tags>true</tags>
+            <match>[0-9]*.[0-9]*.[0-9]*</match>
+          </gitDescribe>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.5.0</version>
@@ -275,6 +319,16 @@
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
               <mainClass>${main.class}</mainClass>
             </manifest>
+            <manifestEntries>
+              <!-- Self-stamped nightly/dev version, e.g. 18.7.0-alpha.93+2026-05-20.gfcf2fb76:
+                   <label>.<commits since last release tag> is the comparison key, and the
+                   build metadata after '+' (commit date and hash) is provenance ignored in
+                   semver precedence. Overridden to the clean ${project.version} by the
+                   "release" profile. Read at runtime via Package.implementationVersion and
+                   surfaced through the version CLI option and the LSP initialize
+                   serverInfo.version. -->
+              <Implementation-Version>${ltex.release.label}.${git.closest.tag.commit.count}+${git.commit.time}.g${git.commit.id.abbrev}</Implementation-Version>
+            </manifestEntries>
           </archive>
         </configuration>
       </plugin>
@@ -441,4 +495,40 @@ if %ERROR_CODE% EQU 0 set ERROR_CODE=1</replacevalue>
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <!-- Activated for tagged releases and source-tarball builds (CI deploy job, Dockerfile)
+         with `mvn -Prelease ...`. Reports the clean ${project.version} (the release tag)
+         instead of the nightly/dev <label>.<count>+g<hash> string, and needs no Git checkout. -->
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <!-- Release/Docker builds run without a Git checkout (or git binary), so skip the
+                 stamping plugin entirely; the version comes from ${project.version} below. -->
+            <groupId>io.github.git-commit-id</groupId>
+            <artifactId>git-commit-id-maven-plugin</artifactId>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <configuration>
+              <archive>
+                <manifest>
+                  <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                  <mainClass>${main.class}</mainClass>
+                </manifest>
+                <manifestEntries>
+                  <Implementation-Version>${project.version}</Implementation-Version>
+                </manifestEntries>
+              </archive>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

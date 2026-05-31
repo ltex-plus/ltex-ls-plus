@@ -291,6 +291,9 @@ Result: {
                 "changeNotifications": true
             }
         }
+    },
+    "serverInfo": {
+        "name": "ltex-ls-plus"
     }
 }
 

@@ -34,8 +34,8 @@ WORKDIR /ltex-ls-plus-src
 
 # Generate completion lists
 RUN python -u tools/createCompletionLists.py
-# Build
-RUN mvn --quiet --errors package -DskipTests
+# Build (-Prelease: source tarball has no .git, so report the clean ${project.version})
+RUN mvn --quiet --errors -Prelease package -DskipTests
 # Package binary
 RUN tar -xzf target/ltex-ls-plus-${LTEX_VERSION}.tar.gz \
     && mv -v ltex-ls-plus-${LTEX_VERSION} /ltex-ls-plus

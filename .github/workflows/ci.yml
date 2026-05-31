@@ -41,6 +41,9 @@ jobs:
     steps:
       - name: "Checkout Repository"
         uses: "actions/checkout@v6"
+        with:
+          # Full history + tags so git-commit-id can stamp the version during the build.
+          fetch-depth: 0
 
       - name: "Set up Java"
         uses: "actions/setup-java@v5"
@@ -161,7 +164,8 @@ jobs:
           fi
 
       - name: "Build LTeX+ LS"
-        run: "mvn -B -e package"
+        # -Prelease stamps the clean ${project.version} (the release tag) into the manifest.
+        run: "mvn -B -e -Prelease package"
         env:
           LANGUAGETOOL_USERNAME: ${{ secrets.LANGUAGETOOL_USERNAME }}
           LANGUAGETOOL_API_KEY: ${{ secrets.LANGUAGETOOL_API_KEY }}

@@ -22,6 +22,7 @@ import org.eclipse.lsp4j.ExecuteCommandOptions
 import org.eclipse.lsp4j.InitializeParams
 import org.eclipse.lsp4j.InitializeResult
 import org.eclipse.lsp4j.ServerCapabilities
+import org.eclipse.lsp4j.ServerInfo
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import org.eclipse.lsp4j.WindowClientCapabilities
 import org.eclipse.lsp4j.WorkspaceFoldersOptions
@@ -149,7 +150,12 @@ class LtexLanguageServer :
     workspaceFoldersOptions.setChangeNotifications(Either.forRight(true))
     serverCapabilities.workspace = WorkspaceServerCapabilities(workspaceFoldersOptions)
 
-    return CompletableFuture.completedFuture(InitializeResult(serverCapabilities))
+    // Advertise the server's identity and version to the client via serverInfo so it can,
+    // e.g., gate features on a minimum version. The version is the JAR manifest's
+    // Implementation-Version, stamped at build time as <label>.<commitsSinceReleaseTag>+g<hash>
+    // for nightlies (see pom.xml / git-commit-id-maven-plugin) and the plain release for releases.
+    val serverInfo = ServerInfo("ltex-ls-plus", ltexLsPackage?.implementationVersion)
+    return CompletableFuture.completedFuture(InitializeResult(serverCapabilities, serverInfo))
   }
 
   override fun shutdown(): CompletableFuture<Any> {
