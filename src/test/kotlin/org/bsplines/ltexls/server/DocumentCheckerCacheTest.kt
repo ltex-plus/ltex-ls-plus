@@ -46,6 +46,63 @@ class DocumentCheckerCacheTest {
     assertEquals(first.first.size, second.first.size)
   }
 
+  // paragraphCacheEnabled = false disables only result reuse: nothing is stored
+  // (cache stays empty) and a re-check rebuilds every fragment from scratch (no
+  // === reuse). Slicing and maxRequestSize batching still run. A multi-paragraph
+  // document with a small maxRequestSize forces the disabled path through the same
+  // slice -> batch -> check machinery the cache uses.
+  //
+  // Spelling and grammar are batch-neutral and must be identical regardless of
+  // caching. A few stylistic rules that span a sequence of sentences (e.g.
+  // ENGLISH_WORD_REPEAT_BEGINNING_RULE) see neighbours only within one request, so
+  // they can fire differently depending on batching boundaries. This is accepted
+  // (see PR.md "Is it safe?"): batching is mandatory anyway — an oversized single
+  // request is rejected by the HTTP backend — and the drift is limited to
+  // non-spelling/non-grammar stylistic matches, mostly on a document's first scan.
+  @Test
+  fun testParagraphCacheDisabledStillSlicesBatchesAndChecks() {
+    val code =
+      "This is qwertyunknownone.\n\nThis is qwertyunknowntwo.\n\nThis is qwertyunknownthree.\n"
+
+    val cache = FragmentCache()
+    val checker =
+      DocumentChecker(
+        SettingsManager(
+          Settings(
+            _paragraphCacheEnabled = false,
+            _maxRequestSize = 30,
+            _logLevel = Level.FINEST,
+          ),
+        ),
+        cache,
+      )
+    val document = createDocument("untitled:nocache.md", "markdown", code)
+
+    val first = checker.check(document)
+    val second = checker.check(document)
+
+    assertEquals(0, cache.size, "cache must stay empty when disabled")
+    assertEquals(3, first.second.size, "the region must still slice into 3 paragraphs")
+    assertTrue(
+      first.first.size >= 3,
+      "every paragraph's typo must be flagged (slicing + batching still ran)",
+    )
+    // Spelling/grammar diagnostics are batch-neutral, so they must match the
+    // cache-enabled path regardless of how paragraphs are batched into requests.
+    // (Cross-paragraph stylistic rules are deliberately NOT compared — see above.)
+    assertEquals(
+      spellingKeys(checkEnabled(code)),
+      spellingKeys(first),
+      "spelling diagnostics must be identical regardless of caching or batching",
+    )
+    // Each check rebuilds every fragment (no reuse), and re-checking is stable.
+    assertEquals(first.first.size, second.first.size)
+    assertTrue(
+      first.second[0].annotatedText !== second.second[0].annotatedText,
+      "without the cache, each check must rebuild the fragment",
+    )
+  }
+
   // Inserting text above an unchanged fragment keeps that fragment a cache hit
   // (same AnnotatedText instance) while its match offsets are reprojected to the
   // new absolute position.
@@ -278,7 +335,7 @@ class DocumentCheckerCacheTest {
   // language). A `% ltex: language=de-DE` command splits the document into two
   // CodeFragments; because the merge loop runs per CodeFragment, an English and a
   // German paragraph can never land in one request — the language boundary is the
-  // merge boundary. Each region here has two paragraphs and maxFragmentSize is
+  // merge boundary. Each region here has two paragraphs and maxRequestSize is
   // huge, so each region becomes one merged multi-paragraph request. The German
   // speller rule firing on the German word proves the German region was checked as
   // German (the English checker has no such rule), and every fragment carries its
@@ -311,7 +368,7 @@ class DocumentCheckerCacheTest {
   // With ltex.language="auto" on the Java backend, language is detected once on the
   // merged text of a multi-paragraph miss-run and that one concrete variant is
   // stamped on every paragraph in the run (SimpleLanguageIdentifier returns bare
-  // codes, promoted to the preferredVariants default en-US). maxFragmentSize is huge
+  // codes, promoted to the preferredVariants default en-US). maxRequestSize is huge
   // so the whole English region is one merged request. All resulting fragments must
   // carry en-US (not the literal "auto"), proving the detected language propagated to
   // each paragraph, and the spell error must still be found.
@@ -382,21 +439,21 @@ class DocumentCheckerCacheTest {
 
     private fun checkMarkdown(
       code: String,
-      maxFragmentSize: Int,
+      maxRequestSize: Int,
     ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
-      check("markdown", code, maxFragmentSize)
+      check("markdown", code, maxRequestSize)
 
-    // maxFragmentSize = 1 forces one request per paragraph (split); a huge value
+    // maxRequestSize = 1 forces one request per paragraph (split); a huge value
     // batches the whole document into one merged request (whole). The two must
     // give identical diagnostics, exercising the merged-match decomposition.
     private fun check(
       codeLanguageId: String,
       code: String,
-      maxFragmentSize: Int,
+      maxRequestSize: Int,
     ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> {
       val checker =
         DocumentChecker(
-          SettingsManager(Settings(_maxFragmentSize = maxFragmentSize, _logLevel = Level.FINEST)),
+          SettingsManager(Settings(_maxRequestSize = maxRequestSize, _logLevel = Level.FINEST)),
           FragmentCache(),
         )
       return checker.check(createDocument("untitled:safety.$codeLanguageId", codeLanguageId, code))
@@ -407,12 +464,31 @@ class DocumentCheckerCacheTest {
     ): List<Triple<String?, Int, Int>> =
       result.first.map { Triple(it.ruleId, it.fromPos, it.toPos) }.sortedBy { it.second }
 
+    // Like matchKeys but only unknown-word (spelling) matches, which are
+    // batch-neutral — unaffected by how paragraphs are grouped into requests.
+    private fun spellingKeys(
+      result: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>>,
+    ): List<Triple<String?, Int, Int>> =
+      result.first
+        .filter { it.isUnknownWordRule() }
+        .map { Triple(it.ruleId, it.fromPos, it.toPos) }
+        .sortedBy { it.second }
+
     private fun createDocument(
       uri: String,
       codeLanguageId: String,
       code: String,
     ): LtexTextDocumentItem =
       LtexTextDocumentItem(LtexLanguageServer(), uri, codeLanguageId, 1, code)
+
+    // Checks a markdown document with the cache enabled (default settings), for
+    // comparing diagnostics against a cache-disabled run.
+    private fun checkEnabled(
+      code: String,
+    ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> {
+      val checker = DocumentChecker(SettingsManager(Settings()), FragmentCache())
+      return checker.check(createDocument("untitled:enabled.md", "markdown", code))
+    }
 
     private fun germanFragment(fragments: List<AnnotatedTextFragment>): AnnotatedTextFragment =
       fragments.first { it.codeFragment.code.contains("Qwertyzuiopc") }

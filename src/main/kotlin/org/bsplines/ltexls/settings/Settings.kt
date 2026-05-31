@@ -43,8 +43,9 @@ data class Settings(
   private val _diagnosticSeverity: Map<String, DiagnosticSeverity>? = null,
   private val _checkFrequency: CheckFrequency? = null,
   private val _clearDiagnosticsWhenClosingFile: Boolean? = null,
-  private val _fragmentCacheTtlMinutes: Long? = null,
-  private val _maxFragmentSize: Int? = null,
+  private val _paragraphCacheEnabled: Boolean? = null,
+  private val _paragraphCacheTtlMinutes: Long? = null,
+  private val _maxRequestSize: Int? = null,
 ) {
   val enabled: Set<String>
     get() = (this._enabled ?: DEFAULT_ENABLED)
@@ -98,10 +99,12 @@ data class Settings(
     get() = (this._checkFrequency ?: CheckFrequency.Edit)
   val clearDiagnosticsWhenClosingFile: Boolean
     get() = (this._clearDiagnosticsWhenClosingFile ?: true)
-  val fragmentCacheTtlMinutes: Long
-    get() = (this._fragmentCacheTtlMinutes ?: DEFAULT_FRAGMENT_CACHE_TTL_MINUTES)
-  val maxFragmentSize: Int
-    get() = (this._maxFragmentSize ?: DEFAULT_MAX_FRAGMENT_SIZE)
+  val paragraphCacheEnabled: Boolean
+    get() = (this._paragraphCacheEnabled ?: true)
+  val paragraphCacheTtlMinutes: Long
+    get() = (this._paragraphCacheTtlMinutes ?: DEFAULT_PARAGRAPH_CACHE_TTL_MINUTES)
+  val maxRequestSize: Int
+    get() = (this._maxRequestSize ?: DEFAULT_MAX_REQUEST_SIZE)
 
   /**
    * Returns differences between `this` and `other` that call for
@@ -226,7 +229,7 @@ data class Settings(
     // 0 disables LanguageTool's internal per-sentence cache; superseded by the
     // per-paragraph FragmentCache (see LanguageToolJavaInterface.resultCache).
     private const val DEFAULT_SENTENCE_CACHE_SIZE = 0L
-    private const val DEFAULT_FRAGMENT_CACHE_TTL_MINUTES = 30L
+    private const val DEFAULT_PARAGRAPH_CACHE_TTL_MINUTES = 30L
 
     // Caps the plain-text characters sent to LanguageTool per request (a run of
     // contiguous changed paragraphs is split across requests if it exceeds this;
@@ -235,7 +238,7 @@ data class Settings(
     // free HTTP (at the limit), Premium HTTP (limit is 60000), and the local
     // Java backend (no limit). Future: detect Premium (api.languagetoolplus.com
     // + credentials) and raise the effective cap to 60000.
-    private const val DEFAULT_MAX_FRAGMENT_SIZE = 20000
+    private const val DEFAULT_MAX_REQUEST_SIZE = 20000
     private val DEFAULT_DIAGNOSTIC_SEVERITY: Map<String, DiagnosticSeverity> =
       mapOf(Pair("default", DiagnosticSeverity.Information))
     val DEFAULT_PREFERRED_VARIANTS: List<String> = listOf("en-US", "de-DE", "pt-BR")
@@ -365,10 +368,12 @@ data class Settings(
         )
       val clearDiagnosticsWhenClosingFile: Boolean? =
         getSettingFromJsonAsBoolean(jsonSettings, "clearDiagnosticsWhenClosingFile")
-      val fragmentCacheTtlMinutes: Long? =
-        getSettingFromJsonAsLong(jsonSettings, "fragmentCacheTtlMinutes")
-      val maxFragmentSize: Int? =
-        getSettingFromJsonAsLong(jsonSettings, "maxFragmentSize")?.toInt()
+      val paragraphCacheEnabled: Boolean? =
+        getSettingFromJsonAsBoolean(jsonSettings, "paragraphCacheEnabled")
+      val paragraphCacheTtlMinutes: Long? =
+        getSettingFromJsonAsLong(jsonSettings, "paragraphCacheTtlMinutes")
+      val maxRequestSize: Int? =
+        getSettingFromJsonAsLong(jsonSettings, "maxRequestSize")?.toInt()
 
       return Settings(
         enabled,
@@ -394,8 +399,9 @@ data class Settings(
         diagnosticSeverity,
         checkFrequency,
         clearDiagnosticsWhenClosingFile,
-        fragmentCacheTtlMinutes,
-        maxFragmentSize,
+        paragraphCacheEnabled,
+        paragraphCacheTtlMinutes,
+        maxRequestSize,
       )
     }
 

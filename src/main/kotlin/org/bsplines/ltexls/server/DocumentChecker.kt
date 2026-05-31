@@ -351,9 +351,11 @@ class DocumentChecker(
     try {
       val codeFragments: List<CodeFragment> = fragmentizeDocument(document, range)
 
-      // Only the full-document path (no range) uses the fragment cache. The
-      // range path (code-action partial checks) is already small and stays on
-      // the simple non-cached path.
+      // Only the full-document path (no range) uses the paragraph machinery
+      // (slicing + per-request batching, and the result cache on top). The range
+      // path (code-action partial checks) is already small and stays simple.
+      // paragraphCacheEnabled gates only the cache get/put, not the slicing or
+      // maxRequestSize batching, which always apply on this path.
       if (rangeStartPos == null) return checkCodeFragmentsWithCache(codeFragments, document)
 
       val annotatedTextFragments: List<AnnotatedTextFragment> =
@@ -373,7 +375,7 @@ class DocumentChecker(
   // hit and skips the LanguageTool call.
   //
   // The cache UNIT (paragraph) is decoupled from the request UNIT: contiguous
-  // cache misses are batched into one LanguageTool request (up to maxFragmentSize
+  // cache misses are batched into one LanguageTool request (up to maxRequestSize
   // plain-text chars), and the returned matches are split back per paragraph. So
   // a fresh open sends a single request (every paragraph misses → one run) while
   // an edit re-checks just the changed paragraph — never a flood of tiny requests.
@@ -388,9 +390,17 @@ class DocumentChecker(
     for (codeFragment: CodeFragment in codeFragments) {
       val paragraphs: List<AnnotatedTextFragment> =
         sliceRegionIntoParagraphs(codeFragment, document)
+      // Gate only the lookup on paragraphCacheEnabled: when off, every paragraph
+      // is treated as a miss (re-checked), but slicing and maxRequestSize batching
+      // below still apply. cacheParagraph() likewise skips the store when off.
+      val cacheEnabled: Boolean = codeFragment.settings.paragraphCacheEnabled
       val cached: List<CachedFragment?> =
         paragraphs.map {
-          this.fragmentCache.get(FragmentCache.makeKey(document.uri, it.codeFragment))
+          if (cacheEnabled) {
+            this.fragmentCache.get(FragmentCache.makeKey(document.uri, it.codeFragment))
+          } else {
+            null
+          }
         }
 
       var i = 0
@@ -408,7 +418,7 @@ class DocumentChecker(
           i++
         } else {
           val runEnd: Int =
-            extentOfMissRun(paragraphs, cached, i, codeFragment.settings.maxFragmentSize)
+            extentOfMissRun(paragraphs, cached, i, codeFragment.settings.maxRequestSize)
           checkAndEmitMissRun(
             paragraphs.subList(i, runEnd),
             document,
@@ -444,7 +454,7 @@ class DocumentChecker(
 
   // Exclusive end index of the maximal run of contiguous cache misses starting at
   // `start`, bounded so the run's total plain-text length stays within
-  // maxFragmentSize. The first paragraph always joins even if it alone exceeds the
+  // maxRequestSize. The first paragraph always joins even if it alone exceeds the
   // cap (a paragraph is never split across requests): it is sent as-is. The local
   // Java backend has no size limit; an HTTP backend may then reject that one
   // oversized request (logged, no diagnostics for that paragraph this check),
@@ -456,13 +466,13 @@ class DocumentChecker(
     paragraphs: List<AnnotatedTextFragment>,
     cached: List<CachedFragment?>,
     start: Int,
-    maxFragmentSize: Int,
+    maxRequestSize: Int,
   ): Int {
     var runLength: Int = paragraphs[start].annotatedText.plainText.length
     var end: Int = start + 1
     while ((end < paragraphs.size) && (cached[end] == null)) {
       val nextLength: Int = paragraphs[end].annotatedText.plainText.length
-      if ((runLength + nextLength) > maxFragmentSize) break
+      if ((runLength + nextLength) > maxRequestSize) break
       runLength += nextLength
       end++
     }
@@ -547,6 +557,7 @@ class DocumentChecker(
     paragraph: AnnotatedTextFragment,
     relativeMatches: List<LanguageToolRuleMatch>,
   ) {
+    if (!paragraph.codeFragment.settings.paragraphCacheEnabled) return
     this.fragmentCache.put(
       FragmentCache.makeKey(uri, paragraph.codeFragment),
       CachedFragment(

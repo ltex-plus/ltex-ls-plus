@@ -70,7 +70,7 @@ class LtexLanguageServer :
 
   init {
     // Sweep idle fragment-cache entries on a fixed 60 s cadence. Entries idle
-    // longer than ltex.fragmentCacheTtlMinutes are dropped; every cache hit
+    // longer than ltex.paragraphCacheTtlMinutes are dropped; every cache hit
     // refreshes an entry, so actively edited documents stay warm.
     this.fragmentCacheSweeper.scheduleAtFixedRate(
       { sweepFragmentCache() },
@@ -87,7 +87,7 @@ class LtexLanguageServer :
   internal fun sweepFragmentCache() {
     try {
       val ttlMillis: Long =
-        this.settingsManager.settings.fragmentCacheTtlMinutes * MILLIS_PER_MINUTE
+        this.settingsManager.settings.paragraphCacheTtlMinutes * MILLIS_PER_MINUTE
       this.fragmentCache.evictIdleOlderThan(ttlMillis)
     } catch (e: RuntimeException) {
       Logging.LOGGER.warning("Fragment cache sweep failed: $e")

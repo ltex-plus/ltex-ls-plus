@@ -137,7 +137,7 @@ class FragmentCacheTest {
     val k2 =
       FragmentCache.makeKey(
         "uri",
-        CodeFragment("plaintext", "x", 0, Settings(_fragmentCacheTtlMinutes = 999L)),
+        CodeFragment("plaintext", "x", 0, Settings(_paragraphCacheTtlMinutes = 999L)),
       )
     assertEquals(k1, k2)
   }
