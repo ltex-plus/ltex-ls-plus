@@ -37,6 +37,9 @@ jobs:
     steps:
       - name: "Checkout Repository"
         uses: "actions/checkout@v6"
+        with:
+          # Full history + tags so git-commit-id can count commits since the last release tag.
+          fetch-depth: 0
 
       - name: "Set up Java"
         uses: "actions/setup-java@v5"
@@ -52,8 +55,21 @@ jobs:
       - name: "Install Python Dependencies"
         run: "python -u -m pip install --upgrade pip && pip install semver"
 
+      # Semver nightly version, identical to the JAR's stamped serverInfo.version:
+      #   <release-label>.<commits since last X.Y.Z release tag>+<commit date>.g<hash>
+      #   e.g. 18.7.0-alpha.93+2026-05-20.gfcf2fb76
+      # The commit count (prerelease) is the comparison key; everything after '+' is build
+      # metadata (commit date + hash), ignored in semver precedence. Must match the
+      # git-commit-id-maven-plugin stamp in pom.xml (same count, UTC commit date, 8-char hash).
       - name: "Set LTEX_LS_VERSION"
-        run: "echo \"LTEX_LS_VERSION=$(python -u -c \"import datetime; import re; print('{}.nightly.{}'.format(re.search(r'<version>(.*?)(?:\\\\.develop)?</version>', open('pom.xml', 'r').read()).group(1), datetime.datetime.today().strftime('%Y-%m-%d')), end='')\")\" >> $GITHUB_ENV"
+        run: |
+          LABEL="$(python -u -c "import re; print(re.search(r'<version>(.*?)(?:\.develop)?</version>', open('pom.xml').read()).group(1), end='')")"
+          COUNT="$(git describe --tags --long --match '[0-9]*.[0-9]*.[0-9]*' | sed -E 's/.*-([0-9]+)-g[0-9a-f]+$/\1/')"
+          DATE="$(TZ=UTC0 git log -1 --date=format-local:'%Y-%m-%d' --format='%cd')"
+          HASH="$(git rev-parse --short=8 HEAD)"
+          echo "LTEX_LS_VERSION=${LABEL}.${COUNT}+${DATE}.g${HASH}" >> "$GITHUB_ENV"
+          # Clean base for the manifest stamp, since "Bump Version" rewrites <version> below.
+          echo "LTEX_RELEASE_LABEL=${LABEL}" >> "$GITHUB_ENV"
 
       - name: "Check LTEX_LS_VERSION"
         run: "if [[ -z \"$LTEX_LS_VERSION\" ]]; then echo 'Error: LTEX_LS_VERSION not set!'; (exit 1); fi; echo \"LTEX_LS_VERSION set to '$LTEX_LS_VERSION'\""
@@ -62,7 +78,9 @@ jobs:
         run: "python -u -c \"import re\nfile = open('pom.xml', 'r+'); pom = file.read(); file.seek(0); file.truncate(); file.write(re.sub(r'<version>(.*?)</version>', '<version>${{ env.LTEX_LS_VERSION }}</version>', pom, 1))\""
 
       - name: "Build LTeX+ LS"
-        run: "mvn -B -e package"
+        # <version> was rewritten to the full build string above, so pass the clean base
+        # explicitly; otherwise the stamp would double-append the count/date/hash.
+        run: "mvn -B -e -Dltex.release.label=\"$LTEX_RELEASE_LABEL\" package"
         env:
           LANGUAGETOOL_USERNAME: ${{ secrets.LANGUAGETOOL_USERNAME }}
           LANGUAGETOOL_API_KEY: ${{ secrets.LANGUAGETOOL_API_KEY }}
