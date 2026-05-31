@@ -460,10 +460,11 @@ class DocumentChecker(
   }
 
   // Builds a region's AnnotatedText once, then slices it into one
-  // AnnotatedTextFragment per prose paragraph (see AnnotatedTextSlicer). Each
-  // paragraph gets a synthetic CodeFragment whose code is its source substring
-  // and whose fromPos is the region's fromPos plus the paragraph's source offset,
-  // so cache keys are position-independent and matches reproject correctly.
+  // AnnotatedTextFragment per prose fragment (see AnnotatedTextSlicer; adjacent
+  // paragraphs are glued until minFragmentSize plain-text chars accumulate). Each
+  // fragment gets a synthetic CodeFragment whose code is its source substring and
+  // whose fromPos is the region's fromPos plus the fragment's source offset, so
+  // cache keys are position-independent and matches reproject correctly.
   // A skipped region (e.g. after "ltex: enabled=false") is not sliced: its build
   // is empty by design, so it passes through as a single fragment.
   private fun sliceRegionIntoParagraphs(
@@ -475,24 +476,26 @@ class DocumentChecker(
       return listOf(regionFragment)
     }
 
-    return AnnotatedTextSlicer.slice(regionFragment.annotatedText).map { slice ->
-      // Source length of the slice = sum of TEXT and MARKUP part lengths;
-      // FAKE_CONTENT exists only in the plain text and contributes zero source
-      // characters. Recovers the paragraph's source substring from its region.
-      val sourceLength: Int =
-        slice.annotatedText.parts.sumOf {
-          if (it.type == TextPart.Type.FAKE_CONTENT) 0 else it.part.length
-        }
-      val paragraphCodeFragment =
-        CodeFragment(
-          region.codeLanguageId,
-          region.code.substring(slice.sourceFromPos, slice.sourceFromPos + sourceLength),
-          region.fromPos + slice.sourceFromPos,
-          region.settings,
-          region.languageShortCode,
-        )
-      AnnotatedTextFragment(slice.annotatedText, paragraphCodeFragment, document)
-    }
+    return AnnotatedTextSlicer
+      .slice(regionFragment.annotatedText, region.settings.minFragmentSize)
+      .map { slice ->
+        // Source length of the slice = sum of TEXT and MARKUP part lengths;
+        // FAKE_CONTENT exists only in the plain text and contributes zero source
+        // characters. Recovers the paragraph's source substring from its region.
+        val sourceLength: Int =
+          slice.annotatedText.parts.sumOf {
+            if (it.type == TextPart.Type.FAKE_CONTENT) 0 else it.part.length
+          }
+        val paragraphCodeFragment =
+          CodeFragment(
+            region.codeLanguageId,
+            region.code.substring(slice.sourceFromPos, slice.sourceFromPos + sourceLength),
+            region.fromPos + slice.sourceFromPos,
+            region.settings,
+            region.languageShortCode,
+          )
+        AnnotatedTextFragment(slice.annotatedText, paragraphCodeFragment, document)
+      }
   }
 
   companion object {

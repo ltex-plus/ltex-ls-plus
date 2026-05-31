@@ -12,14 +12,22 @@ import org.languagetool.markup.AnnotatedText
 import org.languagetool.markup.AnnotatedTextBuilder
 import org.languagetool.markup.TextPart
 
-// Splits an already-built AnnotatedText into one piece per prose paragraph, for
-// incremental checking. Markup understanding is NOT re-implemented here: the
-// builder already stripped it, so a paragraph break is simply a blank line
-// ("\n\n") in the plain text. A break can only occur in genuine prose — markup,
-// verbatim, math, and ignored environments never reach the plain text — so this
-// is correctness-neutral: the slices concatenate back to the original, and each
-// is checked exactly as the whole would have been (minus cross-paragraph rules,
+// Splits an already-built AnnotatedText into prose fragments for incremental
+// checking. Markup understanding is NOT re-implemented here: the builder already
+// stripped it, so a paragraph break is simply a blank line ("\n\n") in the plain
+// text. A break can only occur in genuine prose — markup, verbatim, math, and
+// ignored environments never reach the plain text — so this is
+// correctness-neutral: the slices concatenate back to the original, and each is
+// checked exactly as the whole would have been (minus cross-paragraph rules,
 // which LanguageTool does not have).
+//
+// minFragmentSize coalesces tiny paragraphs: a paragraph break is only used as a
+// cut once at least minFragmentSize plain-text characters have accumulated since
+// the previous cut, so consecutive short paragraphs are glued into one fragment
+// instead of becoming a flood of tiny LanguageTool requests. The default of 0
+// cuts at every paragraph. Coalescing only ever merges adjacent paragraphs, so
+// source offsets stay contiguous and each fragment is still a verbatim slice of
+// the original.
 //
 // Source offsets are preserved so matches reproject correctly: TEXT and MARKUP
 // parts each contribute their length to the source position; FAKE_CONTENT (a
@@ -30,8 +38,11 @@ object AnnotatedTextSlicer {
     val sourceFromPos: Int,
   )
 
-  fun slice(annotatedText: AnnotatedText): List<Slice> {
-    val cutPoints: List<Int> = findCutPoints(annotatedText.plainText)
+  fun slice(
+    annotatedText: AnnotatedText,
+    minFragmentSize: Int = 0,
+  ): List<Slice> {
+    val cutPoints: List<Int> = findCutPoints(annotatedText.plainText, minFragmentSize)
     if (cutPoints.isEmpty()) return listOf(Slice(annotatedText, 0))
 
     val state = SliceState()
@@ -57,7 +68,15 @@ object AnnotatedTextSlicer {
   // leading/standalone blank runs fold into the following slice) and never at
   // end-of-text (so a trailing blank run stays with the final paragraph).
   // Paragraph breaks reach the plain text normalized to runs of '\n'.
-  private fun findCutPoints(plainText: String): List<Int> {
+  //
+  // A boundary is also skipped while fewer than minFragmentSize plain-text
+  // characters have accumulated since the previous cut (runEnd - lastCut): this
+  // glues consecutive short paragraphs into one fragment. lastCut only advances
+  // when a cut is actually taken, so skipped paragraphs keep accumulating.
+  private fun findCutPoints(
+    plainText: String,
+    minFragmentSize: Int,
+  ): List<Int> {
     val cutPoints = ArrayList<Int>()
     val length: Int = plainText.length
     var lastCut = 0
@@ -75,6 +94,7 @@ object AnnotatedTextSlicer {
       if (
         ((runEnd - i) >= 2) &&
         (runEnd < length) &&
+        ((runEnd - lastCut) >= minFragmentSize) &&
         hasNonWhitespace(plainText, lastCut, i)
       ) {
         cutPoints.add(runEnd)
