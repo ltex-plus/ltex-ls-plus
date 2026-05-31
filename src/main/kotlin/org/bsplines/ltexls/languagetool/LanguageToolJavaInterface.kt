@@ -39,8 +39,17 @@ class LanguageToolJavaInterface(
   sentenceCacheSize: Long,
   dictionary: Set<String>,
 ) : LanguageToolInterface() {
-  private val resultCache =
-    ResultCache(sentenceCacheSize, RESULT_CACHE_EXPIRE_AFTER_MINUTES, TimeUnit.MINUTES)
+  // null when sentenceCacheSize <= 0, which disables LanguageTool's internal
+  // per-sentence ResultCache. LTeX's own per-paragraph FragmentCache supersedes
+  // it for the edit loop (and also covers the remote backend), so by default the
+  // in-process cache only adds CPU/memory overhead. JLanguageTool accepts a null
+  // cache (it then checks without one).
+  private val resultCache: ResultCache? =
+    if (sentenceCacheSize > 0) {
+      ResultCache(sentenceCacheSize, RESULT_CACHE_EXPIRE_AFTER_MINUTES, TimeUnit.MINUTES)
+    } else {
+      null
+    }
   private val languageTool: JLanguageTool?
 
   init {
@@ -139,22 +148,23 @@ class LanguageToolJavaInterface(
 
   @Suppress("INACCESSIBLE_TYPE")
   private fun logResultCache() {
+    val resultCache: ResultCache = this.resultCache ?: return
     if (Logging.LOGGER.isLoggable(Level.FINER)) {
-      Logging.LOGGER.finer("matchesCache.size() = " + this.resultCache.matchesCache.size())
+      Logging.LOGGER.finer("matchesCache.size() = " + resultCache.matchesCache.size())
       Logging.LOGGER.finer(
-        "remoteMatchesCache.size() = " + this.resultCache.remoteMatchesCache.size(),
+        "remoteMatchesCache.size() = " + resultCache.remoteMatchesCache.size(),
       )
-      Logging.LOGGER.finer("sentenceCache.size() = " + this.resultCache.sentenceCache.size())
+      Logging.LOGGER.finer("sentenceCache.size() = " + resultCache.sentenceCache.size())
 
       if (Logging.LOGGER.isLoggable(Level.FINEST)) {
         Logging.LOGGER.finest(
-          "matchesCache = " + mapToString(this.resultCache.matchesCache.asMap()),
+          "matchesCache = " + mapToString(resultCache.matchesCache.asMap()),
         )
         Logging.LOGGER.finest(
-          "remoteMatchesCache = " + mapToString(this.resultCache.remoteMatchesCache.asMap()),
+          "remoteMatchesCache = " + mapToString(resultCache.remoteMatchesCache.asMap()),
         )
         Logging.LOGGER.finest(
-          "sentenceCache = " + mapToString(this.resultCache.sentenceCache.asMap()),
+          "sentenceCache = " + mapToString(resultCache.sentenceCache.asMap()),
         )
       }
     }
