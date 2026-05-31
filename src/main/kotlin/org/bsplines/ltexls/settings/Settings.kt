@@ -222,7 +222,10 @@ data class Settings(
         "typst",
         "asciidoc",
       )
-    private const val DEFAULT_SENTENCE_CACHE_SIZE = 2000L
+
+    // 0 disables LanguageTool's internal per-sentence cache; superseded by the
+    // per-paragraph FragmentCache (see LanguageToolJavaInterface.resultCache).
+    private const val DEFAULT_SENTENCE_CACHE_SIZE = 0L
     private const val DEFAULT_FRAGMENT_CACHE_TTL_MINUTES = 30L
 
     // Caps the plain-text characters sent to LanguageTool per request (a run of
