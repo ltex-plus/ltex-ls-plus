@@ -135,14 +135,15 @@ class FragmentCache(
     //
     // The fingerprint deliberately errs toward over-inclusion: result-irrelevant
     // settings (logLevel, completionEnabled, diagnosticSeverity, checkFrequency,
-    // clearDiagnosticsWhenClosingFile) and the retention-only
-    // fragmentCacheTtlMinutes are excluded; everything else that plausibly
-    // changes matches or text extraction is included. Over-inclusion only costs
-    // an occasional extra recheck, never a stale result. Narrowing is a future
-    // optimization; any narrowing MUST keep everything a magic
-    // command can override so inline ltex: settings still invalidate correctly.
+    // clearDiagnosticsWhenClosingFile), the retention-only
+    // paragraphCacheTtlMinutes, and the cache-control paragraphCacheEnabled are
+    // excluded; everything else that plausibly changes matches or text extraction
+    // is included. Over-inclusion only costs an occasional extra recheck, never a
+    // stale result. Narrowing is a future optimization; any narrowing MUST keep
+    // everything a magic command can override so inline ltex: settings still
+    // invalidate correctly.
     //
-    // maxFragmentSize is also excluded: it only changes how contiguous cache
+    // maxRequestSize is also excluded: it only changes how contiguous cache
     // misses are batched into LanguageTool requests, never the per-paragraph
     // cache unit or its result. Checking a paragraph alone vs inside a batch
     // yields identical matches (LanguageTool has no cross-paragraph rules), so a
