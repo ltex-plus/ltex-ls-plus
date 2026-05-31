@@ -19,7 +19,6 @@ import org.bsplines.ltexls.parsing.CodeAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.CodeFragment
 import org.bsplines.ltexls.parsing.CodeFragmentizer
 import org.bsplines.ltexls.parsing.FragmentCache
-import org.bsplines.ltexls.parsing.FragmentCacheKey
 import org.bsplines.ltexls.parsing.plaintext.PlaintextAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.program.ProgramCommentRegexs
 import org.bsplines.ltexls.settings.HiddenFalsePositive
@@ -371,74 +370,204 @@ class DocumentChecker(
   // built once (the build understands the markup), then sliced into paragraphs by
   // AnnotatedTextSlicer. The cache is keyed per paragraph on its source substring
   // + settings (not its position), so a paragraph that merely shifted is still a
-  // hit. A hit returns the cached AnnotatedText and matches, skipping the
-  // LanguageTool call; a miss checks and stores. Offsets are projected to absolute
-  // positions on every iteration (hit or miss).
+  // hit and skips the LanguageTool call.
+  //
+  // The cache UNIT (paragraph) is decoupled from the request UNIT: contiguous
+  // cache misses are batched into one LanguageTool request (up to maxFragmentSize
+  // plain-text chars), and the returned matches are split back per paragraph. So
+  // a fresh open sends a single request (every paragraph misses → one run) while
+  // an edit re-checks just the changed paragraph — never a flood of tiny requests.
   private fun checkCodeFragmentsWithCache(
     codeFragments: List<CodeFragment>,
     document: LtexTextDocumentItem,
   ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> {
     val annotatedTextFragments = ArrayList<AnnotatedTextFragment>()
     val matches = ArrayList<LanguageToolRuleMatch>()
-
-    var sliceCount = 0
-    var newSliceCount = 0
-    var sentChars = 0L
+    val stats = CacheRunStats()
 
     for (codeFragment: CodeFragment in codeFragments) {
-      for (paragraph: AnnotatedTextFragment in sliceRegionIntoParagraphs(codeFragment, document)) {
-        val paragraphCodeFragment: CodeFragment = paragraph.codeFragment
-        val key: FragmentCacheKey = FragmentCache.makeKey(document.uri, paragraphCodeFragment)
-        val cached: CachedFragment? = this.fragmentCache.get(key)
-        val annotatedTextFragment: AnnotatedTextFragment
-        val relativeMatches: List<LanguageToolRuleMatch>
-
-        sliceCount++
-
-        if (cached != null) {
-          // Restore the language the paragraph was checked under (matters for
-          // "auto"); the cached matches already carry the correct per-match
-          // languageShortCode.
-          paragraphCodeFragment.languageShortCode = cached.detectedLanguageShortCode
-          annotatedTextFragment =
-            AnnotatedTextFragment(cached.annotatedText, paragraphCodeFragment, document)
-          relativeMatches = cached.relativeMatches
-        } else {
-          annotatedTextFragment = paragraph
-          relativeMatches = checkAnnotatedTextFragmentRelative(annotatedTextFragment, null)
-          this.fragmentCache.put(
-            key,
-            CachedFragment(
-              annotatedTextFragment.annotatedText,
-              relativeMatches,
-              paragraphCodeFragment.languageShortCode,
-            ),
-          )
-          newSliceCount++
-          sentChars += annotatedTextFragment.annotatedText.plainText.length
+      val paragraphs: List<AnnotatedTextFragment> =
+        sliceRegionIntoParagraphs(codeFragment, document)
+      val cached: List<CachedFragment?> =
+        paragraphs.map {
+          this.fragmentCache.get(FragmentCache.makeKey(document.uri, it.codeFragment))
         }
 
-        annotatedTextFragments.add(annotatedTextFragment)
-        matches.addAll(shiftMatchesToAbsolute(relativeMatches, paragraphCodeFragment, null))
+      var i = 0
+      while (i < paragraphs.size) {
+        val cachedFragment: CachedFragment? = cached[i]
+        if (cachedFragment != null) {
+          emitCachedParagraph(
+            paragraphs[i],
+            cachedFragment,
+            document,
+            annotatedTextFragments,
+            matches,
+          )
+          stats.sliceCount++
+          i++
+        } else {
+          val runEnd: Int =
+            extentOfMissRun(paragraphs, cached, i, codeFragment.settings.maxFragmentSize)
+          checkAndEmitMissRun(
+            paragraphs.subList(i, runEnd),
+            document,
+            annotatedTextFragments,
+            matches,
+            stats,
+          )
+          i = runEnd
+        }
       }
     }
 
-    logFragmentCacheStats(document.uri, sliceCount, newSliceCount, sentChars)
+    logFragmentCacheStats(document.uri, stats)
     return Pair(matches, annotatedTextFragments)
+  }
+
+  // Emits an unchanged paragraph from the cache: restores the language it was
+  // checked under (matters for "auto"; the cached matches already carry the
+  // correct per-match languageShortCode) and reprojects its matches to absolute
+  // positions, so a paragraph that merely shifted still lands correctly.
+  private fun emitCachedParagraph(
+    paragraph: AnnotatedTextFragment,
+    cached: CachedFragment,
+    document: LtexTextDocumentItem,
+    annotatedTextFragments: MutableList<AnnotatedTextFragment>,
+    matches: MutableList<LanguageToolRuleMatch>,
+  ) {
+    val codeFragment: CodeFragment = paragraph.codeFragment
+    codeFragment.languageShortCode = cached.detectedLanguageShortCode
+    annotatedTextFragments.add(AnnotatedTextFragment(cached.annotatedText, codeFragment, document))
+    matches.addAll(shiftMatchesToAbsolute(cached.relativeMatches, codeFragment, null))
+  }
+
+  // Exclusive end index of the maximal run of contiguous cache misses starting at
+  // `start`, bounded so the run's total plain-text length stays within
+  // maxFragmentSize. The first paragraph always joins even if it alone exceeds the
+  // cap (a paragraph is never split across requests): it is sent as-is. The local
+  // Java backend has no size limit; an HTTP backend may then reject that one
+  // oversized request (logged, no diagnostics for that paragraph this check),
+  // while every other paragraph still checks normally. This is strictly better
+  // than the pre-cache behavior, where one oversized document failed wholesale.
+  // A >20k-char paragraph with no blank line is ~6 pages of unbroken prose, i.e.
+  // effectively never real text.
+  private fun extentOfMissRun(
+    paragraphs: List<AnnotatedTextFragment>,
+    cached: List<CachedFragment?>,
+    start: Int,
+    maxFragmentSize: Int,
+  ): Int {
+    var runLength: Int = paragraphs[start].annotatedText.plainText.length
+    var end: Int = start + 1
+    while ((end < paragraphs.size) && (cached[end] == null)) {
+      val nextLength: Int = paragraphs[end].annotatedText.plainText.length
+      if ((runLength + nextLength) > maxFragmentSize) break
+      runLength += nextLength
+      end++
+    }
+    return end
+  }
+
+  // Checks a run of contiguous cache-miss paragraphs. A one-paragraph run is
+  // checked directly; a multi-paragraph run is merged into a single LanguageTool
+  // request and the returned matches are split back per paragraph by source
+  // offset. Either way each paragraph is cached individually (keeping the cache
+  // unit fine-grained) and its matches are emitted at absolute positions.
+  private fun checkAndEmitMissRun(
+    run: List<AnnotatedTextFragment>,
+    document: LtexTextDocumentItem,
+    annotatedTextFragments: MutableList<AnnotatedTextFragment>,
+    matches: MutableList<LanguageToolRuleMatch>,
+    stats: CacheRunStats,
+  ) {
+    stats.requestCount++
+    stats.sliceCount += run.size
+    stats.newSliceCount += run.size
+    for (paragraph: AnnotatedTextFragment in run) {
+      stats.sentChars += paragraph.annotatedText.plainText.length
+    }
+
+    if (run.size == 1) {
+      val paragraph: AnnotatedTextFragment = run[0]
+      val relativeMatches: List<LanguageToolRuleMatch> =
+        checkAnnotatedTextFragmentRelative(paragraph, null)
+      cacheParagraph(document.uri, paragraph, relativeMatches)
+      annotatedTextFragments.add(paragraph)
+      matches.addAll(shiftMatchesToAbsolute(relativeMatches, paragraph.codeFragment, null))
+      return
+    }
+
+    val mergedFragment: AnnotatedTextFragment = mergeParagraphRun(run, document)
+    val mergedMatches: List<LanguageToolRuleMatch> =
+      checkAnnotatedTextFragmentRelative(mergedFragment, null)
+    val detectedLanguageShortCode: String = mergedFragment.codeFragment.languageShortCode
+
+    var sourceOffset = 0
+    for (paragraph: AnnotatedTextFragment in run) {
+      val paragraphSourceLength: Int = sourceLength(paragraph.annotatedText)
+      val paragraphSourceEnd: Int = sourceOffset + paragraphSourceLength
+      val relativeMatches: List<LanguageToolRuleMatch> =
+        mergedMatches
+          .filter { (it.fromPos >= sourceOffset) && (it.fromPos < paragraphSourceEnd) }
+          .map { it.copy(fromPos = it.fromPos - sourceOffset, toPos = it.toPos - sourceOffset) }
+      paragraph.codeFragment.languageShortCode = detectedLanguageShortCode
+      cacheParagraph(document.uri, paragraph, relativeMatches)
+      annotatedTextFragments.add(paragraph)
+      matches.addAll(shiftMatchesToAbsolute(relativeMatches, paragraph.codeFragment, null))
+      sourceOffset += paragraphSourceLength
+    }
+  }
+
+  // Builds one AnnotatedTextFragment spanning a run of contiguous paragraphs:
+  // their AnnotatedTexts are concatenated and their (already adjacent) source
+  // substrings joined. fromPos is the first paragraph's, so a merged match's
+  // source offset maps back into the run by subtracting each paragraph's
+  // cumulative source length.
+  private fun mergeParagraphRun(
+    run: List<AnnotatedTextFragment>,
+    document: LtexTextDocumentItem,
+  ): AnnotatedTextFragment {
+    val first: CodeFragment = run.first().codeFragment
+    val mergedCodeFragment =
+      CodeFragment(
+        first.codeLanguageId,
+        run.joinToString("") { it.codeFragment.code },
+        first.fromPos,
+        first.settings,
+        first.languageShortCode,
+      )
+    val mergedAnnotatedText: AnnotatedText =
+      AnnotatedTextSlicer.mergeAnnotatedTexts(run.map { it.annotatedText })
+    return AnnotatedTextFragment(mergedAnnotatedText, mergedCodeFragment, document)
+  }
+
+  private fun cacheParagraph(
+    uri: String,
+    paragraph: AnnotatedTextFragment,
+    relativeMatches: List<LanguageToolRuleMatch>,
+  ) {
+    this.fragmentCache.put(
+      FragmentCache.makeKey(uri, paragraph.codeFragment),
+      CachedFragment(
+        paragraph.annotatedText,
+        relativeMatches,
+        paragraph.codeFragment.languageShortCode,
+      ),
+    )
   }
 
   // FINER-only correctness probe for the incremental cache. After a full check,
   // reports: how many paragraph slices the document produced, how many were
   // misses (re-sent to LanguageTool), the cache occupancy for this document and
-  // for the whole process (slice count + checked plain-text characters), and the
-  // total characters actually sent this check. A fresh open shows new == slices;
-  // editing one paragraph should show new == 1. Char counts are String.length
-  // (UTF-16 code units), measured on the markup-stripped plain text.
+  // for the whole process (slice count + checked plain-text characters), the
+  // total characters actually sent this check, and how many LanguageTool requests
+  // those misses were batched into. A fresh open shows new == slices in 1 request;
+  // editing one paragraph shows new == 1 in 1 request. Char counts are
+  // String.length (UTF-16 code units), measured on the markup-stripped plain text.
   private fun logFragmentCacheStats(
     uri: String,
-    sliceCount: Int,
-    newSliceCount: Int,
-    sentChars: Long,
+    stats: CacheRunStats,
   ) {
     if (!Logging.LOGGER.isLoggable(Level.FINER)) return
 
@@ -448,23 +577,31 @@ class DocumentChecker(
       I18n.format(
         "fragmentCacheStats",
         uri,
-        sliceCount,
-        newSliceCount,
+        stats.sliceCount,
+        stats.newSliceCount,
         docStats.entryCount,
         docStats.plainTextChars,
         totalStats.entryCount,
         totalStats.plainTextChars,
-        sentChars,
+        stats.sentChars,
+        stats.requestCount,
       ),
     )
   }
 
+  // Per-check accumulator for the FINER cache-stats line.
+  private class CacheRunStats {
+    var sliceCount = 0
+    var newSliceCount = 0
+    var requestCount = 0
+    var sentChars = 0L
+  }
+
   // Builds a region's AnnotatedText once, then slices it into one
-  // AnnotatedTextFragment per prose fragment (see AnnotatedTextSlicer; adjacent
-  // paragraphs are glued until minFragmentSize plain-text chars accumulate). Each
-  // fragment gets a synthetic CodeFragment whose code is its source substring and
-  // whose fromPos is the region's fromPos plus the fragment's source offset, so
-  // cache keys are position-independent and matches reproject correctly.
+  // AnnotatedTextFragment per prose paragraph (see AnnotatedTextSlicer). Each
+  // paragraph gets a synthetic CodeFragment whose code is its source substring
+  // and whose fromPos is the region's fromPos plus the paragraph's source offset,
+  // so cache keys are position-independent and matches reproject correctly.
   // A skipped region (e.g. after "ltex: enabled=false") is not sliced: its build
   // is empty by design, so it passes through as a single fragment.
   private fun sliceRegionIntoParagraphs(
@@ -476,27 +613,28 @@ class DocumentChecker(
       return listOf(regionFragment)
     }
 
-    return AnnotatedTextSlicer
-      .slice(regionFragment.annotatedText, region.settings.minFragmentSize)
-      .map { slice ->
-        // Source length of the slice = sum of TEXT and MARKUP part lengths;
-        // FAKE_CONTENT exists only in the plain text and contributes zero source
-        // characters. Recovers the paragraph's source substring from its region.
-        val sourceLength: Int =
-          slice.annotatedText.parts.sumOf {
-            if (it.type == TextPart.Type.FAKE_CONTENT) 0 else it.part.length
-          }
-        val paragraphCodeFragment =
-          CodeFragment(
-            region.codeLanguageId,
-            region.code.substring(slice.sourceFromPos, slice.sourceFromPos + sourceLength),
-            region.fromPos + slice.sourceFromPos,
-            region.settings,
-            region.languageShortCode,
-          )
-        AnnotatedTextFragment(slice.annotatedText, paragraphCodeFragment, document)
-      }
+    return AnnotatedTextSlicer.slice(regionFragment.annotatedText).map { slice ->
+      val paragraphSourceLength: Int = sourceLength(slice.annotatedText)
+      val paragraphCodeFragment =
+        CodeFragment(
+          region.codeLanguageId,
+          region.code.substring(slice.sourceFromPos, slice.sourceFromPos + paragraphSourceLength),
+          region.fromPos + slice.sourceFromPos,
+          region.settings,
+          region.languageShortCode,
+        )
+      AnnotatedTextFragment(slice.annotatedText, paragraphCodeFragment, document)
+    }
   }
+
+  // Source length of an AnnotatedText = sum of TEXT and MARKUP part lengths;
+  // FAKE_CONTENT exists only in the plain text and contributes zero source
+  // characters. Used to recover a paragraph's source substring and to split a
+  // merged run's matches back per paragraph.
+  private fun sourceLength(annotatedText: AnnotatedText): Int =
+    annotatedText.parts.sumOf {
+      if (it.type == TextPart.Type.FAKE_CONTENT) 0 else it.part.length
+    }
 
   companion object {
     private const val MAX_LOG_TEXT_LENGTH = 100

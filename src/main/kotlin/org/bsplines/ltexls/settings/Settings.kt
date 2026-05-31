@@ -44,7 +44,7 @@ data class Settings(
   private val _checkFrequency: CheckFrequency? = null,
   private val _clearDiagnosticsWhenClosingFile: Boolean? = null,
   private val _fragmentCacheTtlMinutes: Long? = null,
-  private val _minFragmentSize: Int? = null,
+  private val _maxFragmentSize: Int? = null,
 ) {
   val enabled: Set<String>
     get() = (this._enabled ?: DEFAULT_ENABLED)
@@ -100,8 +100,8 @@ data class Settings(
     get() = (this._clearDiagnosticsWhenClosingFile ?: true)
   val fragmentCacheTtlMinutes: Long
     get() = (this._fragmentCacheTtlMinutes ?: DEFAULT_FRAGMENT_CACHE_TTL_MINUTES)
-  val minFragmentSize: Int
-    get() = (this._minFragmentSize ?: DEFAULT_MIN_FRAGMENT_SIZE)
+  val maxFragmentSize: Int
+    get() = (this._maxFragmentSize ?: DEFAULT_MAX_FRAGMENT_SIZE)
 
   /**
    * Returns differences between `this` and `other` that call for
@@ -224,7 +224,15 @@ data class Settings(
       )
     private const val DEFAULT_SENTENCE_CACHE_SIZE = 2000L
     private const val DEFAULT_FRAGMENT_CACHE_TTL_MINUTES = 30L
-    private const val DEFAULT_MIN_FRAGMENT_SIZE = 4000
+
+    // Caps the plain-text characters sent to LanguageTool per request (a run of
+    // contiguous changed paragraphs is split across requests if it exceeds this;
+    // a single paragraph is never split). 20000 is the free HTTP API's
+    // per-request character limit, so this default is safe for every backend:
+    // free HTTP (at the limit), Premium HTTP (limit is 60000), and the local
+    // Java backend (no limit). Future: detect Premium (api.languagetoolplus.com
+    // + credentials) and raise the effective cap to 60000.
+    private const val DEFAULT_MAX_FRAGMENT_SIZE = 20000
     private val DEFAULT_DIAGNOSTIC_SEVERITY: Map<String, DiagnosticSeverity> =
       mapOf(Pair("default", DiagnosticSeverity.Information))
     val DEFAULT_PREFERRED_VARIANTS: List<String> = listOf("en-US", "de-DE", "pt-BR")
@@ -356,8 +364,8 @@ data class Settings(
         getSettingFromJsonAsBoolean(jsonSettings, "clearDiagnosticsWhenClosingFile")
       val fragmentCacheTtlMinutes: Long? =
         getSettingFromJsonAsLong(jsonSettings, "fragmentCacheTtlMinutes")
-      val minFragmentSize: Int? =
-        getSettingFromJsonAsLong(jsonSettings, "minFragmentSize")?.toInt()
+      val maxFragmentSize: Int? =
+        getSettingFromJsonAsLong(jsonSettings, "maxFragmentSize")?.toInt()
 
       return Settings(
         enabled,
@@ -384,7 +392,7 @@ data class Settings(
         checkFrequency,
         clearDiagnosticsWhenClosingFile,
         fragmentCacheTtlMinutes,
-        minFragmentSize,
+        maxFragmentSize,
       )
     }
 

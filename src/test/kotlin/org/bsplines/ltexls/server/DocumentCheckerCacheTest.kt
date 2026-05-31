@@ -133,7 +133,7 @@ class DocumentCheckerCacheTest {
   fun testPlaintextParagraphIncrementalReuse() {
     val checker =
       DocumentChecker(
-        SettingsManager(Settings(_minFragmentSize = 1, _logLevel = Level.FINEST)),
+        SettingsManager(Settings(_logLevel = Level.FINEST)),
         FragmentCache(),
       )
     val uri = "untitled:para.txt"
@@ -184,7 +184,7 @@ class DocumentCheckerCacheTest {
   fun testMarkdownBlockIncrementalReuse() {
     val checker =
       DocumentChecker(
-        SettingsManager(Settings(_minFragmentSize = 1, _logLevel = Level.FINEST)),
+        SettingsManager(Settings(_logLevel = Level.FINEST)),
         FragmentCache(),
       )
     val uri = "untitled:blocks.md"
@@ -254,7 +254,7 @@ class DocumentCheckerCacheTest {
   fun testLatexBlockIncrementalReuse() {
     val checker =
       DocumentChecker(
-        SettingsManager(Settings(_minFragmentSize = 1, _logLevel = Level.FINEST)),
+        SettingsManager(Settings(_logLevel = Level.FINEST)),
         FragmentCache(),
       )
     val uri = "untitled:doc.tex"
@@ -273,24 +273,130 @@ class DocumentCheckerCacheTest {
     )
   }
 
+  // Paragraphs in different magic-command language regions must never be bundled
+  // into the same merged request (and so never checked/cached under one shared
+  // language). A `% ltex: language=de-DE` command splits the document into two
+  // CodeFragments; because the merge loop runs per CodeFragment, an English and a
+  // German paragraph can never land in one request — the language boundary is the
+  // merge boundary. Each region here has two paragraphs and maxFragmentSize is
+  // huge, so each region becomes one merged multi-paragraph request. The German
+  // speller rule firing on the German word proves the German region was checked as
+  // German (the English checker has no such rule), and every fragment carries its
+  // own region's language — neither region's paragraphs were stamped with the
+  // other's language.
+  @Test
+  fun testMagicCommandLanguagesNotBundledInMergedRun() {
+    val code =
+      "This is qwertyunknown.\n\nThis is a clean sentence.\n\n" +
+        "% ltex: language=de-DE\nDies ist Qwertyzuiopc.\n\nDies ist ein sauberer Satz.\n"
+
+    val result = check("latex", code, 1_000_000)
+
+    // German region was checked as German, not folded into the English request.
+    assertEquals("Qwertyzuiopc", spanText(result, germanMatch(result.first)))
+    assertEquals(
+      "de-DE",
+      germanFragment(result.second).codeFragment.languageShortCode,
+      "German paragraphs must stay under de-DE",
+    )
+    val englishFragment: AnnotatedTextFragment =
+      result.second.first { it.codeFragment.code.contains("qwertyunknown") }
+    assertEquals(
+      "en-US",
+      englishFragment.codeFragment.languageShortCode,
+      "English paragraphs must stay under en-US",
+    )
+  }
+
+  // With ltex.language="auto" on the Java backend, language is detected once on the
+  // merged text of a multi-paragraph miss-run and that one concrete variant is
+  // stamped on every paragraph in the run (SimpleLanguageIdentifier returns bare
+  // codes, promoted to the preferredVariants default en-US). maxFragmentSize is huge
+  // so the whole English region is one merged request. All resulting fragments must
+  // carry en-US (not the literal "auto"), proving the detected language propagated to
+  // each paragraph, and the spell error must still be found.
+  @Test
+  fun testAutoLanguageDetectedOnMergedRunPropagatesToAllParagraphs() {
+    val checker =
+      DocumentChecker(
+        SettingsManager(Settings(_languageShortCode = "auto", _logLevel = Level.FINEST)),
+        FragmentCache(),
+      )
+    val code =
+      "This is a perfectly ordinary English paragraph with enough words for the " +
+        "detector to lock on, and it also contains qwertyunknown as a typo.\n\n" +
+        "Here is a second ordinary English paragraph that the detector should " +
+        "recognize without any trouble at all.\n"
+    val result = checker.check(createDocument("untitled:auto.md", "markdown", code))
+
+    assertTrue(result.second.size >= 2, "the region should slice into >= 2 paragraphs")
+    for (fragment: AnnotatedTextFragment in result.second) {
+      assertEquals(
+        "en-US",
+        fragment.codeFragment.languageShortCode,
+        "every paragraph in the merged auto run must carry the detected variant",
+      )
+    }
+    assertTrue(
+      result.first.any { it.isUnknownWordRule() },
+      "the typo must still be flagged after merged-run auto detection",
+    )
+  }
+
+  // After a merged auto run, the per-paragraph cache entries are keyed under the
+  // detected variant, so editing one paragraph reuses the untouched one (same
+  // AnnotatedText instance) without re-detecting or re-checking it, and it still
+  // carries en-US.
+  @Test
+  fun testAutoLanguageMergedRunCachesPerParagraphForReuse() {
+    val checker =
+      DocumentChecker(
+        SettingsManager(Settings(_languageShortCode = "auto", _logLevel = Level.FINEST)),
+        FragmentCache(),
+      )
+    val uri = "untitled:auto-reuse.md"
+    val tail =
+      "\n\nHere is a second ordinary English paragraph that stays the same across " +
+        "both checks and should be reused from the cache.\n"
+    val first =
+      "This is the first ordinary English paragraph with plenty of words to detect.$tail"
+    val second =
+      "This is the first ordinary English paragraph, now edited and even longer.$tail"
+
+    val before = checker.check(createDocument(uri, "markdown", first))
+    val after = checker.check(createDocument(uri, "markdown", second))
+
+    val stayingBefore = before.second.first { it.codeFragment.code.contains("stays the same") }
+    val stayingAfter = after.second.first { it.codeFragment.code.contains("stays the same") }
+    assertSame(
+      stayingBefore.annotatedText,
+      stayingAfter.annotatedText,
+      "the unchanged paragraph must be reused after editing the other",
+    )
+    assertEquals("en-US", stayingAfter.codeFragment.languageShortCode)
+  }
+
   companion object {
     private fun sharedChecker(): DocumentChecker =
       DocumentChecker(SettingsManager(Settings(_logLevel = Level.FINEST)), FragmentCache())
 
     private fun checkMarkdown(
       code: String,
-      minFragmentSize: Int,
+      maxFragmentSize: Int,
     ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
-      check("markdown", code, minFragmentSize)
+      check("markdown", code, maxFragmentSize)
 
+    // maxFragmentSize = 1 forces one request per paragraph (split); a huge value
+    // batches the whole document into one merged request (whole). The two must
+    // give identical diagnostics, exercising the merged-match decomposition.
     private fun check(
       codeLanguageId: String,
       code: String,
-      minFragmentSize: Int,
+      maxFragmentSize: Int,
     ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> {
       val checker =
         DocumentChecker(
-          SettingsManager(Settings(_minFragmentSize = minFragmentSize, _logLevel = Level.FINEST)),
+          SettingsManager(Settings(_maxFragmentSize = maxFragmentSize, _logLevel = Level.FINEST)),
           FragmentCache(),
         )
       return checker.check(createDocument("untitled:safety.$codeLanguageId", codeLanguageId, code))
