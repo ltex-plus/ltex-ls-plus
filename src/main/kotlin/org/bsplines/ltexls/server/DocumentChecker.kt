@@ -12,9 +12,12 @@ import org.apache.commons.text.StringEscapeUtils
 import org.bsplines.ltexls.languagetool.LanguageToolInterface
 import org.bsplines.ltexls.languagetool.LanguageToolRuleMatch
 import org.bsplines.ltexls.parsing.AnnotatedTextFragment
+import org.bsplines.ltexls.parsing.CachedFragment
 import org.bsplines.ltexls.parsing.CodeAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.CodeFragment
 import org.bsplines.ltexls.parsing.CodeFragmentizer
+import org.bsplines.ltexls.parsing.FragmentCache
+import org.bsplines.ltexls.parsing.FragmentCacheKey
 import org.bsplines.ltexls.parsing.plaintext.PlaintextAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.program.ProgramCommentRegexs
 import org.bsplines.ltexls.settings.HiddenFalsePositive
@@ -37,6 +40,11 @@ import java.util.logging.Level
 
 class DocumentChecker(
   val settingsManager: SettingsManager,
+  // Reuses per-fragment results across edits via the fragment cache. The
+  // default keeps the many test call sites (which construct DocumentChecker with
+  // only a SettingsManager) working with a private cache each. The server passes
+  // its shared, swept instance.
+  val fragmentCache: FragmentCache = FragmentCache(),
 ) {
   private var simpleLanguageIdentifier: SimpleLanguageIdentifier
 
@@ -80,44 +88,32 @@ class DocumentChecker(
     return codeFragmentizer.fragmentize(code, this.settingsManager.settings)
   }
 
-  private fun buildAnnotatedTextFragments(
-    codeFragments: List<CodeFragment>,
+  private fun buildAnnotatedTextFragment(
+    codeFragment: CodeFragment,
     document: LtexTextDocumentItem,
-    rangeStartPos: Int? = null,
-  ): List<AnnotatedTextFragment> {
-    val annotatedTextFragments = ArrayList<AnnotatedTextFragment>()
-    val hasRange: Boolean = (rangeStartPos != null)
-
-    for (codeFragment: CodeFragment in codeFragments) {
-      if (
-        shouldSkipCheck(codeFragment.codeLanguageId, codeFragment.settings, rangeStartPos)
-      ) {
-        // Fragment will be skipped at the check phase (e.g., region after
-        // "# ltex: enabled=false"). Skip parsing too — running the
-        // CodeAnnotatedTextBuilder over a large disabled region is pure
-        // overhead, and on big files (>100KB) it dominates request latency.
-        annotatedTextFragments.add(
-          AnnotatedTextFragment(AnnotatedTextBuilder().build(), codeFragment, document),
-        )
-        continue
-      }
-
-      val builder: CodeAnnotatedTextBuilder =
-        if (
-          hasRange && ProgramCommentRegexs.isSupportedCodeLanguageId(codeFragment.codeLanguageId)
-        ) {
-          PlaintextAnnotatedTextBuilder(codeFragment.codeLanguageId)
-        } else {
-          CodeAnnotatedTextBuilder.create(codeFragment.codeLanguageId)
-        }
-
-      builder.setSettings(codeFragment.settings)
-      builder.addCode(codeFragment.code)
-      val curAnnotatedText: AnnotatedText = builder.build()
-      annotatedTextFragments.add(AnnotatedTextFragment(curAnnotatedText, codeFragment, document))
+    rangeStartPos: Int?,
+  ): AnnotatedTextFragment {
+    if (shouldSkipCheck(codeFragment.codeLanguageId, codeFragment.settings, rangeStartPos)) {
+      // Fragment will be skipped at the check phase (e.g., region after
+      // "# ltex: enabled=false"). Skip parsing too — running the
+      // CodeAnnotatedTextBuilder over a large disabled region is pure
+      // overhead, and on big files (>100KB) it dominates request latency.
+      return AnnotatedTextFragment(AnnotatedTextBuilder().build(), codeFragment, document)
     }
 
-    return annotatedTextFragments
+    val hasRange: Boolean = (rangeStartPos != null)
+    val builder: CodeAnnotatedTextBuilder =
+      if (
+        hasRange && ProgramCommentRegexs.isSupportedCodeLanguageId(codeFragment.codeLanguageId)
+      ) {
+        PlaintextAnnotatedTextBuilder(codeFragment.codeLanguageId)
+      } else {
+        CodeAnnotatedTextBuilder.create(codeFragment.codeLanguageId)
+      }
+
+    builder.setSettings(codeFragment.settings)
+    builder.addCode(codeFragment.code)
+    return AnnotatedTextFragment(builder.build(), codeFragment, document)
   }
 
   private fun checkAnnotatedTextFragments(
@@ -127,14 +123,36 @@ class DocumentChecker(
     val matches = ArrayList<LanguageToolRuleMatch>()
 
     for (annotatedTextFragment: AnnotatedTextFragment in annotatedTextFragments) {
-      matches.addAll(checkAnnotatedTextFragment(annotatedTextFragment, rangeStartPos))
+      val relativeMatches: List<LanguageToolRuleMatch> =
+        checkAnnotatedTextFragmentRelative(annotatedTextFragment, rangeStartPos)
+      matches.addAll(
+        shiftMatchesToAbsolute(relativeMatches, annotatedTextFragment.codeFragment, rangeStartPos),
+      )
     }
 
     return matches
   }
 
+  // Re-projects fragment-relative match offsets to absolute document offsets.
+  // Applied identically to freshly computed and cached matches, so a fragment
+  // whose result was cached but whose position shifted (text inserted above it)
+  // still lands at the correct absolute offset.
+  private fun shiftMatchesToAbsolute(
+    relativeMatches: List<LanguageToolRuleMatch>,
+    codeFragment: CodeFragment,
+    rangeStartPos: Int?,
+  ): List<LanguageToolRuleMatch> {
+    val offset: Int = codeFragment.fromPos + (rangeStartPos ?: 0)
+    return relativeMatches.map {
+      it.copy(fromPos = it.fromPos + offset, toPos = it.toPos + offset)
+    }
+  }
+
+  // Returns matches with FRAGMENT-RELATIVE offsets (ignored matches already
+  // removed). Callers apply shiftMatchesToAbsolute. For ltex.language="auto"
+  // this resolves and writes codeFragment.languageShortCode as a side effect.
   @Suppress("TooGenericExceptionCaught")
-  private fun checkAnnotatedTextFragment(
+  private fun checkAnnotatedTextFragmentRelative(
     annotatedTextFragment: AnnotatedTextFragment,
     rangeStartPos: Int? = null,
   ): List<LanguageToolRuleMatch> {
@@ -212,20 +230,7 @@ class DocumentChecker(
     )
     removeIgnoredMatches(matches, annotatedTextFragment)
 
-    val result = ArrayList<LanguageToolRuleMatch>()
-
-    for (match: LanguageToolRuleMatch in matches) {
-      result.add(
-        match.copy(
-          fromPos =
-            match.fromPos + annotatedTextFragment.codeFragment.fromPos + (rangeStartPos ?: 0),
-          toPos =
-            match.toPos + annotatedTextFragment.codeFragment.fromPos + (rangeStartPos ?: 0),
-        ),
-      )
-    }
-
-    return result
+    return matches
   }
 
   private fun logTextToBeChecked(
@@ -343,14 +348,64 @@ class DocumentChecker(
 
     try {
       val codeFragments: List<CodeFragment> = fragmentizeDocument(document, range)
+
+      // Only the full-document path (no range) uses the fragment cache. The
+      // range path (code-action partial checks) is already small and stays on
+      // the simple non-cached path.
+      if (rangeStartPos == null) return checkCodeFragmentsWithCache(codeFragments, document)
+
       val annotatedTextFragments: List<AnnotatedTextFragment> =
-        buildAnnotatedTextFragments(codeFragments, document, rangeStartPos)
+        codeFragments.map { buildAnnotatedTextFragment(it, document, rangeStartPos) }
       val matches: List<LanguageToolRuleMatch> =
         checkAnnotatedTextFragments(annotatedTextFragments, rangeStartPos)
       return Pair(matches, annotatedTextFragments)
     } finally {
       this.settingsManager.settings = originalSettings
     }
+  }
+
+  // Full-document check with per-fragment result reuse. For each fragment, a
+  // cache hit skips both the AnnotatedText build and the LanguageTool call;
+  // a miss computes and stores fragment-relative matches. Offsets are projected
+  // to absolute positions on every iteration (hit or miss).
+  private fun checkCodeFragmentsWithCache(
+    codeFragments: List<CodeFragment>,
+    document: LtexTextDocumentItem,
+  ): Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> {
+    val annotatedTextFragments = ArrayList<AnnotatedTextFragment>()
+    val matches = ArrayList<LanguageToolRuleMatch>()
+
+    for (codeFragment: CodeFragment in codeFragments) {
+      val key: FragmentCacheKey = FragmentCache.makeKey(document.uri, codeFragment)
+      val cached: CachedFragment? = this.fragmentCache.get(key)
+      val annotatedTextFragment: AnnotatedTextFragment
+      val relativeMatches: List<LanguageToolRuleMatch>
+
+      if (cached != null) {
+        // Restore the language the fragment was checked under (matters for
+        // "auto") before rebuilding the wrapper; the cached matches already
+        // carry the correct per-match languageShortCode.
+        codeFragment.languageShortCode = cached.detectedLanguageShortCode
+        annotatedTextFragment = AnnotatedTextFragment(cached.annotatedText, codeFragment, document)
+        relativeMatches = cached.relativeMatches
+      } else {
+        annotatedTextFragment = buildAnnotatedTextFragment(codeFragment, document, null)
+        relativeMatches = checkAnnotatedTextFragmentRelative(annotatedTextFragment, null)
+        this.fragmentCache.put(
+          key,
+          CachedFragment(
+            annotatedTextFragment.annotatedText,
+            relativeMatches,
+            codeFragment.languageShortCode,
+          ),
+        )
+      }
+
+      annotatedTextFragments.add(annotatedTextFragment)
+      matches.addAll(shiftMatchesToAbsolute(relativeMatches, codeFragment, null))
+    }
+
+    return Pair(matches, annotatedTextFragments)
   }
 
   companion object {

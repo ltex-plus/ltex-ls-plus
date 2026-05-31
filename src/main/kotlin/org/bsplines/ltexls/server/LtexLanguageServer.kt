@@ -11,6 +11,7 @@ package org.bsplines.ltexls.server
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import org.bsplines.ltexls.client.LtexLanguageClient
+import org.bsplines.ltexls.parsing.FragmentCache
 import org.bsplines.ltexls.settings.SettingsManager
 import org.bsplines.ltexls.tools.I18n
 import org.bsplines.ltexls.tools.Logging
@@ -36,6 +37,8 @@ import java.util.Locale
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
 
 class LtexLanguageServer :
@@ -44,7 +47,16 @@ class LtexLanguageServer :
   var languageClient: LtexLanguageClient? = null
   val singleThreadExecutorService: ExecutorService = Executors.newSingleThreadScheduledExecutor()
   val settingsManager = SettingsManager()
-  val documentChecker = DocumentChecker(this.settingsManager)
+
+  // Shared across all documents; swept periodically and cleared per-document on
+  // didClose.
+  val fragmentCache = FragmentCache()
+  private val fragmentCacheSweeper: ScheduledExecutorService =
+    Executors.newSingleThreadScheduledExecutor { runnable ->
+      // Daemon so an un-shut-down sweeper (e.g. in tests) never pins the JVM.
+      Thread(runnable, "ltex-fragment-cache-sweeper").apply { isDaemon = true }
+    }
+  val documentChecker = DocumentChecker(this.settingsManager, this.fragmentCache)
   val codeActionProvider = CodeActionProvider(this.settingsManager)
   val completionListProvider = CompletionListProvider(this.settingsManager)
   val ltexTextDocumentService = LtexTextDocumentService(this)
@@ -55,6 +67,32 @@ class LtexLanguageServer :
     private set
   var clientSupportsWorkspaceSpecificConfiguration: Boolean = false
     private set
+
+  init {
+    // Sweep idle fragment-cache entries on a fixed 60 s cadence. Entries idle
+    // longer than ltex.fragmentCacheTtlMinutes are dropped; every cache hit
+    // refreshes an entry, so actively edited documents stay warm.
+    this.fragmentCacheSweeper.scheduleAtFixedRate(
+      { sweepFragmentCache() },
+      FRAGMENT_CACHE_SWEEP_INTERVAL_SECONDS,
+      FRAGMENT_CACHE_SWEEP_INTERVAL_SECONDS,
+      TimeUnit.SECONDS,
+    )
+  }
+
+  // Wrapped so a stray exception never cancels the recurring scheduled task.
+  // internal (not private) so the sweep path is unit-testable without waiting
+  // for the 60 s scheduler.
+  @Suppress("TooGenericExceptionCaught")
+  internal fun sweepFragmentCache() {
+    try {
+      val ttlMillis: Long =
+        this.settingsManager.settings.fragmentCacheTtlMinutes * MILLIS_PER_MINUTE
+      this.fragmentCache.evictIdleOlderThan(ttlMillis)
+    } catch (e: RuntimeException) {
+      Logging.LOGGER.warning("Fragment cache sweep failed: $e")
+    }
+  }
 
   override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult> {
     val ltexLsPackage: Package? = LtexLanguageServer::class.java.getPackage()
@@ -116,6 +154,7 @@ class LtexLanguageServer :
 
   override fun shutdown(): CompletableFuture<Any> {
     Logging.LOGGER.info(I18n.format("shuttingDownLtexLs"))
+    this.fragmentCacheSweeper.shutdownNow()
     this.singleThreadExecutorService.shutdown()
 
     // should return null according to LSP specification, but return empty object instead,
@@ -135,4 +174,9 @@ class LtexLanguageServer :
   override fun getTextDocumentService(): TextDocumentService = this.ltexTextDocumentService
 
   override fun getWorkspaceService(): WorkspaceService = this.ltexWorkspaceService
+
+  companion object {
+    private const val FRAGMENT_CACHE_SWEEP_INTERVAL_SECONDS = 60L
+    private const val MILLIS_PER_MINUTE = 60_000L
+  }
 }

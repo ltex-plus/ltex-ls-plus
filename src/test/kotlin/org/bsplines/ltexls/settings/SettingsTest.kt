@@ -131,6 +131,11 @@ class SettingsTest {
 
     settings = settings.copy(_clearDiagnosticsWhenClosingFile = false)
     assertEquals(false, settings.clearDiagnosticsWhenClosingFile)
+    settings2 = compareSettings(settings, settings2, false)
+
+    assertEquals(30L, Settings().fragmentCacheTtlMinutes)
+    settings = settings.copy(_fragmentCacheTtlMinutes = 1234L)
+    assertEquals(1234L, settings.fragmentCacheTtlMinutes)
     @Suppress("UNUSED_VALUE")
     settings2 = compareSettings(settings, settings2, false)
   }
