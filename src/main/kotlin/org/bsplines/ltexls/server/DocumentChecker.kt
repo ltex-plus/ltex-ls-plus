@@ -13,6 +13,7 @@ import org.bsplines.ltexls.languagetool.LanguageToolInterface
 import org.bsplines.ltexls.languagetool.LanguageToolRuleMatch
 import org.bsplines.ltexls.parsing.AnnotatedTextFragment
 import org.bsplines.ltexls.parsing.AnnotatedTextSlicer
+import org.bsplines.ltexls.parsing.CacheStats
 import org.bsplines.ltexls.parsing.CachedFragment
 import org.bsplines.ltexls.parsing.CodeAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.CodeFragment
@@ -380,6 +381,10 @@ class DocumentChecker(
     val annotatedTextFragments = ArrayList<AnnotatedTextFragment>()
     val matches = ArrayList<LanguageToolRuleMatch>()
 
+    var sliceCount = 0
+    var newSliceCount = 0
+    var sentChars = 0L
+
     for (codeFragment: CodeFragment in codeFragments) {
       for (paragraph: AnnotatedTextFragment in sliceRegionIntoParagraphs(codeFragment, document)) {
         val paragraphCodeFragment: CodeFragment = paragraph.codeFragment
@@ -387,6 +392,8 @@ class DocumentChecker(
         val cached: CachedFragment? = this.fragmentCache.get(key)
         val annotatedTextFragment: AnnotatedTextFragment
         val relativeMatches: List<LanguageToolRuleMatch>
+
+        sliceCount++
 
         if (cached != null) {
           // Restore the language the paragraph was checked under (matters for
@@ -407,6 +414,8 @@ class DocumentChecker(
               paragraphCodeFragment.languageShortCode,
             ),
           )
+          newSliceCount++
+          sentChars += annotatedTextFragment.annotatedText.plainText.length
         }
 
         annotatedTextFragments.add(annotatedTextFragment)
@@ -414,7 +423,40 @@ class DocumentChecker(
       }
     }
 
+    logFragmentCacheStats(document.uri, sliceCount, newSliceCount, sentChars)
     return Pair(matches, annotatedTextFragments)
+  }
+
+  // FINER-only correctness probe for the incremental cache. After a full check,
+  // reports: how many paragraph slices the document produced, how many were
+  // misses (re-sent to LanguageTool), the cache occupancy for this document and
+  // for the whole process (slice count + checked plain-text characters), and the
+  // total characters actually sent this check. A fresh open shows new == slices;
+  // editing one paragraph should show new == 1. Char counts are String.length
+  // (UTF-16 code units), measured on the markup-stripped plain text.
+  private fun logFragmentCacheStats(
+    uri: String,
+    sliceCount: Int,
+    newSliceCount: Int,
+    sentChars: Long,
+  ) {
+    if (!Logging.LOGGER.isLoggable(Level.FINER)) return
+
+    val docStats: CacheStats = this.fragmentCache.stats(uri)
+    val totalStats: CacheStats = this.fragmentCache.stats()
+    Logging.LOGGER.finer(
+      I18n.format(
+        "fragmentCacheStats",
+        uri,
+        sliceCount,
+        newSliceCount,
+        docStats.entryCount,
+        docStats.plainTextChars,
+        totalStats.entryCount,
+        totalStats.plainTextChars,
+        sentChars,
+      ),
+    )
   }
 
   // Builds a region's AnnotatedText once, then slices it into one
