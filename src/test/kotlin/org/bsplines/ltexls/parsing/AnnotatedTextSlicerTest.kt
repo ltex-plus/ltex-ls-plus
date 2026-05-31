@@ -163,39 +163,36 @@ class AnnotatedTextSlicerTest {
     assertSlicesPartitionSource(annotatedText, slices)
   }
 
-  // "Alpha.\n\nBeta.\n\nGamma." has cut candidates at plain-text offsets 8 (after
-  // "Alpha.\n\n") and 15 (after "Beta.\n\n"); total length 21. minFragmentSize
-  // skips a boundary until that many chars accumulate since the previous cut.
+  // Merging the slices of a sliced text reproduces the original plain text and
+  // part structure — the inverse of slice(), used to batch a run of cache-miss
+  // paragraphs into one request.
   @Test
-  fun testMinFragmentSizeCoalescesShortParagraphs() {
-    val annotatedText: AnnotatedText = text("Alpha.\n\nBeta.\n\nGamma.")
-    // First boundary (offset 8) is skipped because only 8 < 10 chars accumulated;
-    // the second (offset 15) is taken because 15 >= 10. So "Alpha." and "Beta."
-    // glue into one fragment, "Gamma." stays separate.
-    val slices: List<AnnotatedTextSlicer.Slice> = AnnotatedTextSlicer.slice(annotatedText, 10)
+  fun testMergeAnnotatedTextsReversesSlice() {
+    val builder = AnnotatedTextBuilder()
+    builder.addMarkup("\\section{")
+    builder.addText("Title")
+    builder.addMarkup("}")
+    builder.addText("\n\nBody one has a typo.\n\nBody two.")
+    val original: AnnotatedText = builder.build()
 
-    assertEquals(2, slices.size)
-    assertEquals("Alpha.\n\nBeta.\n\n", slices[0].annotatedText.plainText)
-    assertEquals("Gamma.", slices[1].annotatedText.plainText)
+    val slices: List<AnnotatedTextSlicer.Slice> = AnnotatedTextSlicer.slice(original)
+    val merged: AnnotatedText =
+      AnnotatedTextSlicer.mergeAnnotatedTexts(slices.map { it.annotatedText })
+
+    assertEquals(original.plainText, merged.plainText)
+    // Source length is preserved (TEXT + MARKUP lengths; FAKE_CONTENT counts 0).
+    assertEquals(sourceLength(original), sourceLength(merged))
   }
 
+  // Merging a contiguous subset spans exactly those paragraphs.
   @Test
-  fun testMinFragmentSizeLargerThanDocumentYieldsSingleSlice() {
+  fun testMergeAnnotatedTextsOfSubset() {
     val annotatedText: AnnotatedText = text("Alpha.\n\nBeta.\n\nGamma.")
-    // No boundary ever reaches the threshold, so the whole document is one slice.
-    val slices: List<AnnotatedTextSlicer.Slice> = AnnotatedTextSlicer.slice(annotatedText, 100)
+    val slices: List<AnnotatedTextSlicer.Slice> = AnnotatedTextSlicer.slice(annotatedText)
+    val merged: AnnotatedText =
+      AnnotatedTextSlicer.mergeAnnotatedTexts(slices.take(2).map { it.annotatedText })
 
-    assertEquals(1, slices.size)
-    assertEquals("Alpha.\n\nBeta.\n\nGamma.", slices[0].annotatedText.plainText)
-  }
-
-  @Test
-  fun testMinFragmentSizeZeroCutsEveryParagraph() {
-    val annotatedText: AnnotatedText = text("Alpha.\n\nBeta.\n\nGamma.")
-    // The default of 0 preserves cut-at-every-paragraph behavior.
-    val slices: List<AnnotatedTextSlicer.Slice> = AnnotatedTextSlicer.slice(annotatedText, 0)
-
-    assertEquals(3, slices.size)
+    assertEquals("Alpha.\n\nBeta.\n\n", merged.plainText)
   }
 
   companion object {
