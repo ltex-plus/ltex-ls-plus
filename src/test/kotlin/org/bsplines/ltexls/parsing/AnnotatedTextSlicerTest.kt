@@ -163,6 +163,41 @@ class AnnotatedTextSlicerTest {
     assertSlicesPartitionSource(annotatedText, slices)
   }
 
+  // "Alpha.\n\nBeta.\n\nGamma." has cut candidates at plain-text offsets 8 (after
+  // "Alpha.\n\n") and 15 (after "Beta.\n\n"); total length 21. minFragmentSize
+  // skips a boundary until that many chars accumulate since the previous cut.
+  @Test
+  fun testMinFragmentSizeCoalescesShortParagraphs() {
+    val annotatedText: AnnotatedText = text("Alpha.\n\nBeta.\n\nGamma.")
+    // First boundary (offset 8) is skipped because only 8 < 10 chars accumulated;
+    // the second (offset 15) is taken because 15 >= 10. So "Alpha." and "Beta."
+    // glue into one fragment, "Gamma." stays separate.
+    val slices: List<AnnotatedTextSlicer.Slice> = AnnotatedTextSlicer.slice(annotatedText, 10)
+
+    assertEquals(2, slices.size)
+    assertEquals("Alpha.\n\nBeta.\n\n", slices[0].annotatedText.plainText)
+    assertEquals("Gamma.", slices[1].annotatedText.plainText)
+  }
+
+  @Test
+  fun testMinFragmentSizeLargerThanDocumentYieldsSingleSlice() {
+    val annotatedText: AnnotatedText = text("Alpha.\n\nBeta.\n\nGamma.")
+    // No boundary ever reaches the threshold, so the whole document is one slice.
+    val slices: List<AnnotatedTextSlicer.Slice> = AnnotatedTextSlicer.slice(annotatedText, 100)
+
+    assertEquals(1, slices.size)
+    assertEquals("Alpha.\n\nBeta.\n\nGamma.", slices[0].annotatedText.plainText)
+  }
+
+  @Test
+  fun testMinFragmentSizeZeroCutsEveryParagraph() {
+    val annotatedText: AnnotatedText = text("Alpha.\n\nBeta.\n\nGamma.")
+    // The default of 0 preserves cut-at-every-paragraph behavior.
+    val slices: List<AnnotatedTextSlicer.Slice> = AnnotatedTextSlicer.slice(annotatedText, 0)
+
+    assertEquals(3, slices.size)
+  }
+
   companion object {
     private fun text(plainText: String): AnnotatedText =
       AnnotatedTextBuilder().addText(plainText).build()
