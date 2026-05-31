@@ -104,6 +104,7 @@ class LtexTextDocumentService(
     if (getDocument(uri) == null) return
 
     this.documents.remove(uri)
+    this.languageServer.fragmentCache.removeByUri(uri)
 
     if (this.languageServer.settingsManager.settings.clearDiagnosticsWhenClosingFile) {
       languageServer.languageClient?.publishDiagnostics(PublishDiagnosticsParams(uri, emptyList()))

@@ -43,6 +43,7 @@ data class Settings(
   private val _diagnosticSeverity: Map<String, DiagnosticSeverity>? = null,
   private val _checkFrequency: CheckFrequency? = null,
   private val _clearDiagnosticsWhenClosingFile: Boolean? = null,
+  private val _fragmentCacheTtlMinutes: Long? = null,
 ) {
   val enabled: Set<String>
     get() = (this._enabled ?: DEFAULT_ENABLED)
@@ -96,6 +97,8 @@ data class Settings(
     get() = (this._checkFrequency ?: CheckFrequency.Edit)
   val clearDiagnosticsWhenClosingFile: Boolean
     get() = (this._clearDiagnosticsWhenClosingFile ?: true)
+  val fragmentCacheTtlMinutes: Long
+    get() = (this._fragmentCacheTtlMinutes ?: DEFAULT_FRAGMENT_CACHE_TTL_MINUTES)
 
   /**
    * Returns differences between `this` and `other` that call for
@@ -217,6 +220,7 @@ data class Settings(
         "asciidoc",
       )
     private const val DEFAULT_SENTENCE_CACHE_SIZE = 2000L
+    private const val DEFAULT_FRAGMENT_CACHE_TTL_MINUTES = 30L
     private val DEFAULT_DIAGNOSTIC_SEVERITY: Map<String, DiagnosticSeverity> =
       mapOf(Pair("default", DiagnosticSeverity.Information))
     val DEFAULT_PREFERRED_VARIANTS: List<String> = listOf("en-US", "de-DE", "pt-BR")
@@ -346,6 +350,8 @@ data class Settings(
         )
       val clearDiagnosticsWhenClosingFile: Boolean? =
         getSettingFromJsonAsBoolean(jsonSettings, "clearDiagnosticsWhenClosingFile")
+      val fragmentCacheTtlMinutes: Long? =
+        getSettingFromJsonAsLong(jsonSettings, "fragmentCacheTtlMinutes")
 
       return Settings(
         enabled,
@@ -371,6 +377,7 @@ data class Settings(
         diagnosticSeverity,
         checkFrequency,
         clearDiagnosticsWhenClosingFile,
+        fragmentCacheTtlMinutes,
       )
     }
 
