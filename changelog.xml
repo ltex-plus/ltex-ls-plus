@@ -14,6 +14,9 @@
   </properties>
   <body>
     <release version="18.7.0" date="upcoming">
+      <action type="add" due-to="Andrea Alberti (@alberti42)">
+        Check trailing/inline Emacs Lisp comments (`(some code) ; comment`), not only standalone comment lines. Applies to `elisp` / `emacs-lisp`.
+      </action>
       <action type="update" due-to="Andrea Alberti (@alberti42)">
         Disable LanguageTool's internal per-sentence result cache by default: the `ltex.sentenceCacheSize` default changes from `2000` to `0`. The new per-paragraph fragment cache supersedes it for the edit loop and, unlike the in-process cache, also covers the remote HTTP backend — so keeping the sentence cache around only added CPU/memory overhead and another point of failure. A value of `0` is the natural floor of the capacity setting (`2000` → … → `1` sentence → `0` = nothing cached), not a separate on/off flag; internally any non-positive value maps to a `null` `ResultCache`, so LanguageTool takes its genuine no-cache code path rather than allocating a zero-capacity cache that would still run its eviction machinery on every lookup. Set `ltex.sentenceCacheSize` to a positive value to re-enable it.
       </action>

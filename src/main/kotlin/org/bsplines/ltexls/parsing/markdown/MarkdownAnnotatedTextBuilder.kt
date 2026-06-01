@@ -45,6 +45,17 @@ class MarkdownAnnotatedTextBuilder(
   // pure Markdown documents leave it false so a literal `` `foo' `` keeps
   // its original meaning.
   private val enableEmacsQuoteRewriting: Boolean = false,
+  // When true, `addComment` additionally neutralises Emacs *docstring* markup
+  // directives so they do not surface as grammar/spelling false positives:
+  // key substitutions (`\\[command]`, `\\{keymap}`, `\\<keymap>`), the
+  // self-quoting escape `\\=` (including the `` `symbol\\=' `` form), and a
+  // leading `*` user-variable marker handled by the caller. Every replacement
+  // is length-preserving, so the shadow-markup offset arithmetic that maps
+  // matches back to the original source stays valid. Opt-in: only
+  // ElispAnnotatedTextBuilder sets this true (for elisp / emacs-lisp); it is
+  // independent of `enableEmacsQuoteRewriting` and both may be enabled
+  // together.
+  private val enableElispDocstringDirectives: Boolean = false,
 ) : CodeAnnotatedTextBuilder(codeLanguageId) {
   private val parser: Parser = Parser.builder(PARSER_OPTIONS).build()
   private var code = ""
@@ -193,11 +204,49 @@ class MarkdownAnnotatedTextBuilder(
   // or whitespace, matching the Emacs convention of using this form only
   // around bare symbol names (`lsp-mode'`, `pp-buffer'`, …) and not around
   // longer phrases.
-  private fun rewriteEmacsQuotesIfEnabled(segment: String): String =
+  private fun rewriteEmacsQuotesIfEnabled(segment: String): String {
+    var result: String = segment
+
     if (this.enableEmacsQuoteRewriting) {
-      segment.replace(EMACS_QUOTED_IDENTIFIER_REGEX, "`$1`")
-    } else {
-      segment
+      result = result.replace(EMACS_QUOTED_IDENTIFIER_REGEX, "`$1`")
+    }
+
+    if (this.enableElispDocstringDirectives) {
+      result = neutralizeElispDocstringDirectives(result)
+    }
+
+    return result
+  }
+
+  // Length-preserving neutralisation of Emacs docstring markup directives. Each
+  // directive is rewritten to the same number of characters so the shadow-
+  // markup mapping (which assumes `clearCode` and the original source share a
+  // length) keeps pointing at the right source offsets. Key substitutions and
+  // `` `symbol\\=' `` become flexmark inline code (collapsed to a Dummy token
+  // downstream); a bare `\\=` becomes whitespace.
+  private fun neutralizeElispDocstringDirectives(segment: String): String {
+    var result: String = segment
+    result =
+      result.replace(ELISP_KEY_SUBSTITUTION_REGEX) {
+        lengthPreservingInlineCode(it.value.length)
+      }
+    result =
+      result.replace(ELISP_QUOTED_IDENTIFIER_WITH_ESCAPE_REGEX) {
+        lengthPreservingInlineCode(it.value.length)
+      }
+    result =
+      result.replace(ELISP_QUOTE_ESCAPE_REGEX) {
+        " ".repeat(it.value.length)
+      }
+    return result
+  }
+
+  private fun lengthPreservingInlineCode(length: Int): String =
+    when {
+      length <= 0 -> ""
+      length == 1 -> "`"
+      length == 2 -> "``"
+      else -> "`" + "x".repeat(length - 2) + "`"
     }
 
   private fun visit(node: Node) {
@@ -315,6 +364,19 @@ class MarkdownAnnotatedTextBuilder(
     // straight apostrophe. The body group is captured so the rewrite can
     // wrap it in matched backticks for flexmark.
     private val EMACS_QUOTED_IDENTIFIER_REGEX: Regex = Regex("`([^`'\\s]+)'")
+
+    // Emacs docstring key substitutions `\\[command]`, `\\{keymap}` and
+    // `\\<keymap>`. In source the backslash is doubled (the elisp string holds
+    // a single backslash), so the pattern matches two literal backslashes.
+    private val ELISP_KEY_SUBSTITUTION_REGEX: Regex = Regex("""\\\\[\[{<][^\]}>\n]*[\]}>]""")
+
+    // The `` `symbol\\=' `` form: a quoted identifier whose closing apostrophe
+    // is preceded by the self-quoting `\\=` escape. Handled before the bare
+    // `\\=` rule so the whole construct collapses to a single inline-code span.
+    private val ELISP_QUOTED_IDENTIFIER_WITH_ESCAPE_REGEX: Regex = Regex("""`[^`'\s]+\\\\='""")
+
+    // A bare self-quoting escape `\\=` (two source backslashes plus `=`).
+    private val ELISP_QUOTE_ESCAPE_REGEX: Regex = Regex("""\\\\=""")
 
     private val PARSER_OPTIONS: DataHolder =
       MutableDataSet()

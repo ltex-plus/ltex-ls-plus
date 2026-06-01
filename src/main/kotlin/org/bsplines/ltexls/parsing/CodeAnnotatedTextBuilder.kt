@@ -16,6 +16,7 @@ import org.bsplines.ltexls.parsing.markdown.MarkdownAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.nop.NopAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.org.OrgAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.plaintext.PlaintextAnnotatedTextBuilder
+import org.bsplines.ltexls.parsing.program.ElispAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.program.ProgramAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.program.ProgramCommentRegexs
 import org.bsplines.ltexls.parsing.restructuredtext.RestructuredtextAnnotatedTextBuilder
@@ -142,6 +143,12 @@ abstract class CodeAnnotatedTextBuilder(
         "tex",
         -> {
           LatexAnnotatedTextBuilder(codeLanguageId)
+        }
+
+        "elisp",
+        "emacs-lisp",
+        -> {
+          ElispAnnotatedTextBuilder(codeLanguageId)
         }
 
         "markdown",
