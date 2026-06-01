@@ -41,29 +41,12 @@ class ElispAnnotatedTextBuilder(
       enableElispDocstringDirectives = true,
     )
 
-  private val commentRegexs = ProgramCommentRegexs.fromCodeLanguageId(codeLanguageId)
-  private val commentBlockRegex: Regex = commentRegexs.commentBlockRegex
-  private val lineCommentPatternString: String? = commentRegexs.lineCommentRegexString
-
   override fun addCode(code: String): CodeAnnotatedTextBuilder {
     val reader = ElispReader(code)
     reader.read()
 
     val segments: MutableList<Segment> = ArrayList()
-
-    for (matchResult: MatchResult in commentBlockRegex.findAll(code)) {
-      val isLineComment: Boolean = (matchResult.groups["lineComment"] != null)
-      val commentGroupName: String = (if (isLineComment) "lineComment" else "blockComment")
-      val commentGroup: MatchGroup = matchResult.groups[commentGroupName] ?: continue
-      val start: Int = commentGroup.range.first
-      val endExclusive: Int = commentGroup.range.last + 1
-
-      // A `;` inside a string literal is not a comment. The reader knows every
-      // string span, so keep only comment matches that overlap no string.
-      if (reader.stringSpans.none { rangesOverlap(start, endExclusive, it) }) {
-        segments += CommentSegment(start, endExclusive, isLineComment)
-      }
-    }
+    segments += buildCommentSegments(code, reader.commentSpans)
 
     for (docstring: ElispReader.DocstringSpan in reader.docstringSpans) {
       segments += DocstringSegment(docstring)
@@ -97,6 +80,55 @@ class ElispAnnotatedTextBuilder(
 
     if (curPos < code.length) annotatedTextBuilder.addMarkup(code.substring(curPos))
     return this
+  }
+
+  // Turns the reader's raw comment spans into checked segments. Consecutive
+  // standalone (line-leading) comment lines are coalesced into a single block so
+  // a sentence wrapping across `;;` lines is checked as one unit; trailing/inline
+  // comments (code before the `;`) become individual single-line segments.
+  // Non-checkable comments (`;text`, `;;;sections`, …) are dropped here and so
+  // remain inert markup.
+  private fun buildCommentSegments(
+    code: String,
+    comments: List<ElispReader.CommentSpan>,
+  ): List<CommentSegment> {
+    val result: MutableList<CommentSegment> = ArrayList()
+    var blockStart = -1
+    var blockEnd = -1
+
+    fun flushBlock() {
+      if (blockStart >= 0) {
+        result += CommentSegment(blockStart, blockEnd, isLineComment = true)
+        blockStart = -1
+      }
+    }
+
+    for (comment: ElispReader.CommentSpan in comments) {
+      when {
+        !comment.checkable -> {
+          flushBlock()
+        }
+
+        !comment.lineLeading -> {
+          flushBlock()
+          result += CommentSegment(comment.start, comment.end, isLineComment = true)
+        }
+
+        (blockStart >= 0) &&
+          BETWEEN_COMMENT_LINES_REGEX.matches(code.substring(blockEnd, comment.start)) -> {
+          blockEnd = comment.end
+        }
+
+        else -> {
+          flushBlock()
+          blockStart = comment.start
+          blockEnd = comment.end
+        }
+      }
+    }
+
+    flushBlock()
+    return result
   }
 
   private fun addDocstring(
@@ -133,13 +165,7 @@ class ElispAnnotatedTextBuilder(
     val lineContentsRegex =
       Regex(
         "[ \t]*" +
-          (
-            if (isLineComment && (lineCommentPatternString != null)) {
-              lineCommentPatternString
-            } else {
-              ""
-            }
-          ) +
+          (if (isLineComment) LINE_COMMENT_MARKER else "") +
           "(?:" + Regex.escape(commonFirstCharacter) + ")?[ \t]*(.*?)(?:\r?\n|$)",
       )
     var curPos = 0
@@ -213,28 +239,32 @@ class ElispAnnotatedTextBuilder(
     private val LINE_SEPARATOR_REGEX = Regex("\r?\n")
     private val FIRST_CHARACTER_REGEX = Regex("^[ \t]*(?:([#$%*+\\-/])|(.))")
 
-    private fun rangesOverlap(
-      start: Int,
-      endExclusive: Int,
-      span: IntRange,
-    ): Boolean = (start <= span.last) && (span.first < endExclusive)
+    // Emacs Lisp comment markers are any run of semicolons (`;`, `;;`, `;;;`
+    // section headings, `;;;;` file headers, …); all leading semicolons are
+    // stripped before the prose is checked.
+    private const val LINE_COMMENT_MARKER = ";+"
+
+    // Matches the gap between two standalone comment lines that should coalesce:
+    // exactly one line terminator followed by the next line's indentation.
+    private val BETWEEN_COMMENT_LINES_REGEX = Regex("\r?\n[ \t]*")
   }
 }
 
 /**
  * Minimal s-expression reader that records, for an Emacs Lisp source string,
- * every string literal span and the subset of those that are docstrings.
+ * every `;` comment span and the string literals that are docstrings.
  *
  * It is intentionally a *scanner*, not a full reader: it tracks parenthesis
  * nesting, string/char-literal/comment lexical state, and the head symbol plus
  * element index of each list, which is everything needed to apply the
  * [DOCSTRING_FORMS] position table. It does not build an AST or evaluate
- * anything.
+ * anything. Because comments are recognised lexically, a `;` inside a string or
+ * character literal is never reported as a comment.
  */
 internal class ElispReader(
   private val code: String,
 ) {
-  val stringSpans: MutableList<IntRange> = ArrayList()
+  val commentSpans: MutableList<CommentSpan> = ArrayList()
   val docstringSpans: MutableList<DocstringSpan> = ArrayList()
 
   /** A docstring string literal, with delimiter-inclusive and content ranges. */
@@ -243,6 +273,23 @@ internal class ElispReader(
     val contentStart: Int,
     val contentEnd: Int,
     val fullEnd: Int,
+  )
+
+  /**
+   * A `;`-introduced comment. [start] is the first `;`; [end] is the line
+   * terminator (or end of input), excluding any `\r`/`\n`. [checkable] is true
+   * when the comment's run of leading semicolons is followed by whitespace or
+   * end-of-line (the convention for prose comments — `;`, `;;`, `;;;` headings
+   * and `;;;;` file headers all qualify; `;text` with no space does not).
+   * [lineLeading] is true when only
+   * whitespace precedes the comment on its line (a standalone comment, as
+   * opposed to a trailing/inline comment after code).
+   */
+  class CommentSpan(
+    val start: Int,
+    val end: Int,
+    val checkable: Boolean,
+    val lineLeading: Boolean,
   )
 
   private class Form {
@@ -273,7 +320,8 @@ internal class ElispReader(
       when {
         c == ';' -> {
           var j: Int = i + 1
-          while ((j < n) && (code[j] != '\n')) j++
+          while ((j < n) && (code[j] != '\n') && (code[j] != '\r')) j++
+          recordComment(i, j)
           i = j
         }
 
@@ -366,8 +414,6 @@ internal class ElispReader(
     val contentEnd: Int = if (j < n) j else n
     val fullEnd: Int = if (j < n) j + 1 else n
 
-    stringSpans += fullStart until fullEnd
-
     val top: Form? = stack.lastOrNull()
     if (top != null) {
       val elementIndex: Int = top.childCount
@@ -385,6 +431,38 @@ internal class ElispReader(
     val index: Int = top.childCount
     top.childCount++
     return index
+  }
+
+  /**
+   * Records the comment spanning [start] (the first `;`) up to [end] (the line
+   * terminator or end of input), classifying it as checkable and line-leading.
+   * Reached only from the reader's lexical comment branch, so a `;` inside a
+   * string or character literal never gets here.
+   */
+  private fun recordComment(
+    start: Int,
+    end: Int,
+  ) {
+    var semicolons = 0
+    while ((start + semicolons < end) && (code[start + semicolons] == ';')) semicolons++
+
+    // Any run of semicolons is a valid comment marker (`;;;` headings, `;;;;`
+    // file headers, …); it is prose only when followed by whitespace or EOL.
+    val afterMarker: Int = start + semicolons
+    val checkable: Boolean =
+      (afterMarker >= end) || (code[afterMarker] == ' ') || (code[afterMarker] == '\t')
+
+    var lineLeading = true
+    var b: Int = start - 1
+    while ((b >= 0) && (code[b] != '\n')) {
+      if ((code[b] != ' ') && (code[b] != '\t') && (code[b] != '\r')) {
+        lineLeading = false
+        break
+      }
+      b--
+    }
+
+    commentSpans += CommentSpan(start, end, checkable, lineLeading)
   }
 
   private fun detectDocstring(form: Form) {

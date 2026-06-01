@@ -14,17 +14,79 @@ import kotlin.test.Test
 class ElispAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("elisp") {
   @Test
   fun testComments() {
-    // Comment behaviour matches ProgramAnnotatedTextBuilder: only standalone
-    // comment lines with a space after the delimiter are checked.
+    // Trailing/inline comments after code (line 1) ARE checked for elisp.
+    // `;text` with no space after the marker (line 2) is not checked.
+    // Consecutive standalone `;;` lines (3-4) coalesce into one block.
     assertPlainText(
       """
-      Sentence 1 - no check ; Sentence 2 - no check
+      Sentence 1 - no check ; Sentence 2 - check
       ;Sentence 3 - no check
       ;; Sentence 4 -
       ;; check
 
       """.trimIndent(),
-      "\n\n\nSentence 4 -\ncheck",
+      "\n\n\nSentence 2 - check\n\n\nSentence 4 -\ncheck",
+    )
+  }
+
+  @Test
+  fun testTrailingCommentAfterCode() {
+    assertPlainText(
+      "(setq foo 1) ; increment the counter later\n",
+      "\n\n\nincrement the counter later",
+    )
+  }
+
+  @Test
+  fun testTrailingCommentEmacsQuotedIdentifier() {
+    assertPlainText(
+      "(foo) ; see `bar' for details\n",
+      "\n\n\nsee Dummy0 for details",
+    )
+  }
+
+  @Test
+  fun testSemicolonInStringIsNotInlineComment() {
+    // The `;` inside the string is not a comment; the trailing `;` after the
+    // closing paren is.
+    assertPlainText(
+      "(setq x \"a ; not a comment\") ; but this is\n",
+      "\n\n\nbut this is",
+    )
+  }
+
+  @Test
+  fun testSectionHeadingsChecked() {
+    // `;;;` section headings and `;;;;` file headers are prose and checked;
+    // `;text` (no space after the marker) is not.
+    assertPlainText(
+      ";;; Code:\n;nospace\n;; Real comment here.\n",
+      "\n\n\nCode:\n\n\nReal comment here.",
+    )
+  }
+
+  @Test
+  fun testFourSemicolonHeadingChecked() {
+    assertPlainText(
+      ";;;; File header summary.\n",
+      "\n\n\nFile header summary.",
+    )
+  }
+
+  @Test
+  fun testBlankCommentLineSeparatesParagraphs() {
+    // A bare `;;` line inside a coalesced comment block must survive as a blank
+    // line so the two paragraphs are not merged into one (the checker would
+    // otherwise run a sentence across the paragraph boundary). Lines within a
+    // paragraph are joined with a single newline; the blank line becomes `\n\n`.
+    assertPlainText(
+      ";; First line\n" +
+        ";; second line of the same paragraph\n" +
+        ";;\n" +
+        ";; New line of new paragraph\n" +
+        ";; second line of second paragraph\n",
+      "\n\n\nFirst line\nsecond line of the same paragraph" +
+        "\n\nNew line of new paragraph\nsecond line of second paragraph",
     )
   }
 
