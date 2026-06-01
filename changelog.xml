@@ -15,6 +15,9 @@
   <body>
     <release version="18.7.0" date="upcoming">
       <action type="add" due-to="Andrea Alberti (@alberti42)">
+        Spell- and grammar-check Emacs Lisp docstrings (in `defun`, `defcustom`, `defvar`, `define-minor-mode` and similar definition forms), not just comments. Docstring markup directives such as `\\[command]` and `` `symbol' `` are ignored so they do not cause false positives. Applies to `elisp` / `emacs-lisp`.
+      </action>
+      <action type="add" due-to="Andrea Alberti (@alberti42)">
         Check trailing/inline Emacs Lisp comments (`(some code) ; comment`), not only standalone comment lines. Applies to `elisp` / `emacs-lisp`.
       </action>
       <action type="update" due-to="Andrea Alberti (@alberti42)">

@@ -160,15 +160,19 @@ class ProgramAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("") {
 
   @Test
   fun testElisp() {
+    // Unlike "lisp"/"clojure" (testLisp), elisp routes through
+    // ElispAnnotatedTextBuilder, which also checks trailing/inline comments
+    // (line 1's "Sentence 2 - check"). See ElispAnnotatedTextBuilderTest for the
+    // full elisp coverage.
     assertPlainText(
       """
-      Sentence 1 - no check ; Sentence 2 - no check
+      Sentence 1 - no check ; Sentence 2 - check
       ;Sentence 3 - no check
       ;; Sentence 4 -
       ;; check
 
       """.trimIndent(),
-      "\n\n\nSentence 4 -\ncheck",
+      "\n\n\nSentence 2 - check\n\n\nSentence 4 -\ncheck",
       "elisp",
     )
   }
@@ -177,13 +181,13 @@ class ProgramAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("") {
   fun testEmacsLisp() {
     assertPlainText(
       """
-      Sentence 1 - no check ; Sentence 2 - no check
+      Sentence 1 - no check ; Sentence 2 - check
       ;Sentence 3 - no check
       ;; Sentence 4 -
       ;; check
 
       """.trimIndent(),
-      "\n\n\nSentence 4 -\ncheck",
+      "\n\n\nSentence 2 - check\n\n\nSentence 4 -\ncheck",
       "emacs-lisp",
     )
   }
