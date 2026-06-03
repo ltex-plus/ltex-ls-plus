@@ -44,8 +44,12 @@ object AnnotatedTextSlicer {
 
     val state = SliceState()
     var cutIndex = 0
+    val parts: List<TextPart> = annotatedText.parts
+    var partIndex = 0
 
-    for (part: TextPart in annotatedText.parts) {
+    while (partIndex < parts.size) {
+      val part: TextPart = parts[partIndex]
+
       // Boundary cuts at the current plain-text position close the slice before
       // this part is emitted, so any markup here begins the next paragraph's
       // slice rather than trailing the previous one.
@@ -53,7 +57,26 @@ object AnnotatedTextSlicer {
         state.closeSlice(state.sourcePos)
         cutIndex++
       }
-      cutIndex = state.emitPart(part, cutPoints, cutIndex)
+
+      // A MARKUP immediately followed by its FAKE_CONTENT interpretation is the
+      // result of a single addMarkup(markup, interpretAs) call and must be re-emitted
+      // as one (exactly as mergeAnnotatedTexts/appendParts does). Emitting them as
+      // separate addMarkup(markup) + addMarkup("", interpretAs) calls would insert a
+      // spurious empty MARKUP part between them, desynchronizing downstream
+      // markup<->fake pairing (e.g. AnnotatedTextFragment.invertAnnotatedText, which
+      // looks only one part ahead) and corrupting plain<->source position mapping.
+      if (
+        (part.type == TextPart.Type.MARKUP) &&
+        (partIndex + 1 < parts.size) &&
+        (parts[partIndex + 1].type == TextPart.Type.FAKE_CONTENT)
+      ) {
+        cutIndex =
+          state.emitMarkupWithFakeContent(part.part, parts[partIndex + 1].part, cutPoints, cutIndex)
+        partIndex += 2
+      } else {
+        cutIndex = state.emitPart(part, cutPoints, cutIndex)
+        partIndex++
+      }
     }
 
     state.finish()
@@ -218,6 +241,51 @@ object AnnotatedTextSlicer {
       addPiece(isText, string.substring(localStart))
       plainPos += plainLength
       if (isText) sourcePos += plainLength
+      return cutIndex
+    }
+
+    // Emits a MARKUP part together with its FAKE_CONTENT interpretation as a single
+    // addMarkup(markup, interpretAs) call, so the slice has no spurious empty MARKUP
+    // part separating them. The markup carries source (its length) but no plain text;
+    // the interpretAs carries plain text but no source. A cut can only fall inside the
+    // interpretAs (the markup itself is never a split site); in that case the real
+    // markup stays with the first piece and any later pieces are bare fake
+    // continuations, which is the one situation where an empty markup is correct.
+    fun emitMarkupWithFakeContent(
+      markup: String,
+      interpretAs: String,
+      cutPoints: List<Int>,
+      startCutIndex: Int,
+    ): Int {
+      var cutIndex: Int = startCutIndex
+      var localStart = 0
+      val plainLength: Int = interpretAs.length
+      var markupPending = true
+
+      while (
+        (cutIndex < cutPoints.size) &&
+        (cutPoints[cutIndex] > plainPos) &&
+        (cutPoints[cutIndex] < plainPos + plainLength)
+      ) {
+        val localCut: Int = cutPoints[cutIndex] - plainPos
+        builder.addMarkup(
+          if (markupPending) markup else "",
+          interpretAs.substring(localStart, localCut),
+        )
+        // The markup's source belongs to the first piece's slice; account for it
+        // before closing so the next slice starts after the markup.
+        if (markupPending) {
+          sourcePos += markup.length
+          markupPending = false
+        }
+        closeSlice(sourcePos)
+        localStart = localCut
+        cutIndex++
+      }
+
+      builder.addMarkup(if (markupPending) markup else "", interpretAs.substring(localStart))
+      if (markupPending) sourcePos += markup.length
+      plainPos += plainLength
       return cutIndex
     }
 

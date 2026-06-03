@@ -163,6 +163,33 @@ class AnnotatedTextSlicerTest {
     assertSlicesPartitionSource(annotatedText, slices)
   }
 
+  // Regression: a MARKUP immediately followed by its FAKE_CONTENT interpretation
+  // (e.g. inline math "$x$" -> dummy "Dummy0") that lands in a sliced paragraph must
+  // be re-emitted as a single addMarkup(markup, interpretAs), NOT as
+  // addMarkup(markup) + addMarkup("", interpretAs). The latter inserts a spurious
+  // empty MARKUP part between the markup and its fake content, which desynchronizes
+  // the one-part-lookahead markup<->fake pairing used by
+  // AnnotatedTextFragment.invertAnnotatedText and shifts getSubstringOfPlainText.
+  @Test
+  fun testMarkupFakeContentPairNotSplitByEmptyMarkup() {
+    val builder = AnnotatedTextBuilder()
+    builder.addText("First paragraph of prose here.\n\n")
+    builder.addText("Then ")
+    builder.addMarkup("\$x\$", "Dummy0") // MARKUP "$x$" with FAKE_CONTENT "Dummy0"
+    builder.addText(" gives an eigenspace here.")
+    val annotatedText: AnnotatedText = builder.build()
+    val slices: List<AnnotatedTextSlicer.Slice> = AnnotatedTextSlicer.slice(annotatedText)
+
+    assertEquals(2, slices.size)
+    assertEquals("Then Dummy0 gives an eigenspace here.", slices[1].annotatedText.plainText)
+    for (slice: AnnotatedTextSlicer.Slice in slices) {
+      assertNoEmptyMarkupSeparatingFake(slice.annotatedText)
+    }
+    // The markup+fake pairing must not disturb source/plain accounting.
+    assertEquals(annotatedText.plainText, slices.joinToString("") { it.annotatedText.plainText })
+    assertSlicesPartitionSource(annotatedText, slices)
+  }
+
   // Merging the slices of a sliced text reproduces the original plain text and
   // part structure — the inverse of slice(), used to batch a run of cache-miss
   // paragraphs into one request.
@@ -198,6 +225,22 @@ class AnnotatedTextSlicerTest {
   companion object {
     private fun text(plainText: String): AnnotatedText =
       AnnotatedTextBuilder().addText(plainText).build()
+
+    // Asserts the markup<->fake invariant relied on by AnnotatedTextFragment: every
+    // FAKE_CONTENT part is immediately preceded by a (non-empty) MARKUP part, i.e.
+    // there is no empty MARKUP wedged between a real markup and its fake content.
+    private fun assertNoEmptyMarkupSeparatingFake(annotatedText: AnnotatedText) {
+      val parts: List<TextPart> = annotatedText.parts
+      for (i in parts.indices) {
+        if (parts[i].type != TextPart.Type.FAKE_CONTENT) continue
+        assertTrue(
+          (i > 0) &&
+            (parts[i - 1].type == TextPart.Type.MARKUP) &&
+            parts[i - 1].part.isNotEmpty(),
+          "FAKE_CONTENT at part $i must follow a non-empty MARKUP (no empty markup wedge)",
+        )
+      }
+    }
 
     // Total source length = sum of TEXT and MARKUP part lengths (FAKE_CONTENT
     // exists only in plain text and contributes zero source characters).
