@@ -15,6 +15,7 @@ import java.util.logging.Level
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class SettingsTest {
@@ -148,6 +149,35 @@ class SettingsTest {
     val expandedDirPath = settings.languageModelRulesDirectory
     assertTrue(expandedDirPath.endsWith("tildeExpansion"))
     assertNotEquals(originalDirPath, expandedDirPath)
+  }
+
+  @Test
+  fun testResolveEnvironmentVariableReference() {
+    // Pick an environment variable that is actually set and whose name matches
+    // the reference grammar, so the test does not depend on a hard-coded name.
+    val setEntry: Map.Entry<String, String>? =
+      System.getenv().entries.firstOrNull {
+        Regex("""^[A-Za-z_][A-Za-z0-9_]*$""").matches(it.key) && it.value.isNotEmpty()
+      }
+    assertNotNull(setEntry, "expected at least one usable environment variable")
+    val name: String = setEntry.key
+
+    // Whole-value reference resolves to the variable's value, in both getters.
+    var settings = Settings().copy(_languageToolOrgApiKey = "\${$name}")
+    assertEquals(setEntry.value, settings.languageToolOrgApiKey)
+    settings = Settings().copy(_languageToolOrgUsername = "\${$name}")
+    assertEquals(setEntry.value, settings.languageToolOrgUsername)
+
+    // A reference to an unset variable degrades to the empty string (anonymous).
+    settings = Settings().copy(_languageToolOrgApiKey = "\${LTEX_DEFINITELY_UNSET_VAR_XYZ}")
+    assertEquals("", settings.languageToolOrgApiKey)
+
+    // Non-reference values are returned verbatim: a plain literal, and a value
+    // that merely contains "${" without being a whole-value reference.
+    settings = Settings().copy(_languageToolOrgApiKey = "literal-key")
+    assertEquals("literal-key", settings.languageToolOrgApiKey)
+    settings = Settings().copy(_languageToolOrgApiKey = "prefix-\${$name}")
+    assertEquals("prefix-\${$name}", settings.languageToolOrgApiKey)
   }
 
   @Test

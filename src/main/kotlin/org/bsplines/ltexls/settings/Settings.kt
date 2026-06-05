@@ -84,9 +84,9 @@ data class Settings(
   val languageToolHttpServerUri: String
     get() = (this._languageToolHttpServerUri ?: "")
   val languageToolOrgUsername: String
-    get() = (this._languageToolOrgUsername ?: "")
+    get() = resolveEnvironmentVariableReference(this._languageToolOrgUsername ?: "")
   val languageToolOrgApiKey: String
-    get() = (this._languageToolOrgApiKey ?: "")
+    get() = resolveEnvironmentVariableReference(this._languageToolOrgApiKey ?: "")
   val logLevel: Level
     get() = (this._logLevel ?: Level.FINE)
   val sentenceCacheSize: Long
@@ -485,6 +485,36 @@ data class Settings(
 
     private val LANGUAGE_TAG_REGEX: Regex =
       Regex("""^([A-Za-z]{2,3})(?:-([A-Za-z]{2}))?(-.*)?$""")
+
+    // Matches a setting whose *entire* value is a single environment-variable
+    // reference, e.g. "${LANGUAGETOOL_API_KEY}". Whole-value only (no inline
+    // interpolation) so there is nothing to escape and a literal value that
+    // merely contains "${" is never mangled. The captured name is restricted
+    // to the POSIX-portable identifier charset.
+    private val ENVIRONMENT_VARIABLE_REFERENCE_REGEX: Regex =
+      Regex("""^\$\{([A-Za-z_][A-Za-z0-9_]*)}$""")
+
+    /**
+     * Resolves a setting value of the form `${ENV_VAR}` to the value of that
+     * environment variable, looked up via [System.getenv] (never a shell, so
+     * there is no injection surface). Any other value is returned verbatim.
+     * A reference to an unset/empty variable resolves to the empty string and
+     * logs a warning, so a misconfiguration degrades to "no credentials"
+     * (anonymous checking) rather than sending the literal placeholder to the
+     * LanguageTool server.
+     */
+    private fun resolveEnvironmentVariableReference(value: String): String {
+      val name: String =
+        ENVIRONMENT_VARIABLE_REFERENCE_REGEX.matchEntire(value)?.groupValues?.get(1) ?: return value
+      val resolved: String? = System.getenv(name)
+
+      if (resolved.isNullOrEmpty()) {
+        Logging.LOGGER.warning(I18n.format("environmentVariableNotSet", name))
+        return ""
+      }
+
+      return resolved
+    }
 
     private fun getEnabledFromJson(jsonSettings: JsonElement): Set<String>? {
       val jsonElement: JsonElement? = getSettingFromJsonAsJsonElement(jsonSettings, "enabled")
