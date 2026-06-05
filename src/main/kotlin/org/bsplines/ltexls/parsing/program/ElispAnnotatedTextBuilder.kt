@@ -24,12 +24,12 @@ import org.languagetool.markup.AnnotatedText
  * because the docstring position is form-specific and string boundaries depend
  * on escape and character-literal syntax.
  *
- * Comments keep the exact behaviour of [ProgramAnnotatedTextBuilder] by reusing
- * the same [ProgramCommentRegexs] line-comment regex; comment matches that fall
- * inside a string literal are discarded so a `;` inside a docstring is never
- * mistaken for a comment. The contents of comments and docstrings are
- * interpreted as Markdown, with Emacs quote rewriting and docstring-directive
- * neutralisation enabled (see [MarkdownAnnotatedTextBuilder]).
+ * Comments are detected structurally by [ElispReader], not by the
+ * [ProgramCommentRegexs] line-comment regex: a `;` inside a string or character
+ * literal is recognised lexically and never reported as a comment. The contents
+ * of comments and docstrings are interpreted as Markdown, with Emacs quote
+ * rewriting and docstring-directive neutralisation enabled (see
+ * [MarkdownAnnotatedTextBuilder]).
  */
 class ElispAnnotatedTextBuilder(
   codeLanguageId: String,

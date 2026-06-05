@@ -104,13 +104,19 @@ class DocumentChecker(
     }
 
     val hasRange: Boolean = (rangeStartPos != null)
+    val codeLanguageId: String = codeFragment.codeLanguageId
+    // Languages whose builder extracts comments/docstrings from source: a
+    // sub-range of such a document is bare prose, so it is checked as plaintext.
+    // Emacs Lisp belongs here too but is no longer in the ProgramCommentRegexs
+    // table, so it is matched explicitly.
+    val extractsCommentsFromSource: Boolean =
+      ProgramCommentRegexs.isSupportedCodeLanguageId(codeLanguageId) ||
+        (codeLanguageId == "elisp") || (codeLanguageId == "emacs-lisp")
     val builder: CodeAnnotatedTextBuilder =
-      if (
-        hasRange && ProgramCommentRegexs.isSupportedCodeLanguageId(codeFragment.codeLanguageId)
-      ) {
-        PlaintextAnnotatedTextBuilder(codeFragment.codeLanguageId)
+      if (hasRange && extractsCommentsFromSource) {
+        PlaintextAnnotatedTextBuilder(codeLanguageId)
       } else {
-        CodeAnnotatedTextBuilder.create(codeFragment.codeLanguageId)
+        CodeAnnotatedTextBuilder.create(codeLanguageId)
       }
 
     builder.setSettings(codeFragment.settings)

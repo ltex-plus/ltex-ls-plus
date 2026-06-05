@@ -17,6 +17,7 @@ import org.bsplines.ltexls.parsing.markdown.MarkdownFragmentizer
 import org.bsplines.ltexls.parsing.nop.NopFragmentizer
 import org.bsplines.ltexls.parsing.org.OrgFragmentizer
 import org.bsplines.ltexls.parsing.plaintext.PlaintextFragmentizer
+import org.bsplines.ltexls.parsing.program.ElispFragmentizer
 import org.bsplines.ltexls.parsing.program.ProgramCommentRegexs
 import org.bsplines.ltexls.parsing.program.ProgramFragmentizer
 import org.bsplines.ltexls.parsing.restructuredtext.RestructuredtextFragmentizer
@@ -59,6 +60,12 @@ abstract class CodeFragmentizer(
         "bibtex",
         -> {
           BibtexFragmentizer(codeLanguageId)
+        }
+
+        "elisp",
+        "emacs-lisp",
+        -> {
+          ElispFragmentizer(codeLanguageId)
         }
 
         "git-commit",

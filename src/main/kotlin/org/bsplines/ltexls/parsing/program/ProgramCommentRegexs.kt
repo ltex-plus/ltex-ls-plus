@@ -124,7 +124,10 @@ data class ProgramCommentRegexs(
           lineCommentRegexString = "---?"
         }
 
-        "clojure", "elisp", "emacs-lisp", "lisp" -> {
+        // Emacs Lisp ("elisp"/"emacs-lisp") is intentionally absent: it is
+        // handled structurally by ElispAnnotatedTextBuilder/ElispFragmentizer
+        // (a real s-expression scanner), not by this line-comment regex.
+        "clojure", "lisp" -> {
           lineCommentRegexString = ";;?"
         }
 

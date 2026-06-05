@@ -22,17 +22,9 @@ open class RegexCodeFragmentizer(
     code: String,
     originalSettings: Settings,
   ): List<CodeFragment> {
-    val codeFragments = ArrayList<CodeFragment>()
-    val settingsOverride = SettingsOverride(originalSettings)
-    var curSettings: Settings = settingsOverride.toSettings()
-    var curPos = 0
+    val magicComments = ArrayList<MagicComment>()
 
     for (matchResult: MatchResult in this.regex.findAll(code)) {
-      var lastPos: Int = curPos
-      curPos = matchResult.range.first
-      var lastCode: String = code.substring(lastPos, curPos)
-      codeFragments.add(CodeFragment(codeLanguageId, lastCode, lastPos, curSettings))
-
       var settingsLine: String? = null
 
       for (groupIndex in 1 until matchResult.groups.size) {
@@ -42,24 +34,75 @@ open class RegexCodeFragmentizer(
         }
       }
 
-      if (settingsLine == null) {
-        Logging.LOGGER.warning(I18n.format("couldNotFindSettingsInMatch"))
-        continue
-      }
-
-      SettingsParser.updateSettingsOverride(settingsLine, settingsOverride)
-      curSettings = settingsOverride.toSettings()
-
-      lastPos = curPos
-      curPos = matchResult.range.last + 1
-      lastCode = code.substring(lastPos, curPos)
-      codeFragments.add(CodeFragment("nop", lastCode, lastPos, curSettings))
+      magicComments.add(
+        MagicComment(matchResult.range.first, matchResult.range.last + 1, settingsLine),
+      )
     }
 
-    codeFragments.add(
-      CodeFragment(codeLanguageId, code.substring(curPos), curPos, curSettings),
-    )
+    return buildFragments(codeLanguageId, code, originalSettings, magicComments)
+  }
 
-    return codeFragments
+  /**
+   * A located `ltex:` magic comment: the source span to excise (from [start] to
+   * [endExclusive]) and the settings text it carries ([settingsLine], or null
+   * when a magic comment was matched but its settings group could not be
+   * isolated).
+   */
+  class MagicComment(
+    val start: Int,
+    val endExclusive: Int,
+    val settingsLine: String?,
+  )
+
+  companion object {
+    /**
+     * Splits [code] at the given [magicComments], threading the cumulative
+     * `ltex:` settings overrides through the resulting fragments. Magic comments
+     * must be supplied in source order and must not overlap.
+     *
+     * Shared by regex-driven fragmentizers and scanner-driven ones (e.g. Emacs
+     * Lisp via [org.bsplines.ltexls.parsing.program.ElispFragmentizer]) so the
+     * fragment/settings bookkeeping has a single implementation; only the way
+     * magic comments are *located* differs.
+     */
+    fun buildFragments(
+      codeLanguageId: String,
+      code: String,
+      originalSettings: Settings,
+      magicComments: List<MagicComment>,
+    ): List<CodeFragment> {
+      val codeFragments = ArrayList<CodeFragment>()
+      val settingsOverride = SettingsOverride(originalSettings)
+      var curSettings: Settings = settingsOverride.toSettings()
+      var curPos = 0
+
+      for (magicComment: MagicComment in magicComments) {
+        var lastPos: Int = curPos
+        curPos = magicComment.start
+        var lastCode: String = code.substring(lastPos, curPos)
+        codeFragments.add(CodeFragment(codeLanguageId, lastCode, lastPos, curSettings))
+
+        val settingsLine: String? = magicComment.settingsLine
+
+        if (settingsLine == null) {
+          Logging.LOGGER.warning(I18n.format("couldNotFindSettingsInMatch"))
+          continue
+        }
+
+        SettingsParser.updateSettingsOverride(settingsLine, settingsOverride)
+        curSettings = settingsOverride.toSettings()
+
+        lastPos = curPos
+        curPos = magicComment.endExclusive
+        lastCode = code.substring(lastPos, curPos)
+        codeFragments.add(CodeFragment("nop", lastCode, lastPos, curSettings))
+      }
+
+      codeFragments.add(
+        CodeFragment(codeLanguageId, code.substring(curPos), curPos, curSettings),
+      )
+
+      return codeFragments
+    }
   }
 }
