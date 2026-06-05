@@ -21,37 +21,7 @@ class ProgramFragmentizer(
   override fun fragmentize(
     code: String,
     originalSettings: Settings,
-  ): List<CodeFragment> {
-    val oldCodeFragments: List<CodeFragment> = super.fragmentize(code, originalSettings)
-    val result = ArrayList<CodeFragment>()
-
-    for (oldCodeFragment: CodeFragment in oldCodeFragments) {
-      val settings: Settings = oldCodeFragment.settings
-
-      val dictionary = HashSet<String>(settings.dictionary)
-      dictionary.addAll(DICTIONARY)
-
-      val disabledRules = HashSet<String>(settings.disabledRules)
-
-      for (ruleId: String in DISABLED_RULES) {
-        if (!settings.enabledRules.contains(ruleId)) {
-          disabledRules.add(ruleId)
-        }
-      }
-
-      result.add(
-        oldCodeFragment.copy(
-          settings =
-            settings.copy(
-              _allDictionaries = settings.getModifiedDictionary(dictionary),
-              _allDisabledRules = settings.getModifiedDisabledRules(disabledRules),
-            ),
-        ),
-      )
-    }
-
-    return result
-  }
+  ): List<CodeFragment> = augmentFragments(super.fragmentize(code, originalSettings))
 
   companion object {
     val DICTIONARY =
@@ -69,5 +39,43 @@ class ProgramFragmentizer(
         "UPPERCASE_SENTENCE_START",
         "WHITESPACE_RULE",
       )
+
+    /**
+     * Applies the source-code comment defaults to already-split [fragments]:
+     * adds the programmer-jargon [DICTIONARY] entries and disables the prose
+     * [DISABLED_RULES] that misfire on code comments (unless the user explicitly
+     * enabled them). Shared with [ElispFragmentizer] so Emacs Lisp gets the same
+     * defaults as the regex-driven program languages.
+     */
+    fun augmentFragments(fragments: List<CodeFragment>): List<CodeFragment> {
+      val result = ArrayList<CodeFragment>()
+
+      for (oldCodeFragment: CodeFragment in fragments) {
+        val settings: Settings = oldCodeFragment.settings
+
+        val dictionary = HashSet<String>(settings.dictionary)
+        dictionary.addAll(DICTIONARY)
+
+        val disabledRules = HashSet<String>(settings.disabledRules)
+
+        for (ruleId: String in DISABLED_RULES) {
+          if (!settings.enabledRules.contains(ruleId)) {
+            disabledRules.add(ruleId)
+          }
+        }
+
+        result.add(
+          oldCodeFragment.copy(
+            settings =
+              settings.copy(
+                _allDictionaries = settings.getModifiedDictionary(dictionary),
+                _allDisabledRules = settings.getModifiedDisabledRules(disabledRules),
+              ),
+          ),
+        )
+      }
+
+      return result
+    }
   }
 }
