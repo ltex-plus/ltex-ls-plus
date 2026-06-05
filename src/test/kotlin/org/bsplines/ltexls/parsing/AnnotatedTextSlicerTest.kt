@@ -211,6 +211,32 @@ class AnnotatedTextSlicerTest {
     assertEquals(sourceLength(original), sourceLength(merged))
   }
 
+  // Defensive path: a FAKE_CONTENT whose plain text itself contains a paragraph
+  // break *with content after it* (e.g. interpretAs "\n\nB") would put a cut
+  // strictly inside a markup+fake pair. Real builders never emit such a fake — a
+  // fake is at most exactly "\n\n", whose cut lands on the boundary — so this case
+  // does not occur in practice, but the slicer must still handle it consistently:
+  // the source markup stays with the head and the tail becomes a bare fake
+  // continuation. Correctness (reassembly + source partition) must not depend on
+  // the invariant holding.
+  @Test
+  fun testFakeStraddlingCutIsSplitDefensively() {
+    val builder = AnnotatedTextBuilder()
+    builder.addText("A.")
+    builder.addMarkup("MK", "\n\nB") // FAKE_CONTENT "\n\nB": break with trailing content
+    builder.addText("C")
+    val annotatedText: AnnotatedText = builder.build()
+    val slices: List<AnnotatedTextSlicer.Slice> = AnnotatedTextSlicer.slice(annotatedText)
+
+    assertEquals(2, slices.size)
+    assertEquals("A.\n\n", slices[0].annotatedText.plainText)
+    assertEquals("BC", slices[1].annotatedText.plainText)
+    // "A." (2) + "MK" (2) source chars precede the second slice.
+    assertEquals(4, slices[1].sourceFromPos)
+    assertEquals(annotatedText.plainText, slices.joinToString("") { it.annotatedText.plainText })
+    assertSlicesPartitionSource(annotatedText, slices)
+  }
+
   // Merging a contiguous subset spans exactly those paragraphs.
   @Test
   fun testMergeAnnotatedTextsOfSubset() {
