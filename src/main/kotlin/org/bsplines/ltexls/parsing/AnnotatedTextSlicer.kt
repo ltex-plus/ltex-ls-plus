@@ -29,9 +29,17 @@ import org.languagetool.markup.TextPart
 // (paragraph) from the request unit (run of misses) is what lets an edit
 // re-check one paragraph while a fresh open still sends a single request.
 //
-// Source offsets are preserved so matches reproject correctly: TEXT and MARKUP
-// parts each contribute their length to the source position; FAKE_CONTENT (a
-// synthetic stand-in present only in the plain text) contributes zero.
+// Both slicing and merging re-emit an AnnotatedText's parts as addText/addMarkup
+// calls. The rule for turning raw parts back into those calls (which MARKUP owns
+// which FAKE_CONTENT) lives in exactly one place — parseSegments — so the two
+// paths cannot disagree. A Segment is one logical builder call:
+//   - TextSegment(text)               -> addText(text)
+//   - MarkupSegment(markup, interpretAs) -> addMarkup(markup, interpretAs)
+// where a MarkupSegment with empty interpretAs is a plain addMarkup(markup) and
+// one with empty markup is a bare fake (addMarkup("", interpretAs)). Source
+// offsets are preserved because a Segment's sourceLength counts only its source
+// characters (TextSegment's text, MarkupSegment's markup); FAKE_CONTENT, a
+// synthetic stand-in present only in the plain text, contributes zero source.
 object AnnotatedTextSlicer {
   data class Slice(
     val annotatedText: AnnotatedText,
@@ -44,39 +52,16 @@ object AnnotatedTextSlicer {
 
     val state = SliceState()
     var cutIndex = 0
-    val parts: List<TextPart> = annotatedText.parts
-    var partIndex = 0
 
-    while (partIndex < parts.size) {
-      val part: TextPart = parts[partIndex]
-
+    for (segment: Segment in parseSegments(annotatedText.parts)) {
       // Boundary cuts at the current plain-text position close the slice before
-      // this part is emitted, so any markup here begins the next paragraph's
+      // this segment is emitted, so any markup here begins the next paragraph's
       // slice rather than trailing the previous one.
       while ((cutIndex < cutPoints.size) && (cutPoints[cutIndex] == state.plainPos)) {
         state.closeSlice(state.sourcePos)
         cutIndex++
       }
-
-      // A MARKUP immediately followed by its FAKE_CONTENT interpretation is the
-      // result of a single addMarkup(markup, interpretAs) call and must be re-emitted
-      // as one (exactly as mergeAnnotatedTexts/appendParts does). Emitting them as
-      // separate addMarkup(markup) + addMarkup("", interpretAs) calls would insert a
-      // spurious empty MARKUP part between them, desynchronizing downstream
-      // markup<->fake pairing (e.g. AnnotatedTextFragment.invertAnnotatedText, which
-      // looks only one part ahead) and corrupting plain<->source position mapping.
-      if (
-        (part.type == TextPart.Type.MARKUP) &&
-        (partIndex + 1 < parts.size) &&
-        (parts[partIndex + 1].type == TextPart.Type.FAKE_CONTENT)
-      ) {
-        cutIndex =
-          state.emitMarkupWithFakeContent(part.part, parts[partIndex + 1].part, cutPoints, cutIndex)
-        partIndex += 2
-      } else {
-        cutIndex = state.emitPart(part, cutPoints, cutIndex)
-        partIndex++
-      }
+      cutIndex = state.emitSegment(segment, cutPoints, cutIndex)
     }
 
     state.finish()
@@ -122,51 +107,72 @@ object AnnotatedTextSlicer {
   // preserving part types so the result is exactly the spanning sub-AnnotatedText
   // the builder would have produced for that source range. Used by DocumentChecker
   // to send a run of cache-miss paragraphs as a single LanguageTool request; the
-  // returned matches are then split back per paragraph by source offset. A MARKUP
-  // part optionally followed by its FAKE_CONTENT interpretation is re-emitted as
-  // the original addMarkup(markup, interpretedAs) call; FAKE_CONTENT never appears
-  // without a preceding MARKUP (the slicer emits it via addMarkup("", piece)).
+  // returned matches are then split back per paragraph by source offset.
   fun mergeAnnotatedTexts(annotatedTexts: List<AnnotatedText>): AnnotatedText {
     val builder = AnnotatedTextBuilder()
-    for (annotatedText: AnnotatedText in annotatedTexts) appendParts(builder, annotatedText.parts)
+    for (annotatedText: AnnotatedText in annotatedTexts) {
+      for (segment: Segment in parseSegments(annotatedText.parts)) emit(builder, segment)
+    }
     return builder.build()
   }
 
-  // Re-emits one AnnotatedText's parts into the builder. A MARKUP part optionally
-  // followed by its FAKE_CONTENT interpretation is re-emitted as the original
-  // addMarkup(markup, interpretedAs) call (and the FAKE_CONTENT part skipped); a
-  // bare FAKE_CONTENT is emitted via addMarkup("", piece), as the slicer does.
-  private fun appendParts(
-    builder: AnnotatedTextBuilder,
-    parts: List<TextPart>,
-  ) {
+  // The single place that decides how raw parts map back to builder calls: a
+  // MARKUP optionally followed by its FAKE_CONTENT is one MarkupSegment; a
+  // FAKE_CONTENT with no preceding MARKUP is a bare fake (empty markup). This is
+  // the only knowledge both slice() and mergeAnnotatedTexts() share, so the
+  // pairing rule can never drift between them.
+  private fun parseSegments(parts: List<TextPart>): List<Segment> {
+    val segments = ArrayList<Segment>()
     var i = 0
+
     while (i < parts.size) {
       val part: TextPart = parts[i]
-      val nextIsFakeContent: Boolean =
-        (i < parts.size - 1) && (parts[i + 1].type == TextPart.Type.FAKE_CONTENT)
-
       when (part.type) {
         TextPart.Type.TEXT -> {
-          builder.addText(part.part)
-        }
-
-        TextPart.Type.FAKE_CONTENT -> {
-          builder.addMarkup("", part.part)
+          segments.add(TextSegment(part.part))
         }
 
         TextPart.Type.MARKUP -> {
-          if (nextIsFakeContent) {
-            builder.addMarkup(part.part, parts[i + 1].part)
+          if ((i + 1 < parts.size) && (parts[i + 1].type == TextPart.Type.FAKE_CONTENT)) {
+            segments.add(MarkupSegment(part.part, parts[i + 1].part))
             i++
           } else {
-            builder.addMarkup(part.part)
+            segments.add(MarkupSegment(part.part, ""))
           }
+        }
+
+        TextPart.Type.FAKE_CONTENT -> {
+          segments.add(MarkupSegment("", part.part))
         }
 
         null -> {}
       }
       i++
+    }
+
+    return segments
+  }
+
+  // The single place that turns a Segment back into a builder call. An empty
+  // interpretAs collapses to a plain addMarkup(markup) (the FAKE_CONTENT part is
+  // only emitted for a non-empty interpretAs), matching what the original build
+  // produced.
+  private fun emit(
+    builder: AnnotatedTextBuilder,
+    segment: Segment,
+  ) {
+    when (segment) {
+      is TextSegment -> {
+        builder.addText(segment.text)
+      }
+
+      is MarkupSegment -> {
+        if (segment.interpretAs.isNotEmpty()) {
+          builder.addMarkup(segment.markup, segment.interpretAs)
+        } else {
+          builder.addMarkup(segment.markup)
+        }
+      }
     }
   }
 
@@ -181,8 +187,48 @@ object AnnotatedTextSlicer {
     return false
   }
 
+  // One logical builder call, normalized so slicing and merging share the same
+  // emit and split logic regardless of the underlying part shape. sourceLength is
+  // the number of source characters consumed; plainText is the contribution to
+  // the checker-visible plain text.
+  private sealed interface Segment {
+    val sourceLength: Int
+    val plainText: String
+
+    // Splits the plain text at [index], returning (head, tail). Used only by the
+    // slicer when a cut falls strictly inside this segment.
+    fun splitAtPlain(index: Int): Pair<Segment, Segment>
+  }
+
+  private class TextSegment(
+    val text: String,
+  ) : Segment {
+    override val sourceLength: Int get() = text.length
+    override val plainText: String get() = text
+
+    override fun splitAtPlain(index: Int): Pair<Segment, Segment> =
+      Pair(TextSegment(text.substring(0, index)), TextSegment(text.substring(index)))
+  }
+
+  private class MarkupSegment(
+    val markup: String,
+    val interpretAs: String,
+  ) : Segment {
+    override val sourceLength: Int get() = markup.length
+    override val plainText: String get() = interpretAs
+
+    // The source markup belongs entirely to the head; the tail is a bare fake
+    // continuation (empty markup, zero source). See emitSegment for why this is a
+    // defensive path that real input does not exercise.
+    override fun splitAtPlain(index: Int): Pair<Segment, Segment> =
+      Pair(
+        MarkupSegment(markup, interpretAs.substring(0, index)),
+        MarkupSegment("", interpretAs.substring(index)),
+      )
+  }
+
   // Per-slice accumulation state. plainPos/sourcePos track the running position
-  // at the start of the next part; sourceFromPos is the current slice's source
+  // at the start of the next segment; sourceFromPos is the current slice's source
   // start.
   private class SliceState {
     val slices = ArrayList<Slice>()
@@ -201,99 +247,45 @@ object AnnotatedTextSlicer {
       slices.add(Slice(builder.build(), sourceFromPos))
     }
 
-    // Emits one part, splitting it at any cut points strictly inside its plain
-    // text. Returns the advanced cut index. MARKUP carries no plain text and so
-    // is never split; TEXT advances source 1:1 with plain text, FAKE_CONTENT
-    // advances source by zero.
-    fun emitPart(
-      part: TextPart,
-      cutPoints: List<Int>,
-      startCutIndex: Int,
-    ): Int {
-      val string: String = part.part
-      val isText: Boolean = (part.type == TextPart.Type.TEXT)
-      val isFakeContent: Boolean = (part.type == TextPart.Type.FAKE_CONTENT)
-
-      if (!isText && !isFakeContent) {
-        // MARKUP (or null): source only, no plain text, never a split site.
-        if (part.type == TextPart.Type.MARKUP) builder.addMarkup(string)
-        sourcePos += string.length
-        return startCutIndex
-      }
-
-      var cutIndex: Int = startCutIndex
-      var localStart = 0
-      val plainLength: Int = string.length
-
-      while (
-        (cutIndex < cutPoints.size) &&
-        (cutPoints[cutIndex] > plainPos) &&
-        (cutPoints[cutIndex] < plainPos + plainLength)
-      ) {
-        val localCut: Int = cutPoints[cutIndex] - plainPos
-        addPiece(isText, string.substring(localStart, localCut))
-        // TEXT: source advances with plain text; FAKE_CONTENT: source unchanged.
-        closeSlice(if (isText) sourcePos + localCut else sourcePos)
-        localStart = localCut
-        cutIndex++
-      }
-
-      addPiece(isText, string.substring(localStart))
-      plainPos += plainLength
-      if (isText) sourcePos += plainLength
-      return cutIndex
-    }
-
-    // Emits a MARKUP part together with its FAKE_CONTENT interpretation as a single
-    // addMarkup(markup, interpretAs) call, so the slice has no spurious empty MARKUP
-    // part separating them. The markup carries source (its length) but no plain text;
-    // the interpretAs carries plain text but no source. A cut can only fall inside the
-    // interpretAs (the markup itself is never a split site); in that case the real
-    // markup stays with the first piece and any later pieces are bare fake
-    // continuations, which is the one situation where an empty markup is correct.
-    fun emitMarkupWithFakeContent(
-      markup: String,
-      interpretAs: String,
+    // Emits one segment, splitting it at any cut points strictly inside its plain
+    // text and closing a slice at each. Returns the advanced cut index.
+    //
+    // In practice only TextSegments are ever split: a cut is the end of a "\n\n"
+    // run with content before it, and the builders only ever emit such a run as
+    // genuine prose (a TextSegment) or as a whole fake equal to "\n\n" (whose cut
+    // lands on the segment boundary, handled by the caller's boundary loop, not
+    // here). A fake containing a paragraph break *followed by more content* — the
+    // only way a cut could land strictly inside a MarkupSegment — is never
+    // produced. splitAtPlain still handles that case correctly (markup stays with
+    // the head, tail becomes a bare fake) so correctness does not depend on the
+    // invariant; it just is not exercised by real input.
+    fun emitSegment(
+      segment: Segment,
       cutPoints: List<Int>,
       startCutIndex: Int,
     ): Int {
       var cutIndex: Int = startCutIndex
-      var localStart = 0
-      val plainLength: Int = interpretAs.length
-      var markupPending = true
+      var remaining: Segment = segment
 
       while (
         (cutIndex < cutPoints.size) &&
         (cutPoints[cutIndex] > plainPos) &&
-        (cutPoints[cutIndex] < plainPos + plainLength)
+        (cutPoints[cutIndex] < plainPos + remaining.plainText.length)
       ) {
         val localCut: Int = cutPoints[cutIndex] - plainPos
-        builder.addMarkup(
-          if (markupPending) markup else "",
-          interpretAs.substring(localStart, localCut),
-        )
-        // The markup's source belongs to the first piece's slice; account for it
-        // before closing so the next slice starts after the markup.
-        if (markupPending) {
-          sourcePos += markup.length
-          markupPending = false
-        }
+        val (head: Segment, tail: Segment) = remaining.splitAtPlain(localCut)
+        emit(builder, head)
+        plainPos += head.plainText.length
+        sourcePos += head.sourceLength
         closeSlice(sourcePos)
-        localStart = localCut
+        remaining = tail
         cutIndex++
       }
 
-      builder.addMarkup(if (markupPending) markup else "", interpretAs.substring(localStart))
-      if (markupPending) sourcePos += markup.length
-      plainPos += plainLength
+      emit(builder, remaining)
+      plainPos += remaining.plainText.length
+      sourcePos += remaining.sourceLength
       return cutIndex
-    }
-
-    private fun addPiece(
-      isText: Boolean,
-      piece: String,
-    ) {
-      if (isText) builder.addText(piece) else builder.addMarkup("", piece)
     }
   }
 }
