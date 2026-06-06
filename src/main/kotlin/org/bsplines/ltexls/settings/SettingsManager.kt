@@ -45,7 +45,6 @@ class SettingsManager {
           this.languageToolInterface
         }
 
-      languageToolInterface?.allDictionaries = value.allDictionaries
       languageToolInterface?.allDisabledRules = value.allDisabledRules
       languageToolInterface?.languageToolOrgUsername = value.languageToolOrgUsername
       languageToolInterface?.languageToolOrgApiKey = value.languageToolOrgApiKey
@@ -78,7 +77,6 @@ class SettingsManager {
           this.settings.languageShortCode,
           this.settings.motherTongueShortCode,
           this.settings.sentenceCacheSize,
-          this.settings.dictionary,
         )
       } else {
         LanguageToolHttpInterface(

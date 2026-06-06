@@ -43,10 +43,12 @@ class ProgramAnnotatedTextBuilder(
   private val commentBlockRegex: Regex = commentRegexs.commentBlockRegex
   private val lineCommentPatternString: String? = commentRegexs.lineCommentRegexString
 
-  // This builder only wraps the inner Markdown/reStructuredText builder (addCode
-  // and build delegate to it), so settings must be forwarded there — otherwise
-  // the inner builder never receives ltex.language (used to pick dummy tokens)
-  // or ltex.markdownNodes for prose inside comments/docstrings.
+  // This builder is a pure wrapper: addCode/build delegate to the inner
+  // Markdown/reStructuredText builder, so settings must be configured on that
+  // inner builder, not on this outer shell whose own AnnotatedTextBuilder state
+  // is never used. Otherwise the inner builder never receives ltex.language
+  // (used to pick dummy tokens), ltex.markdownNodes, or the dictionary masker
+  // for prose inside comments/docstrings.
   override fun setSettings(settings: Settings) {
     annotatedTextBuilder.setSettings(settings)
   }

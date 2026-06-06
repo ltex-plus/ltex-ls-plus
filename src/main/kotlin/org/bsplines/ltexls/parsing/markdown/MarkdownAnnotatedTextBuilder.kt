@@ -60,10 +60,8 @@ class MarkdownAnnotatedTextBuilder(
   private val parser: Parser = Parser.builder(PARSER_OPTIONS).build()
   private var code = ""
   private var pos = 0
-  private var dummyCounter = 0
   private var firstCellInTableRow = false
   private val nodeTypeStack = ArrayDeque<String>()
-  private var language: String = "en-US"
   private var shadowMarkups = listOf<Triple<String, Int, Int>>()
   private var shadowOffset = 0
   private val nodeSignatures: MutableList<MarkdownNodeSignature> =
@@ -328,7 +326,6 @@ class MarkdownAnnotatedTextBuilder(
 
   override fun setSettings(settings: Settings) {
     super.setSettings(settings)
-    this.language = settings.languageShortCode
 
     for ((nodeName: String, actionString: String) in settings.markdownNodes) {
       var dummyGenerator: DummyGenerator = DummyGenerator.getInstance()
