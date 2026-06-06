@@ -13,27 +13,15 @@ import org.bsplines.ltexls.parsing.AnnotatedTextFragment
 abstract class LanguageToolInterface {
   // Per-language buckets, keyed by `<lang>` or `<lang>-<REGION>`. The match-time
   // filter looks these up using `annotatedTextFragment.codeFragment.languageShortCode`
-  // so that dictionary / disabled-rule suppression keys correctly under the
-  // *detected* language when ltex.language="auto" — including the HTTP path,
-  // where detection happens server-side and the session-wide
-  // settings.languageShortCode stays at the literal "auto".
+  // so that disabled-rule suppression keys correctly under the *detected*
+  // language when ltex.language="auto" — including the HTTP path, where
+  // detection happens server-side and the session-wide settings.languageShortCode
+  // stays at the literal "auto".
   //
-  // The user dictionary buckets are stored verbatim. The add path
-  // (CodeActionProvider) sends bare words to the client in the "Add to
-  // dictionary" command — for matches from rule families that emit
-  // punctuation-adjacent spans (Premium QB_NEW_* / AI_*) the matched
-  // substring is stripped via DictionaryWord.normalize before being persisted,
-  // so the on-disk entry is the bare word. For every other rule family the
-  // substring is already bare and is persisted as-is. The server cannot
-  // enforce what the client actually writes to disk, but the reference
-  // clients write what we send.
-  //
-  // Hand-edited entries are intentionally left untouched at load time: the
-  // file on disk is the user's data and may carry punctuation or whitespace
-  // by deliberate choice. Normalization on the check side happens only when
-  // the match's rule id falls into the Premium punctuation-adjacent family —
-  // see isCoveredByDictionary below.
-  var allDictionaries: Map<String, Set<String>> = emptyMap()
+  // Note: the user dictionary is no longer consulted here. Dictionary words are
+  // masked out of the text before it reaches LanguageTool (see
+  // CodeAnnotatedTextBuilder / DictionaryMasker), so no match is ever produced
+  // for them and there is nothing to suppress after the fact.
   var allDisabledRules: Map<String, Set<String>> = emptyMap()
 
   var languageToolOrgUsername = ""
@@ -54,51 +42,8 @@ abstract class LanguageToolInterface {
     match: LanguageToolRuleMatch,
   ): Boolean {
     val fragmentLanguage: String = annotatedTextFragment.codeFragment.languageShortCode
-    val dictionary: Set<String> = this.allDictionaries[fragmentLanguage] ?: emptySet()
     val disabledRules: Set<String> = this.allDisabledRules[fragmentLanguage] ?: emptySet()
-    return !disabledRules.contains(match.ruleId) &&
-      (
-        !match.isUnknownWordRule() ||
-          !isCoveredByDictionary(annotatedTextFragment, match, dictionary)
-      )
-  }
-
-  // Suppress a match if the per-language dictionary contains the flagged word.
-  //
-  // The lookup key depends on which rule family fired the match. Premium's
-  // QB_NEW_* / AI_* families sometimes emit spans that include adjacent
-  // punctuation, e.g. `amazng!` (length 7) or `"amazng"` (length 8); for
-  // those rules we strip leading/trailing non-letter-non-digit characters
-  // via DictionaryWord.normalize so a single stored entry `amazng` suppresses
-  // every punctuation-context variant.
-  //
-  // For every other rule family (Morfologik / Hunspell / *_SPELLER_RULE /
-  // Slovak gender rules / _SIMPLE_REPLACE_) the span is already bare and we
-  // look it up literally — gaining a stronger no-behavior-change guarantee
-  // for free-LT and local-Java users: not just a no-op normalize call but
-  // no normalize call at all on those code paths.
-  //
-  // Multi-word phrase entries (e.g. a hand-typed `"LTEX LS"`, or the local
-  // Java backend's all-caps Morfologik collapse on `LTEX LS`) still suppress:
-  // those matches fall in the literal branch, and the dictionary holds the
-  // phrase verbatim.
-  //
-  // An entirely-punctuation span normalizes to "" (Premium branch) and is
-  // treated as not covered; the diagnostic stays visible. The user can
-  // disable the rule or fix the text in that exotic case.
-  private fun isCoveredByDictionary(
-    annotatedTextFragment: AnnotatedTextFragment,
-    match: LanguageToolRuleMatch,
-    dictionary: Set<String>,
-  ): Boolean {
-    val span: String = annotatedTextFragment.getSubstringOfPlainText(match.fromPos, match.toPos)
-    val lookupKey: String =
-      if (LanguageToolRuleMatch.isPremiumPunctuationAdjacentSpanRule(match.ruleId)) {
-        DictionaryWord.normalize(span)
-      } else {
-        span
-      }
-    return lookupKey.isNotEmpty() && dictionary.contains(lookupKey)
+    return !disabledRules.contains(match.ruleId)
   }
 
   abstract fun isInitialized(): Boolean

@@ -203,11 +203,13 @@ data class LanguageToolRuleMatch(
     // already matches verbatim and no normalization is needed.
     //
     // The dictionary add path (CodeActionProvider.getAddWordToDictionaryCodeAction)
-    // and check path (LanguageToolInterface.isCoveredByDictionary) consult this
-    // predicate to decide whether to normalize the span before persisting or
-    // looking up. Mirrors the rule-family allowlist convention used by
-    // isUnknownWordRule above; if Premium adds new rule families that include
-    // adjacent punctuation, extend this allowlist accordingly.
+    // consults this predicate to decide whether to normalize the span before
+    // persisting, so the on-disk entry is the bare word. (The former check-path
+    // lookup is gone: dictionary words are now masked out of the text before
+    // LanguageTool sees them — see DictionaryMasker.) Mirrors the rule-family
+    // allowlist convention used by isUnknownWordRule above; if Premium adds new
+    // rule families that include adjacent punctuation, extend this allowlist
+    // accordingly.
     fun isPremiumPunctuationAdjacentSpanRule(ruleId: String?): Boolean =
       (ruleId != null) &&
         (ruleId.startsWith("QB_NEW_") || ruleId.startsWith("AI_"))

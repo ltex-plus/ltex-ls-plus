@@ -37,7 +37,6 @@ class LanguageToolJavaInterface(
   languageShortCode: String,
   motherTongueShortCode: String,
   sentenceCacheSize: Long,
-  dictionary: Set<String>,
 ) : LanguageToolInterface() {
   // null when sentenceCacheSize <= 0, which disables LanguageTool's internal
   // per-sentence ResultCache. LTeX's own per-paragraph FragmentCache supersedes
@@ -61,7 +60,10 @@ class LanguageToolJavaInterface(
         } else {
           null
         }
-      val userConfig = UserConfig(dictionary.toList())
+      // The user dictionary is masked out of the text upstream (DictionaryMasker),
+      // so LanguageTool needs no acceptedWords list here — masking is the single,
+      // backend-agnostic mechanism (the HTTP backend has no UserConfig at all).
+      val userConfig = UserConfig(emptyList<String>())
 
       this.languageTool = JLanguageTool(language, motherTongue, this.resultCache, userConfig)
     } else {
