@@ -327,6 +327,7 @@ class MarkdownAnnotatedTextBuilder(
   }
 
   override fun setSettings(settings: Settings) {
+    super.setSettings(settings)
     this.language = settings.languageShortCode
 
     for ((nodeName: String, actionString: String) in settings.markdownNodes) {
