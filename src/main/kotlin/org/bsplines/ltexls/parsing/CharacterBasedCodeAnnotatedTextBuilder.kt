@@ -8,7 +8,6 @@
 
 package org.bsplines.ltexls.parsing
 
-import org.bsplines.ltexls.settings.Settings
 import org.bsplines.ltexls.tools.I18n
 import org.bsplines.ltexls.tools.Logging
 
@@ -24,22 +23,12 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
     protected set
   val codeMode = CodeModeHandler()
 
-  protected var dummyGenerator = DummyGenerator.getInstance()
-  protected var dummyCounter = 0
-
-  protected var language: String = "en-US"
-
   var isPreventingInfiniteLoops = false
 
   var curString = ""
     protected set
   var isStartOfLine = false
     protected set
-
-  override fun setSettings(settings: Settings) {
-    super.setSettings(settings)
-    this.language = settings.languageShortCode
-  }
 
   override fun addText(text: String?): CharacterBasedCodeAnnotatedTextBuilder {
     if (text?.isNotEmpty() == true) {

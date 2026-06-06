@@ -218,12 +218,11 @@ class CodeActionProvider(
       // Strip leading/trailing punctuation only when the match's rule family
       // is known to emit punctuation-adjacent spans (Premium's QB_NEW_* /
       // AI_*); for everyone else the span is already bare and we persist it
-      // verbatim. Same gate runs on the check path
-      // (LanguageToolInterface.isCoveredByDictionary) so the round-trip is
-      // symmetric — a word added under one rule family looks up correctly
-      // when seen again under the same family. Skip the match if the
-      // normalized form is empty (entirely-punctuation span — should never
-      // happen for a real spell-check rule).
+      // verbatim. Persisting the bare word is what lets DictionaryMasker mask
+      // it back out of the text on the next check (whole-token, case-sensitive
+      // matching). Skip the match if the normalized form is empty
+      // (entirely-punctuation span — should never happen for a real
+      // spell-check rule).
       val word: String =
         if (LanguageToolRuleMatch.isPremiumPunctuationAdjacentSpanRule(match.ruleId)) {
           DictionaryWord.normalize(matchedText)

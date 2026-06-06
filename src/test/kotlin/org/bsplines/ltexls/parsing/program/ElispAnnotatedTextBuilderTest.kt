@@ -9,9 +9,38 @@
 package org.bsplines.ltexls.parsing.program
 
 import org.bsplines.ltexls.parsing.CodeAnnotatedTextBuilderTest
+import org.bsplines.ltexls.settings.Settings
 import kotlin.test.Test
 
 class ElispAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("elisp") {
+  @Test
+  fun testDictionaryEntriesAreMaskedInCommentsAndDocstrings() {
+    // User-dictionary words are masked (replaced by a dummy) before the prose
+    // reaches LanguageTool. This exercises the elisp path end to end: it only
+    // works because ElispAnnotatedTextBuilder forwards setSettings to its inner
+    // Markdown builder, which builds the masker. Multi-word entries work because
+    // the phrase is contiguous in the comment/docstring text; longest-match-wins
+    // masks the whole "GreenTeam Penciltest" rather than the bare "GreenTeam".
+    val dictionary =
+      Settings(_allDictionaries = mapOf("en-US" to setOf("GreenTeam Penciltest", "GreenTeam")))
+
+    // Multi-word entry inside a line comment.
+    assertPlainText(
+      ";; The GreenTeam Penciltest audit was thorough.\n",
+      "\n\n\nThe Dummy0 audit was thorough.",
+      "elisp",
+      dictionary,
+    )
+
+    // Single-word entry inside a defun docstring.
+    assertPlainText(
+      "(defun foo ()\n  \"Run the GreenTeam audit now.\"\n  nil)\n",
+      "\n\n\nRun the Dummy0 audit now.",
+      "elisp",
+      dictionary,
+    )
+  }
+
   @Test
   fun testComments() {
     // Trailing/inline comments after code (line 1) ARE checked for elisp.
