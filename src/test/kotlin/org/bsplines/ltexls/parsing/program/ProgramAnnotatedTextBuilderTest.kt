@@ -9,9 +9,38 @@
 package org.bsplines.ltexls.parsing.program
 
 import org.bsplines.ltexls.parsing.CodeAnnotatedTextBuilderTest
+import org.bsplines.ltexls.settings.Settings
 import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class ProgramAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("") {
+  @Test
+  fun testSettingsAreForwardedToInnerBuilder() {
+    // ProgramAnnotatedTextBuilder and ElispAnnotatedTextBuilder are thin wrappers
+    // that delegate parsing to an inner Markdown / reStructuredText builder. Their
+    // setSettings must forward to that inner builder, otherwise ltex.language
+    // (which selects the dummy-token form) and ltex.markdownNodes never reach the
+    // prose inside comments / docstrings. Regression: setSettings was not
+    // overridden, so the inner builder kept the default en-US and emitted the
+    // en-US "Dummy0" regardless of ltex.language — here a French setting must
+    // instead yield the French dummy ("Jimmy-0").
+    val french = Settings(_languageShortCode = "fr")
+
+    // elisp / emacs-lisp -> ElispAnnotatedTextBuilder (`name' -> inline code -> dummy).
+    val elisp: String =
+      buildAnnotatedText(";; LSP clients need `lsp-mode' to work.\n", french, "elisp").plainText
+    assertTrue(elisp.contains("Jimmy-0"), "expected French dummy, got: $elisp")
+    assertFalse(elisp.contains("Dummy0"))
+
+    // lisp (and the rest of the Lisp family) -> ProgramAnnotatedTextBuilder
+    // (plain Markdown inline code -> dummy).
+    val lisp: String =
+      buildAnnotatedText(";; Use `the-fn` to run.\n", french, "lisp").plainText
+    assertTrue(lisp.contains("Jimmy-0"), "expected French dummy, got: $lisp")
+    assertFalse(lisp.contains("Dummy0"))
+  }
+
   @Test
   fun testJava() {
     assertPlainText(

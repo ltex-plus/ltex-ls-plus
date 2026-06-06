@@ -10,6 +10,7 @@ package org.bsplines.ltexls.parsing.program
 
 import org.bsplines.ltexls.parsing.CodeAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.markdown.MarkdownAnnotatedTextBuilder
+import org.bsplines.ltexls.settings.Settings
 import org.languagetool.markup.AnnotatedText
 
 /**
@@ -40,6 +41,14 @@ class ElispAnnotatedTextBuilder(
       enableEmacsQuoteRewriting = true,
       enableElispDocstringDirectives = true,
     )
+
+  // Like ProgramAnnotatedTextBuilder, this builder only wraps the inner Markdown
+  // builder (addCode and build delegate to it), so settings must be forwarded
+  // there — otherwise ltex.language (used to pick dummy tokens) and
+  // ltex.markdownNodes never reach the prose in comments and docstrings.
+  override fun setSettings(settings: Settings) {
+    annotatedTextBuilder.setSettings(settings)
+  }
 
   override fun addCode(code: String): CodeAnnotatedTextBuilder {
     val reader = ElispReader(code)

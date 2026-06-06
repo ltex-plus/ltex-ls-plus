@@ -11,6 +11,7 @@ package org.bsplines.ltexls.parsing.program
 import org.bsplines.ltexls.parsing.CodeAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.markdown.MarkdownAnnotatedTextBuilder
 import org.bsplines.ltexls.parsing.restructuredtext.RestructuredtextAnnotatedTextBuilder
+import org.bsplines.ltexls.settings.Settings
 import org.bsplines.ltexls.tools.I18n
 import org.bsplines.ltexls.tools.Logging
 import org.languagetool.markup.AnnotatedText
@@ -41,6 +42,14 @@ class ProgramAnnotatedTextBuilder(
   private val commentRegexs = ProgramCommentRegexs.fromCodeLanguageId(codeLanguageId)
   private val commentBlockRegex: Regex = commentRegexs.commentBlockRegex
   private val lineCommentPatternString: String? = commentRegexs.lineCommentRegexString
+
+  // This builder only wraps the inner Markdown/reStructuredText builder (addCode
+  // and build delegate to it), so settings must be forwarded there — otherwise
+  // the inner builder never receives ltex.language (used to pick dummy tokens)
+  // or ltex.markdownNodes for prose inside comments/docstrings.
+  override fun setSettings(settings: Settings) {
+    annotatedTextBuilder.setSettings(settings)
+  }
 
   override fun addCode(code: String): CodeAnnotatedTextBuilder {
     var curPos = 0
