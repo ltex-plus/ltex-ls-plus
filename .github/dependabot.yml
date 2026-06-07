@@ -16,6 +16,12 @@ updates:
       all-dependencies:
         patterns:
           - "*"
+    # CodeQL's Kotlin extractor (code-scanning autobuild) only supports Kotlin
+    # versions below 2.3.30. Bumping past that (2.4.0 broke develop) fails the
+    # CodeQL build with KotlinVersionTooRecentError. Hold Kotlin back until the
+    # CodeQL extractor supports the newer release; revisit then.
+    ignore:
+      - dependency-name: "org.jetbrains.kotlin:*"
     assignees:
       - "spitzerd"
     labels:
