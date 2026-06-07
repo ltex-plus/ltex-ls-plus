@@ -14,7 +14,7 @@ import tarfile
 import tempfile
 import urllib.request
 
-lspCliVersion = "2.2.1"
+lspCliVersion = "2.3.0"
 
 
 

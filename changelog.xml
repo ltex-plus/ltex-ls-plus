@@ -99,7 +99,7 @@
         Org: spell-check the term in description lists. The prefix of a description-list item (e.g. `- Apple :: a red fruit`) used to be consumed as one chunk of markup, which silently dropped the term ("Apple") on the floor — typos in it went unnoticed. The parser now splits the prefix into bullet, **term (text)**, and ` ::` separator, so the term reaches LanguageTool and is spell- and grammar-checked like any other word. A single `\n` separator keeps the term in the same LanguageTool paragraph as the description, so the description's lowercase first word ("a red fruit") is not flagged.
       </action>
       <action type="update">
-        Update to lsp-cli-plus 2.2.2. See [lsp-cli-plus release notes](https://github.com/ltex-plus/lsp-cli-plus/releases/tag/2.2.2).
+        Update to lsp-cli-plus 2.3.0. See [lsp-cli-plus release notes](https://github.com/ltex-plus/lsp-cli-plus/releases/tag/2.3.0).
       </action>
       <action type="update">
         Update bundled Java runtime from 21.0.8+9 to 21.0.10+7
