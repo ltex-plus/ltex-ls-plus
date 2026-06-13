@@ -13,6 +13,8 @@
     <author>Julian Valentin, Daniel Spitzer and LTeX+ Development Community</author>
   </properties>
   <body>
+    <release version="18.7.1" date="upcoming">
+    </release>
     <release version="18.7.0" date="2026-06-13">
       <action type="add" issue="ltex-plus/ltex-ls-plus#183" due-to="Andrea Alberti (@alberti42)">
         Resolve `ltex.languageToolOrg.username` and `ltex.languageToolOrg.apiKey` from an environment variable when the whole setting value is a reference of the form `${ENV_VAR}` (e.g. `"ltex.languageToolOrg.apiKey": "${LANGUAGETOOL_API_KEY}"`). This lets LanguageTool Premium credentials stay out of shared/synced configuration files: the public config references a variable, and the secret lives only in the environment of the process that launches the server. Resolution is a plain `System.getenv` lookup at the point the value is consumed — never a shell, so there is no command-injection surface — and the match is whole-value only, so a literal credential that merely contains `${` is never altered. A reference to an unset or empty variable resolves to the empty string (degrading to anonymous checking) and logs a warning, rather than sending the literal placeholder to the server. Requested in ltex-plus/ltex-ls-plus#112.
