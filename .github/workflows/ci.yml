@@ -153,14 +153,15 @@ jobs:
       - name: "Install Python Dependencies"
         run: "python -u -m pip install --upgrade pip && pip install semver"
 
-      - name: "Set LTEX_LS_CHANGELOG"
+      - name: "Write release notes"
+        # Write the notes to a file and feed gh via --notes-file. Passing the
+        # multi-line changelog inline (--notes='${{ ... }}') breaks shell quoting:
+        # apostrophes in the prose close the quote and the markdown runs as commands.
         run: |
           if [ "${{ needs.get-version.outputs.ltex_ls_is_prerelease }}" = "false" ]; then
-            echo "LTEX_LS_CHANGELOG<<EOF" >> "$GITHUB_ENV"
-            python -u tools/convertChangelog.py --xml-file changelog.xml --version latest >> "$GITHUB_ENV"
-            echo "EOF" >> "$GITHUB_ENV"
+            python -u tools/convertChangelog.py --xml-file changelog.xml --version "${{ needs.get-version.outputs.ltex_ls_version }}" > release-notes.md
           else
-            echo "LTEX_LS_CHANGELOG=This is a pre-release. Use at your own risk." >> "$GITHUB_ENV"
+            echo "This is a pre-release. Use at your own risk." > release-notes.md
           fi
 
       - name: "Build LTeX+ LS"
@@ -181,7 +182,7 @@ jobs:
           --draft
           --prerelease=${{ needs.get-version.outputs.ltex_ls_is_prerelease }}
           --title='${{ needs.get-version.outputs.ltex_ls_version }}'
-          --notes='${{ env.LTEX_LS_CHANGELOG }}'
+          --notes-file release-notes.md
           'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}.tar.gz'
           'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-linux-x64.tar.gz'
           'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-mac-x64.tar.gz'
