@@ -14,6 +14,9 @@
   </properties>
   <body>
     <release version="18.7.1" date="upcoming">
+      <action type="fix" issue="ltex-plus/vscode-ltex-plus#206" due-to="Daniel Spitzer (@spitzerd)">
+        Fix StackOverflowError for Typst, AsciiDoc, and Org documents. The issue occurred on long comments, for example.
+      </action>
     </release>
     <release version="18.7.0" date="2026-06-13">
       <action type="add" issue="ltex-plus/ltex-ls-plus#183" due-to="Andrea Alberti (@alberti42)">

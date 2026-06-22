@@ -116,16 +116,16 @@ class AsciiDocAnnotatedTextBuilder(
   }
 
   companion object {
-    private val CODE_BLOCK_PLUS_REGEX = Regex("^\\+{3,}(.|\r?\n)*?\\+{3,}")
+    private val CODE_BLOCK_PLUS_REGEX = Regex("^\\+{3,}[\\s\\S]*?\\+{3,}")
     private val LIST_REGEX = Regex("^\\s*?(\\.+|\\-|\\*+)\\s+")
     private val LEADING_WHITESPACE_REGEX = Regex("^\\s*")
     private val DOT_REGEX = Regex("^\\.")
-    private val CODE_BLOCK_REGEX = Regex("^\\[source.*?\\]\\s*?\r?\n[^\\-](.|\r?\n)*?\r?\n\r?\n")
-    private val CODE_BLOCK_MINUS_REGEX = Regex("^-{3,}(.|\r?\n)*?-{3,}")
-    private val MULTILINELINE_COMMENT_REGEX = Regex("^\\/{4,}(.|\r?\n)*?\\/{4,}")
+    private val CODE_BLOCK_REGEX = Regex("^\\[source.*?\\]\\s*?\r?\n[^\\-][\\s\\S]*?\r?\n\r?\n")
+    private val CODE_BLOCK_MINUS_REGEX = Regex("^-{3,}[\\s\\S]*?-{3,}")
+    private val MULTILINELINE_COMMENT_REGEX = Regex("^\\/{4,}[\\s\\S]*?\\/{4,}")
     private val LINE_COMMENT_REGEX = Regex("^\\/\\/.*?\r?\n")
     private val CODE_SQUARE_BRACKETS_REGEX = Regex("^\\[.*?\\]")
-    private val TABLE_REGEX = Regex("^\\|={3,}(.|\r?\n)*?\\|={3,}")
+    private val TABLE_REGEX = Regex("^\\|={3,}[\\s\\S]*?\\|={3,}")
     private val TIP_IMP_WARN_CAUT_REGEX = Regex("^(TIP:|IMPORTANT:|WARNING:|CAUTION:)\\s")
     private val IMAGE_REGEX = Regex("^image:.*?\\[")
     private val LINK_REGEX = Regex("^link:.*?\\[")
@@ -137,6 +137,6 @@ class AsciiDocAnnotatedTextBuilder(
     private val EMPTY_LINE_INDENT_REGEX = Regex("^\r?\n\\s*?\r?\n(?=\\s)")
     private val EMPTY_LINE_NON_INDENT_REGEX = Regex("^\r?\n\\s*?\r?\n(?=\\S)")
     private val EMPTY_LINE_REGEX = Regex("^\\s*?\r?\n")
-    private val SUBSEQUENT_TEXT_REGEX = Regex("^(.|\r?\n)*?\r?\n\r?\n")
+    private val SUBSEQUENT_TEXT_REGEX = Regex("^[\\s\\S]*?\r?\n\r?\n")
   }
 }

@@ -748,17 +748,17 @@ class OrgAnnotatedTextBuilder(
       )
     private val LATEX_FRAGMENT_REGEX2 =
       Regex(
-        "^\\\\\\((.|\r?\n)*?\\\\\\)",
+        "^\\\\\\([\\s\\S]*?\\\\\\)",
         RegexOption.IGNORE_CASE,
       )
     private val LATEX_FRAGMENT_REGEX3 =
       Regex(
-        "^\\\\\\[(.|\r?\n)*?\\\\]",
+        "^\\\\\\[[\\s\\S]*?\\\\]",
         RegexOption.IGNORE_CASE,
       )
     private val LATEX_FRAGMENT_REGEX4 =
       Regex(
-        "^\\$\\$(.|\r?\n)*?\\$\\$",
+        "^\\$\\$[\\s\\S]*?\\$\\$",
         RegexOption.IGNORE_CASE,
       )
     private val LATEX_FRAGMENT_REGEX5 =
