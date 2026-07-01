@@ -40,7 +40,7 @@ jobs:
 
     steps:
       - name: "Checkout Repository"
-        uses: "actions/checkout@v6"
+        uses: "actions/checkout@v7"
         with:
           # Full history + tags so git-commit-id can stamp the version during the build.
           fetch-depth: 0
@@ -69,7 +69,7 @@ jobs:
       contents: read
     steps:
       - name: "Checkout Repository"
-        uses: "actions/checkout@v6"
+        uses: "actions/checkout@v7"
 
       - name: "Set up Python"
         uses: "actions/setup-python@v6"
@@ -101,7 +101,7 @@ jobs:
       ltex_ls_is_prerelease: ${{ steps.meta.outputs.ltex_ls_is_prerelease }}
     steps:
       - name: "Checkout Repository"
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: "Set up Python"
         uses: actions/setup-python@v6
@@ -137,7 +137,7 @@ jobs:
       contents: write
     steps:
       - name: "Checkout Repository"
-        uses: "actions/checkout@v6"
+        uses: "actions/checkout@v7"
 
       - name: "Set up Java"
         uses: "actions/setup-java@v5"
@@ -211,7 +211,7 @@ jobs:
 
     steps:
       - name: "Checkout Repository"
-        uses: "actions/checkout@v6"
+        uses: "actions/checkout@v7"
 
       - name: "Set up QEMU"
         uses: "docker/setup-qemu-action@v4"
