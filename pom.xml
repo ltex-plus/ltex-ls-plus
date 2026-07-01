@@ -48,7 +48,7 @@
     <kotlin.compiler.jvmTarget>${java.version}</kotlin.compiler.jvmTarget>
     <main.class>org.bsplines.ltexls.LtexLanguageServerLauncher</main.class>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <junit.jupiter.version>6.1.0</junit.jupiter.version>
+    <junit.jupiter.version>6.1.1</junit.jupiter.version>
     <languagetool.version>6.8</languagetool.version>
     <!-- Base version for the stamped Implementation-Version, e.g.
          ${ltex.release.label}.<commitsSinceLastReleaseTag>+<commitDate>.g<hash>
@@ -125,7 +125,7 @@
     <dependency>
       <groupId>com.fasterxml.woodstox</groupId>
       <artifactId>woodstox-core</artifactId>
-      <version>7.2.0</version>
+      <version>7.2.1</version>
     </dependency>
     <dependency>
       <groupId>com.google.code.gson</groupId>
