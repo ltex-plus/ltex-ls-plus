@@ -29,10 +29,14 @@ import org.eclipse.lsp4j.TextDocumentItem
 import org.eclipse.lsp4j.WorkDoneProgressBegin
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams
 import org.eclipse.lsp4j.WorkDoneProgressEnd
+import org.eclipse.lsp4j.WorkspaceFolder
 import org.eclipse.lsp4j.jsonrpc.CancelChecker
 import org.eclipse.lsp4j.jsonrpc.messages.Either
+import java.net.URI
+import java.nio.file.Path
 import java.time.Instant
 import java.util.concurrent.CancellationException
+import kotlin.io.path.toPath
 
 @Suppress("JoinDeclarationAndAssignment", "TooManyFunctions")
 class LtexTextDocumentItem(
@@ -428,6 +432,9 @@ class LtexTextDocumentItem(
         workspaceSpecificConfiguration as JsonElement?
 
       this.raiseExceptionIfCanceled()
+      val relativePathRoot = relativePathRoot()
+
+      this.raiseExceptionIfCanceled()
       this.languageServer.settingsManager.settings =
         Settings.fromJson(jsonConfiguration, jsonWorkspaceSpecificConfiguration)
 
@@ -446,6 +453,37 @@ class LtexTextDocumentItem(
 
       this.beingChecked = false
     }
+  }
+
+  /**
+   * Guess the most appropriate workspace folder for the current file.
+   * This folder will be used as the root for resolving relative file settings paths.
+   *
+   * This function does not currently distinguish between workspaceFolders and rootUri, treating
+   * them equally. The shadowing of rootUri by workspaceFolders is
+   * [still somewhat murky](https://github.com/microsoft/language-server-protocol/issues/2154).
+   * In the end, the resolution works by looking at all paths that are an ancestor of the document,
+   * and picking the most specific one (i.e. the one such that all others are its prefix).
+   *
+   * This function does not do path canonicalization, so the above resolution might fail for
+   * example for symlinked paths. I suggest this as a future improvement, as that brings its own
+   * host of issues that need to be handled.
+   */
+  fun relativePathRoot(): Path? {
+    // LSP guarantees valid URI
+    val scopePath = URI.create(this.uri).toPath()
+
+    val workspaceFolderUris = this.languageServer.workspaceFolders
+      ?.asSequence().orEmpty().map { it.uri }
+      .plus(this.languageServer.rootUri)
+
+    val candidateRoots = workspaceFolderUris
+      .filterNotNull()
+      .map { URI.create(it).toPath() }
+      //TODO: Canonicalize paths?
+      .filter { scopePath.startsWith(it) }
+
+    return candidateRoots.reduceOrNull { best, curr -> if(best.startsWith(curr)) best else curr }
   }
 
   fun raiseExceptionIfCanceled() {
