@@ -16,9 +16,12 @@ import org.bsplines.ltexls.tools.Logging
 import org.bsplines.ltexls.tools.Tools
 import org.eclipse.lsp4j.DidChangeConfigurationParams
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams
+import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams
 import org.eclipse.lsp4j.ExecuteCommandParams
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
+import org.eclipse.lsp4j.WorkspaceFolder
+import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent
 import org.eclipse.lsp4j.jsonrpc.CancelChecker
 import org.eclipse.lsp4j.jsonrpc.CompletableFutures
 import org.eclipse.lsp4j.services.WorkspaceService
@@ -65,6 +68,35 @@ class LtexWorkspaceService(
   }
 
   override fun didChangeWatchedFiles(params: DidChangeWatchedFilesParams) {
+  }
+
+  override fun didChangeWorkspaceFolders(params: DidChangeWorkspaceFoldersParams?) {
+    // Updating workspace folders has to be serialized both against other didChangeWsFolders and
+    // against document checking. Running on the language server's single executor does this, at the
+    // cost of workspace folder updates blocking document checking.
+    // I consider that a reasonable tradeoff, as workspace folder changes should be fairly rare
+    // and I would expect the performance tradeoff not to be too significant.
+
+    this.languageServer.singleThreadExecutorService.execute {
+      try {
+        val folders = this.languageServer.languageClient?.workspaceFolders()?.get()
+        this.languageServer.workspaceFolders = folders
+      } catch (e: Exception) {
+        Logging.LOGGER.warning(I18n.format("workspaceFoldersRequestFailed", e))
+        params?.event?.let { applyWorkspaceFolderDelta(it) }
+      }
+    }
+  }
+
+  private fun applyWorkspaceFolderDelta(delta: WorkspaceFoldersChangeEvent) {
+    val folders = this.languageServer.workspaceFolders?.toMutableList() ?: mutableListOf()
+    for (rem in delta.removed) {
+      if (!folders.remove(rem)) {
+        Logging.LOGGER.warning(I18n.format("removingNonexistentWorkspaceDir", rem))
+      }
+    }
+    folders.addAll(delta.added)
+    this.languageServer.workspaceFolders = folders
   }
 
   override fun executeCommand(params: ExecuteCommandParams): CompletableFuture<Any> =

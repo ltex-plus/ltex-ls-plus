@@ -25,6 +25,7 @@ import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.ServerInfo
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import org.eclipse.lsp4j.WindowClientCapabilities
+import org.eclipse.lsp4j.WorkspaceFolder
 import org.eclipse.lsp4j.WorkspaceFoldersOptions
 import org.eclipse.lsp4j.WorkspaceServerCapabilities
 import org.eclipse.lsp4j.jsonrpc.messages.Either
@@ -68,6 +69,9 @@ class LtexLanguageServer :
     private set
   var clientSupportsWorkspaceSpecificConfiguration: Boolean = false
     private set
+
+  var rootUri: String? = null
+  var workspaceFolders: List<WorkspaceFolder>? = null
 
   init {
     // Sweep idle fragment-cache entries on a fixed 60 s cadence. Entries idle
@@ -147,8 +151,15 @@ class LtexLanguageServer :
 
     val workspaceFoldersOptions = WorkspaceFoldersOptions()
     workspaceFoldersOptions.supported = true
-    workspaceFoldersOptions.setChangeNotifications(Either.forRight(true))
+    workspaceFoldersOptions.changeNotifications = Either.forRight(true)
     serverCapabilities.workspace = WorkspaceServerCapabilities(workspaceFoldersOptions)
+
+    this.workspaceFolders = params.workspaceFolders
+    // TODO: Should we keep holding onto the rootUri? It feels like a reasonable fallback for
+    // clients lacking workspaceFolders support. Otoh it's been superseded by workspaceFolders
+    // since 2018.
+    @Suppress("DEPRECATION")
+    this.rootUri = params.rootUri
 
     // Advertise the server's identity and version to the client via serverInfo so it can,
     // e.g., gate features on a minimum version. The version is the JAR manifest's
