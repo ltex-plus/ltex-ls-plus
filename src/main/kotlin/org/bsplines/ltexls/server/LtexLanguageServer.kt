@@ -34,6 +34,9 @@ import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.lsp4j.services.TextDocumentService
 import org.eclipse.lsp4j.services.WorkspaceService
+import java.net.URI
+import java.net.URISyntaxException
+import java.nio.file.Path
 import java.time.Instant
 import java.util.Locale
 import java.util.concurrent.CompletableFuture
@@ -70,8 +73,7 @@ class LtexLanguageServer :
   var clientSupportsWorkspaceSpecificConfiguration: Boolean = false
     private set
 
-  var rootUri: String? = null
-  var workspaceFolders: List<WorkspaceFolder>? = null
+  var workspaceRoots: List<CanonicalizedPath<WorkspaceFolder>> = listOf()
 
   init {
     // Sweep idle fragment-cache entries on a fixed 60 s cadence. Entries idle
@@ -154,12 +156,25 @@ class LtexLanguageServer :
     workspaceFoldersOptions.changeNotifications = Either.forRight(true)
     serverCapabilities.workspace = WorkspaceServerCapabilities(workspaceFoldersOptions)
 
-    this.workspaceFolders = params.workspaceFolders
-    // TODO: Should we keep holding onto the rootUri? It feels like a reasonable fallback for
-    // clients lacking workspaceFolders support. Otoh it's been superseded by workspaceFolders
-    // since 2018.
-    @Suppress("DEPRECATION")
-    this.rootUri = params.rootUri
+    // If the client supports workspace folders, then we only use those. Otherwise, we fall
+    // back on the rootUri. Either way, it should be possible to get their canonical paths --
+    // all of them should be file:// URIs pointing to real directories on the machine where the
+    // language server is running.
+    // If we do fail to get the canonical representation of any path, then we just log the reason
+    // and ignore the path.
+    if (clientCapabilities?.workspace?.workspaceFolders == true) {
+      val folders: List<WorkspaceFolder>? = params.workspaceFolders
+      this.workspaceRoots = folders
+        ?.mapNotNull { CanonicalizedPath.from(it) }
+        ?: listOf()
+    } else {
+      // TODO Should we keep holding onto the rootUri? It feels like a reasonable fallback for
+      //  clients lacking workspaceFolders support. Otoh it's been superseded by workspaceFolders
+      //  since 2018.
+      @Suppress("DEPRECATION")
+      val path = CanonicalizedPath.from(WorkspaceFolder(params.rootUri, "root"))
+      this.workspaceRoots = listOfNotNull(path)
+    }
 
     // Advertise the server's identity and version to the client via serverInfo so it can,
     // e.g., gate features on a minimum version. The version is the JAR manifest's
@@ -195,5 +210,36 @@ class LtexLanguageServer :
   companion object {
     private const val FRAGMENT_CACHE_SWEEP_INTERVAL_SECONDS = 60L
     private const val MILLIS_PER_MINUTE = 60_000L
+
+    @ConsistentCopyVisibility
+    data class CanonicalizedPath<T> private constructor(
+      val canonicalPath: Path,
+      val originalUri: T,
+    ) {
+      companion object {
+        // Ideally (https://youtrack.jetbrains.com/issue/KT-7128) we could multi-catch
+        // URISyntaxException, FileSystemNotFoundException, SecurityException and
+        // IOException. The handling would be the same in all cases though -- log the
+        // error and return null, so I'm just suppressing the compiler error here.
+        @Suppress("TooGenericExceptionCaught")
+        fun from(uriString: String): CanonicalizedPath<String>? {
+          try {
+            val uri = URI(uriString)
+            val path = Path.of(uri)
+            val canonicalPath = path.normalize().toRealPath()
+            return CanonicalizedPath(canonicalPath, uriString)
+          } catch (e: Exception) {
+            Logging.LOGGER.warning(
+              I18n.format("cannotCanonicalizeUri", e, uriString),
+            )
+            return null
+          }
+        }
+
+        fun from(workspaceFolder: WorkspaceFolder): CanonicalizedPath<WorkspaceFolder>? =
+          from(workspaceFolder.uri)
+            ?.let { CanonicalizedPath(it.canonicalPath, workspaceFolder) }
+      }
+    }
   }
 }

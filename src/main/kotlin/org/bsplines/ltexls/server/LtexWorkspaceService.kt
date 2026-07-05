@@ -10,6 +10,7 @@ package org.bsplines.ltexls.server
 
 import com.google.gson.JsonObject
 import com.sun.management.OperatingSystemMXBean
+import org.bsplines.ltexls.server.LtexLanguageServer.Companion.CanonicalizedPath
 import org.bsplines.ltexls.tools.FileIo
 import org.bsplines.ltexls.tools.I18n
 import org.bsplines.ltexls.tools.Logging
@@ -20,7 +21,6 @@ import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams
 import org.eclipse.lsp4j.ExecuteCommandParams
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
-import org.eclipse.lsp4j.WorkspaceFolder
 import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent
 import org.eclipse.lsp4j.jsonrpc.CancelChecker
 import org.eclipse.lsp4j.jsonrpc.CompletableFutures
@@ -79,9 +79,13 @@ class LtexWorkspaceService(
 
     this.languageServer.singleThreadExecutorService.execute {
       try {
-        val folders = this.languageServer.languageClient?.workspaceFolders()?.get()
-        this.languageServer.workspaceFolders = folders
-      } catch (e: Exception) {
+        val client = this.languageServer.languageClient ?: return@execute
+        val folders = client.workspaceFolders().get()
+
+        this.languageServer.workspaceRoots = folders
+          ?.mapNotNull { CanonicalizedPath.from(it) }
+          ?: listOf()
+      } catch (e: UnsupportedOperationException) {
         Logging.LOGGER.warning(I18n.format("workspaceFoldersRequestFailed", e))
         params?.event?.let { applyWorkspaceFolderDelta(it) }
       }
@@ -89,14 +93,17 @@ class LtexWorkspaceService(
   }
 
   private fun applyWorkspaceFolderDelta(delta: WorkspaceFoldersChangeEvent) {
-    val folders = this.languageServer.workspaceFolders?.toMutableList() ?: mutableListOf()
+    val roots = this.languageServer.workspaceRoots.toMutableList()
     for (rem in delta.removed) {
-      if (!folders.remove(rem)) {
+      val idx = roots.indexOfFirst { it.originalUri == rem }
+      if (idx == -1) {
         Logging.LOGGER.warning(I18n.format("removingNonexistentWorkspaceDir", rem))
+      } else {
+        roots.removeAt(idx)
       }
     }
-    folders.addAll(delta.added)
-    this.languageServer.workspaceFolders = folders
+    roots.addAll(delta.added.mapNotNull { CanonicalizedPath.from(it) })
+    this.languageServer.workspaceRoots = roots
   }
 
   override fun executeCommand(params: ExecuteCommandParams): CompletableFuture<Any> =
