@@ -174,6 +174,19 @@ jobs:
       - name: "Create Binary Archives"
         run: "python -u tools/createBinaryArchives.py"
 
+      - name: "Create Source Archive"
+        # Publish a byte-stable source tarball as a release asset. GitHub's
+        # auto-generated archive/refs/tags/<tag>.tar.gz has no checksum guarantee
+        # (GitHub can regenerate it, changing the sha256), which breaks downstream
+        # packagers that pin it (e.g. Homebrew). An uploaded release asset is a fixed
+        # blob, so its sha256 never drifts. HEAD is the checked-out tag commit, so this
+        # is a faithful snapshot of the tagged tree.
+        run: >
+          git archive --format=tar.gz
+          --prefix='ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}/'
+          -o 'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-src.tar.gz'
+          HEAD
+
       - name: "Create GitHub Release"
         # Stage as a draft so a maintainer can review the release and its assets,
         # then publish it manually (uncheck the draft box on the release page).
@@ -184,6 +197,7 @@ jobs:
           --title='${{ needs.get-version.outputs.ltex_ls_version }}'
           --notes-file release-notes.md
           'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}.tar.gz'
+          'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-src.tar.gz'
           'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-linux-x64.tar.gz'
           'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-mac-x64.tar.gz'
           'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-windows-x64.zip'
