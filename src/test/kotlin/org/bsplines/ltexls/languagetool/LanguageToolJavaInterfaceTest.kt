@@ -12,6 +12,7 @@ import org.bsplines.ltexls.parsing.AnnotatedTextFragment
 import org.bsplines.ltexls.server.DocumentChecker
 import org.bsplines.ltexls.server.DocumentCheckerTest
 import org.bsplines.ltexls.server.LtexTextDocumentItem
+import org.bsplines.ltexls.settings.FileSettings
 import org.bsplines.ltexls.settings.Settings
 import org.bsplines.ltexls.settings.SettingsManager
 import kotlin.test.Test
@@ -27,7 +28,7 @@ class LanguageToolJavaInterfaceTest {
 
   @Test
   fun testEasterEgg() {
-    val settings = Settings(_allDictionaries = mapOf(Pair("en-US", setOf("BsPlInEs"))))
+    val settings = Settings(_allDictionaries = mapOf(Pair("en-US", FileSettings.of("BsPlInEs"))))
     val settingsManager = SettingsManager(settings)
     val documentChecker = DocumentChecker(settingsManager)
     val document: LtexTextDocumentItem =

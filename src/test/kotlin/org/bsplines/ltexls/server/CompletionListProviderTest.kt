@@ -8,6 +8,7 @@
 
 package org.bsplines.ltexls.server
 
+import org.bsplines.ltexls.settings.FileSettings
 import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionItemKind
 import org.eclipse.lsp4j.CompletionList
@@ -22,7 +23,7 @@ class CompletionListProviderTest {
     val languageServer = LtexLanguageServer()
     languageServer.settingsManager.settings =
       languageServer.settingsManager.settings.copy(
-        _allDictionaries = mapOf(Pair("en-US", setOf("testfoobar"))),
+        _allDictionaries = mapOf(Pair("en-US", FileSettings.of("testfoobar"))),
       )
 
     val document =
@@ -104,7 +105,7 @@ class CompletionListProviderTest {
     val languageServer = LtexLanguageServer()
     languageServer.settingsManager.settings =
       languageServer.settingsManager.settings.copy(
-        _allDictionaries = mapOf(Pair("en-US", setOf("testfoobar"))),
+        _allDictionaries = mapOf(Pair("en-US", FileSettings.of("testfoobar"))),
       )
 
     val document =

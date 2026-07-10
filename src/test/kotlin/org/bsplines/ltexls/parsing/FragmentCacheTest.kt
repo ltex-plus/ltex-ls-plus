@@ -8,6 +8,7 @@
 
 package org.bsplines.ltexls.parsing
 
+import org.bsplines.ltexls.settings.FileSettings
 import org.bsplines.ltexls.settings.Settings
 import org.languagetool.markup.AnnotatedTextBuilder
 import kotlin.test.Test
@@ -127,7 +128,10 @@ class FragmentCacheTest {
     }
     val base = Settings()
     assertNotEquals(key(base), key(Settings(_languageShortCode = "de-DE")))
-    assertNotEquals(key(base), key(Settings(_allDictionaries = mapOf("en-US" to setOf("x")))))
+    assertNotEquals(
+      key(base),
+      key(Settings(_allDictionaries = mapOf("en-US" to FileSettings.of("x")))),
+    )
   }
 
   @Test

@@ -44,11 +44,7 @@ class SettingsOverride(
       newSettings =
         newSettings.copy(
           _allDictionaries =
-            overrideMapSet(
-              // hacky: get _allDictionaries.
-              newSettings.getModifiedDictionary(newSettings.dictionary),
-              it,
-            ),
+            overrideMapFileSettings(newSettings.rawAllDictionaries, it),
         )
     }
     allRules?.let {
@@ -72,13 +68,13 @@ class SettingsOverride(
       newSettings =
         newSettings.copy(
           _allEnabledRules =
-            overrideMapSet(
-              _inner.getModifiedEnabledRules(newSettings.enabledRules),
+            overrideMapFileSettings(
+              newSettings.rawAllEnabledRules,
               mapSetOverride(false),
             ),
           _allDisabledRules =
-            overrideMapSet(
-              _inner.getModifiedDisabledRules(newSettings.disabledRules),
+            overrideMapFileSettings(
+              newSettings.rawAllDisabledRules,
               mapSetOverride(true),
             ),
         )
@@ -87,10 +83,7 @@ class SettingsOverride(
       newSettings =
         newSettings.copy(
           _allHiddenFalsePositives =
-            overrideMapSet(
-              newSettings.getModifiedHiddenFalsePositives(newSettings.hiddenFalsePositives),
-              it,
-            ),
+            overrideMapFileSettings(newSettings.rawAllHiddenFalsePositives, it),
         )
     }
     bibtexFields?.let {
@@ -315,6 +308,17 @@ class SettingsOverride(
       return new
     }
 
+    fun <K, V> overrideMapFileSettings(
+      old: Map<K, FileSettings<V>>?,
+      override: Map<K, Map<V, SetUpdate>>,
+    ): Map<K, FileSettings<V>> {
+      val new = old?.toMutableMap() ?: mutableMapOf()
+      for ((mapKey, fileSettingsOverride) in override) {
+        new[mapKey] = overrideFileSettings(new[mapKey], fileSettingsOverride)
+      }
+      return new
+    }
+
     fun <V> overrideSet(
       old: Set<V>?,
       override: Map<V, SetUpdate>,
@@ -324,6 +328,19 @@ class SettingsOverride(
         setUpdate.performOn(new, setElement)
       }
       return new
+    }
+
+    fun <V> overrideFileSettings(
+      old: FileSettings<V>?,
+      override: Map<V, SetUpdate>,
+    ): FileSettings<V> {
+      val newItems = old?.items?.toMutableList() ?: mutableListOf()
+      newItems.addAll(
+        override.asSequence().map {
+          FileSettings.Item.Literal(it.key, it.value == SetUpdate.REMOVE)
+        },
+      )
+      return FileSettings(newItems)
     }
 
     fun <K, V> overrideMap(

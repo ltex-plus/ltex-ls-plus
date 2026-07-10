@@ -17,15 +17,16 @@ import org.bsplines.ltexls.tools.I18n
 import org.bsplines.ltexls.tools.Logging
 import org.eclipse.lsp4j.DiagnosticSeverity
 import org.languagetool.Languages
+import java.nio.file.Path
 import java.util.logging.Level
 
 data class Settings(
   private val _enabled: Set<String>? = null,
   private val _languageShortCode: String? = null,
-  private val _allDictionaries: Map<String, Set<String>>? = null,
-  private val _allDisabledRules: Map<String, Set<String>>? = null,
-  private val _allEnabledRules: Map<String, Set<String>>? = null,
-  private val _allHiddenFalsePositives: Map<String, Set<HiddenFalsePositive>>? = null,
+  private val _allDictionaries: Map<String, FileSettings<String>>? = null,
+  private val _allDisabledRules: Map<String, FileSettings<String>>? = null,
+  private val _allEnabledRules: Map<String, FileSettings<String>>? = null,
+  private val _allHiddenFalsePositives: Map<String, FileSettings<HiddenFalsePositive>>? = null,
   private val _bibtexFields: Map<String, Boolean>? = null,
   private val _latexCommands: Map<String, String>? = null,
   private val _latexEnvironments: Map<String, String>? = null,
@@ -52,19 +53,21 @@ data class Settings(
   val languageShortCode: String
     get() = (this._languageShortCode ?: "en-US")
   val dictionary: Set<String>
-    get() = (this._allDictionaries?.get(this.languageShortCode) ?: setOf())
+    get() = (this._allDictionaries?.get(this.languageShortCode)?.values ?: setOf())
   val disabledRules: Set<String>
-    get() = (this._allDisabledRules?.get(this.languageShortCode) ?: setOf())
+    get() = (this._allDisabledRules?.get(this.languageShortCode)?.values ?: setOf())
   val enabledRules: Set<String>
-    get() = (this._allEnabledRules?.get(this.languageShortCode) ?: setOf())
+    get() = (this._allEnabledRules?.get(this.languageShortCode)?.values ?: setOf())
   val hiddenFalsePositives: Set<HiddenFalsePositive>
-    get() = (this._allHiddenFalsePositives?.get(this.languageShortCode) ?: setOf())
+    get() = (this._allHiddenFalsePositives?.get(this.languageShortCode)?.values ?: setOf())
   val allDictionaries: Map<String, Set<String>>
-    get() = (this._allDictionaries ?: emptyMap())
+    get() = (this._allDictionaries?.mapValues { it.value.values } ?: emptyMap())
   val allDisabledRules: Map<String, Set<String>>
-    get() = (this._allDisabledRules ?: emptyMap())
+    get() = (this._allDisabledRules?.mapValues { it.value.values } ?: emptyMap())
+  val allEnabledRules: Map<String, Set<String>>
+    get() = (this._allEnabledRules?.mapValues { it.value.values } ?: emptyMap())
   val allHiddenFalsePositives: Map<String, Set<HiddenFalsePositive>>
-    get() = (this._allHiddenFalsePositives ?: emptyMap())
+    get() = (this._allHiddenFalsePositives?.mapValues { it.value.values } ?: emptyMap())
   val bibtexFields: Map<String, Boolean>
     get() = (this._bibtexFields ?: mapOf())
   val latexCommands: Map<String, String>
@@ -105,6 +108,16 @@ data class Settings(
     get() = (this._paragraphCacheTtlMinutes ?: DEFAULT_PARAGRAPH_CACHE_TTL_MINUTES)
   val maxRequestSize: Int
     get() = (this._maxRequestSize ?: DEFAULT_MAX_REQUEST_SIZE)
+
+  // Need to expose these for overrides
+  val rawAllDictionaries: Map<String, FileSettings<String>>?
+    get() = this._allDictionaries
+  val rawAllEnabledRules: Map<String, FileSettings<String>>?
+    get() = this._allEnabledRules
+  val rawAllDisabledRules: Map<String, FileSettings<String>>?
+    get() = this._allDisabledRules
+  val rawAllHiddenFalsePositives: Map<String, FileSettings<HiddenFalsePositive>>?
+    get() = this._allHiddenFalsePositives
 
   /**
    * Returns differences between `this` and `other` that call for
@@ -171,32 +184,31 @@ data class Settings(
     return differences
   }
 
-  fun getModifiedDictionary(dictionary: Set<String>): Map<String, Set<String>> {
-    val allDictionaries = HashMap<String, Set<String>>(this._allDictionaries ?: emptyMap())
-    allDictionaries[this.languageShortCode] = dictionary
+  fun getModifiedDictionary(dictionary: Set<String>): Map<String, FileSettings<String>> {
+    val allDictionaries = HashMap(this._allDictionaries ?: mapOf())
+    allDictionaries[this.languageShortCode] = FileSettings.fromSet(dictionary)
     return allDictionaries
   }
 
-  fun getModifiedDisabledRules(disabledRules: Set<String>): Map<String, Set<String>> {
-    val allDisabledRules = HashMap<String, Set<String>>(this._allDisabledRules ?: emptyMap())
-    allDisabledRules[this.languageShortCode] = disabledRules
+  fun getModifiedDisabledRules(disabledRules: Set<String>): Map<String, FileSettings<String>> {
+    val allDisabledRules = HashMap(this._allDisabledRules ?: mapOf())
+    allDisabledRules[this.languageShortCode] = FileSettings.fromSet(disabledRules)
     return allDisabledRules
   }
 
   @Suppress("unused")
-  fun getModifiedEnabledRules(enabledRules: Set<String>): Map<String, Set<String>> {
-    val allEnabledRules = HashMap<String, Set<String>>(this._allEnabledRules ?: emptyMap())
-    allEnabledRules[this.languageShortCode] = enabledRules
+  fun getModifiedEnabledRules(enabledRules: Set<String>): Map<String, FileSettings<String>> {
+    val allEnabledRules = HashMap(this._allEnabledRules ?: mapOf())
+    allEnabledRules[this.languageShortCode] = FileSettings.fromSet(enabledRules)
     return allEnabledRules
   }
 
   @Suppress("unused")
   fun getModifiedHiddenFalsePositives(
     hiddenFalsePositives: Set<HiddenFalsePositive>,
-  ): Map<String, Set<HiddenFalsePositive>> {
-    val allHiddenFalsePositives =
-      HashMap<String, Set<HiddenFalsePositive>>(this._allHiddenFalsePositives ?: emptyMap())
-    allHiddenFalsePositives[this.languageShortCode] = hiddenFalsePositives
+  ): Map<String, FileSettings<HiddenFalsePositive>> {
+    val allHiddenFalsePositives = HashMap(this._allHiddenFalsePositives ?: mapOf())
+    allHiddenFalsePositives[this.languageShortCode] = FileSettings.fromSet(hiddenFalsePositives)
     return allHiddenFalsePositives
   }
 
@@ -247,32 +259,27 @@ data class Settings(
     fun fromJson(
       jsonSettings: JsonElement,
       jsonWorkspaceSpecificSettings: JsonElement? = null,
+      settingsFileManager: SettingsFileManager.Rooted,
     ): Settings {
       val jsonWorkspaceSpecificSettings2 = jsonWorkspaceSpecificSettings ?: jsonSettings
 
       val enabled: Set<String>? = getEnabledFromJson(jsonSettings)
       val languageShortCode: String? =
         getSettingFromJsonAsString(jsonSettings, "language")?.let { normalizeLanguageShortCode(it) }
-      val allDictionaries: Map<String, Set<String>>? =
-        mergeMapOfListsIntoMapOfSets(
-          convertJsonObjectToMapOfLists(
-            getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "dictionary"),
-          ),
-        )
-      val allDisabledRules: Map<String, Set<String>>? =
-        mergeMapOfListsIntoMapOfSets(
-          convertJsonObjectToMapOfLists(
-            getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "disabledRules"),
-          ),
-        )
-      val allEnabledRules: Map<String, Set<String>>? =
-        mergeMapOfListsIntoMapOfSets(
-          convertJsonObjectToMapOfLists(
-            getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "enabledRules"),
-          ),
-        )
-      val allHiddenFalsePositives: Map<String, Set<HiddenFalsePositive>>? =
-        getAllHiddenFalsePositivesFromJson(jsonWorkspaceSpecificSettings2)
+      val allDictionaries: Map<String, FileSettings<String>>? =
+        convertJsonObjectToMapOfLists(
+          getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "dictionary"),
+        )?.mapValues { FileSettings.fromListOfStrings(it.value, settingsFileManager) }
+      val allDisabledRules: Map<String, FileSettings<String>>? =
+        convertJsonObjectToMapOfLists(
+          getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "disabledRules"),
+        )?.mapValues { FileSettings.fromListOfStrings(it.value, settingsFileManager) }
+      val allEnabledRules: Map<String, FileSettings<String>>? =
+        convertJsonObjectToMapOfLists(
+          getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "enabledRules"),
+        )?.mapValues { FileSettings.fromListOfStrings(it.value, settingsFileManager) }
+      val allHiddenFalsePositives: Map<String, FileSettings<HiddenFalsePositive>>? =
+        getAllHiddenFalsePositivesFromJson(jsonWorkspaceSpecificSettings2, settingsFileManager)
       val bibtexFields: Map<String, Boolean>? =
         convertJsonObjectToMapOfBooleans(
           getSettingFromJsonAsJsonObject(jsonSettings, "bibtex.fields"),
@@ -538,45 +545,21 @@ data class Settings(
 
     private fun getAllHiddenFalsePositivesFromJson(
       jsonWorkspaceSpecificSettings: JsonElement,
-    ): Map<String, Set<HiddenFalsePositive>>? {
-      val objectMap: Map<String, Set<JsonObject>>? =
-        convertJsonObjectToMapOfJsonObjects(
+      settingsFileManager: SettingsFileManager.Rooted,
+    ): Map<String, FileSettings<HiddenFalsePositive>>? {
+      val arrayMap =
+        convertJsonObjectToMapOfJsonArrays(
           getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings, "hiddenFalsePositives"),
         )
-      val stringMap: Map<String, Set<String>>? =
-        mergeMapOfListsIntoMapOfSets(
-          convertJsonObjectToMapOfLists(
-            getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings, "hiddenFalsePositives"),
-          ),
+
+      return arrayMap?.mapValues {
+        FileSettings.fromJsonArray(
+          it.value,
+          settingsFileManager,
+          HiddenFalsePositive::fromJsonString,
+          HiddenFalsePositive::fromJsonObject,
         )
-
-      if (objectMap == null && stringMap == null) {
-        return null
       }
-
-      val hiddenFalsePositivesMap = HashMap<String, HashSet<HiddenFalsePositive>>()
-
-      if (objectMap != null) {
-        for ((language, jsonObjectSet) in objectMap) {
-          val falsePositivesSet = hiddenFalsePositivesMap.getOrPut(language) { HashSet() }
-          for (jsonObject in jsonObjectSet) {
-            val falsePositive = HiddenFalsePositive.fromJsonObject(jsonObject)
-            falsePositivesSet.add(falsePositive)
-          }
-        }
-      }
-
-      if (stringMap != null) {
-        for ((language, stringSet) in stringMap) {
-          val falsePositivesSet = hiddenFalsePositivesMap.getOrPut(language) { HashSet() }
-          for (jsonString in stringSet) {
-            val falsePositive = HiddenFalsePositive.fromJsonString(jsonString)
-            falsePositivesSet.add(falsePositive)
-          }
-        }
-      }
-
-      return hiddenFalsePositivesMap
     }
 
     private fun getDiagnosticSeverityFromJson(
@@ -792,6 +775,18 @@ data class Settings(
       return map
     }
 
+    private fun convertJsonObjectToMapOfJsonArrays(obj: JsonObject?): Map<String, JsonArray>? {
+      if (obj == null) return null
+      val map = HashMap<String, JsonArray>()
+
+      for (entry: Map.Entry<String, JsonElement> in obj.entrySet()) {
+        if (!entry.value.isJsonArray) return null
+        map[entry.key] = entry.value.asJsonArray
+      }
+
+      return map
+    }
+
     private fun <T> convertJsonObjectToMapOfEnums(
       obj: JsonObject?,
       enumValues: Array<T>,
@@ -802,27 +797,6 @@ data class Settings(
       for (entry: Map.Entry<String, JsonElement> in obj.entrySet()) {
         val enumValue: T? = convertJsonElementToEnum(entry.value, enumValues)
         if (enumValue != null) map[entry.key] = enumValue
-      }
-
-      return map
-    }
-
-    private fun convertJsonObjectToMapOfJsonObjects(
-      obj: JsonObject?,
-    ): Map<String, Set<JsonObject>>? {
-      if (obj == null) return null
-      val map = HashMap<String, Set<JsonObject>>()
-
-      for (entry: Map.Entry<String, JsonElement> in obj.entrySet()) {
-        if (!entry.value.isJsonArray) return null
-        val set = HashSet<JsonObject>()
-
-        for (element: JsonElement in entry.value.asJsonArray) {
-          if (!element.isJsonObject) return null
-          set.add(element.asJsonObject)
-        }
-
-        map[entry.key] = set
       }
 
       return map
@@ -853,29 +827,6 @@ data class Settings(
       }
 
       return null
-    }
-
-    private fun mergeMapOfListsIntoMapOfSets(
-      mapOfLists: Map<String, List<String>>?,
-    ): Map<String, Set<String>>? {
-      if (mapOfLists == null) return null
-      val mapOfSets = HashMap<String, HashSet<String>>()
-
-      for ((key: String, set2: List<String>) in mapOfLists) {
-        val set1 = HashSet<String>()
-
-        for (string: String in set2) {
-          if (string.startsWith("-")) {
-            set1.remove(string.substring(1))
-          } else {
-            set1.add(string)
-          }
-        }
-
-        mapOfSets[key] = set1
-      }
-
-      return mapOfSets
     }
   }
 }

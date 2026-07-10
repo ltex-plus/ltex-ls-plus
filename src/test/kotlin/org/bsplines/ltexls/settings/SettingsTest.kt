@@ -12,6 +12,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import org.eclipse.lsp4j.DiagnosticSeverity
 import java.util.logging.Level
+import kotlin.io.path.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -414,7 +415,9 @@ class SettingsTest {
     jsonWorkspaceSpecificSettings.add("dictionary", dictionary)
     jsonWorkspaceSpecificSettings.add("hiddenFalsePositives", hiddenFalsePositives)
 
-    var settings: Settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
+    val settingsFileManager = MockSettingsFileManager()
+    var settings: Settings =
+      Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings, settingsFileManager)
     assertEquals(emptySet<Any>(), settings.enabled)
     assertEquals(setOf("wordtwo"), settings.dictionary)
     assertEquals(setOf(HiddenFalsePositive("rule", "sentence")), settings.hiddenFalsePositives)
@@ -431,26 +434,26 @@ class SettingsTest {
     hiddenFalsePositives.add("en-US", vscodeLTeXJSON)
     jsonWorkspaceSpecificSettings = JsonObject()
     jsonWorkspaceSpecificSettings.add("hiddenFalsePositives", hiddenFalsePositives)
-    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
+    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings, settingsFileManager)
     assertEquals(setOf(HiddenFalsePositive("rule", "sentence")), settings.hiddenFalsePositives)
 
     jsonSettings.addProperty("diagnosticSeverity", "error")
-    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
+    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings, settingsFileManager)
     assertEquals(mapOf(Pair("default", DiagnosticSeverity.Error)), settings.diagnosticSeverity)
 
     jsonSettings.addProperty("diagnosticSeverity", "warning")
-    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
+    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings, settingsFileManager)
     assertEquals(mapOf(Pair("default", DiagnosticSeverity.Warning)), settings.diagnosticSeverity)
 
     jsonSettings.addProperty("diagnosticSeverity", "information")
-    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
+    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings, settingsFileManager)
     assertEquals(
       mapOf(Pair("default", DiagnosticSeverity.Information)),
       settings.diagnosticSeverity,
     )
 
     jsonSettings.addProperty("diagnosticSeverity", "hint")
-    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
+    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings, settingsFileManager)
     assertEquals(mapOf(Pair("default", DiagnosticSeverity.Hint)), settings.diagnosticSeverity)
 
     val diagnosticSeverity = JsonObject()
@@ -458,29 +461,29 @@ class SettingsTest {
     diagnosticSeverity.addProperty("default", "error")
 
     jsonSettings.add("diagnosticSeverity", diagnosticSeverity)
-    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
+    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings, settingsFileManager)
     assertEquals(
       mapOf(Pair("ruleId", DiagnosticSeverity.Warning), Pair("default", DiagnosticSeverity.Error)),
       settings.diagnosticSeverity,
     )
 
     jsonSettings.addProperty("checkFrequency", "edit")
-    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
+    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings, settingsFileManager)
     assertEquals(Settings.CheckFrequency.Edit, settings.checkFrequency)
 
     jsonSettings.addProperty("checkFrequency", "save")
-    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
+    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings, settingsFileManager)
     assertEquals(Settings.CheckFrequency.Save, settings.checkFrequency)
 
     jsonSettings.addProperty("checkFrequency", "manual")
-    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
+    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings, settingsFileManager)
     assertEquals(Settings.CheckFrequency.Manual, settings.checkFrequency)
 
     val preferredVariantsArray = JsonArray()
     preferredVariantsArray.add("en-gb")
     preferredVariantsArray.add("DE-at")
     jsonSettings.add("preferredVariants", preferredVariantsArray)
-    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
+    settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings, settingsFileManager)
     // Each entry is canonicalised (lang lowercase + region uppercase, variant preserved)
     // and merged with DEFAULT_PREFERRED_VARIANTS: en-GB and de-AT override the default
     // en-US and de-DE; the default pt-BR is kept since the user did not specify a

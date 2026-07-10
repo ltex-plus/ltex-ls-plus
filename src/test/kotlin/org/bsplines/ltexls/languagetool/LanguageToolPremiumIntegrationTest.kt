@@ -12,6 +12,7 @@ import org.bsplines.ltexls.parsing.AnnotatedTextFragment
 import org.bsplines.ltexls.server.DocumentChecker
 import org.bsplines.ltexls.server.DocumentCheckerTest
 import org.bsplines.ltexls.server.LtexTextDocumentItem
+import org.bsplines.ltexls.settings.FileSettings
 import org.bsplines.ltexls.settings.Settings
 import org.bsplines.ltexls.settings.SettingsManager
 import org.junit.jupiter.api.extension.ConditionEvaluationResult
@@ -85,7 +86,7 @@ class LanguageToolPremiumIntegrationTest {
   fun testPremiumPunctuationSpansSuppressedAfterBareWordAdd() =
     withPremiumFailureHint {
       val spans: List<String> =
-        collectMatchSpans(buildSettings(dictionary = setOf("amazng")))
+        collectMatchSpans(buildSettings(dictionary = FileSettings.of("amazng")))
 
       assertTrue(
         spans.isEmpty(),
@@ -124,7 +125,7 @@ class LanguageToolPremiumIntegrationTest {
       |    code change.
       """.trimMargin()
 
-    private fun buildSettings(dictionary: Set<String> = emptySet()): Settings {
+    private fun buildSettings(dictionary: FileSettings<String> = FileSettings.of()): Settings {
       var settings =
         Settings(
           _languageShortCode = "en-US",

@@ -10,7 +10,7 @@ package org.bsplines.ltexls.server
 
 import com.google.gson.JsonObject
 import com.sun.management.OperatingSystemMXBean
-import org.bsplines.ltexls.server.LtexLanguageServer.Companion.CanonicalizedPath
+import org.bsplines.ltexls.server.LtexLanguageServer.Canonical
 import org.bsplines.ltexls.tools.FileIo
 import org.bsplines.ltexls.tools.I18n
 import org.bsplines.ltexls.tools.Logging
@@ -83,7 +83,7 @@ class LtexWorkspaceService(
         val folders = client.workspaceFolders().get()
 
         this.languageServer.workspaceRoots = folders
-          ?.mapNotNull { CanonicalizedPath.from(it) }
+          ?.mapNotNull { Canonical.from(it) }
           ?: listOf()
       } catch (e: UnsupportedOperationException) {
         Logging.LOGGER.warning(I18n.format("workspaceFoldersRequestFailed", e))
@@ -102,7 +102,7 @@ class LtexWorkspaceService(
         roots.removeAt(idx)
       }
     }
-    roots.addAll(delta.added.mapNotNull { CanonicalizedPath.from(it) })
+    roots.addAll(delta.added.mapNotNull { Canonical.from(it) })
     this.languageServer.workspaceRoots = roots
   }
 

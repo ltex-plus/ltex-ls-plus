@@ -12,6 +12,7 @@ import org.bsplines.ltexls.parsing.AnnotatedTextFragment
 import org.bsplines.ltexls.server.DocumentChecker
 import org.bsplines.ltexls.server.DocumentCheckerTest
 import org.bsplines.ltexls.server.LtexTextDocumentItem
+import org.bsplines.ltexls.settings.FileSettings
 import org.bsplines.ltexls.settings.HiddenFalsePositive
 import org.bsplines.ltexls.settings.Settings
 import org.bsplines.ltexls.settings.SettingsManager
@@ -191,7 +192,7 @@ class LanguageToolHttpInterfaceTest {
       this.defaultSettings.copy(
         _languageShortCode = "auto",
         _preferredVariants = listOf("en-US"),
-        _allDictionaries = mapOf("en-US" to setOf("testt", "mispeling")),
+        _allDictionaries = mapOf("en-US" to FileSettings.of("testt", "mispeling")),
       )
     val settingsManager = SettingsManager(settings)
     val documentChecker = DocumentChecker(settingsManager)
@@ -229,7 +230,7 @@ class LanguageToolHttpInterfaceTest {
     val settings: Settings =
       this.defaultSettings.copy(
         _languageShortCode = "auto",
-        _allDictionaries = mapOf("de-DE" to setOf("gegesssen", "wunderschöön")),
+        _allDictionaries = mapOf("de-DE" to FileSettings.of("gegesssen", "wunderschöön")),
       )
     val settingsManager = SettingsManager(settings)
     val documentChecker = DocumentChecker(settingsManager)
@@ -273,7 +274,7 @@ class LanguageToolHttpInterfaceTest {
       this.defaultSettings.copy(
         _languageShortCode = "auto",
         _preferredVariants = listOf("en-US"),
-        _allDisabledRules = mapOf("en-US" to setOf("EN_A_VS_AN")),
+        _allDisabledRules = mapOf("en-US" to FileSettings.of("EN_A_VS_AN")),
       )
     val settingsManager = SettingsManager(settings)
     val documentChecker = DocumentChecker(settingsManager)
@@ -311,7 +312,7 @@ class LanguageToolHttpInterfaceTest {
         _languageShortCode = "auto",
         _preferredVariants = listOf("en-US"),
         _allHiddenFalsePositives =
-          mapOf("en-US" to setOf(HiddenFalsePositive("EN_A_VS_AN", "^\\Q$sentence\\E$"))),
+          mapOf("en-US" to FileSettings.of(HiddenFalsePositive("EN_A_VS_AN", "^\\Q$sentence\\E$"))),
       )
     val settingsManager = SettingsManager(settings)
     val documentChecker = DocumentChecker(settingsManager)

@@ -11,6 +11,7 @@ package org.bsplines.ltexls.server
 import org.bsplines.ltexls.languagetool.LanguageToolRuleMatch
 import org.bsplines.ltexls.parsing.AnnotatedTextFragment
 import org.bsplines.ltexls.parsing.FragmentCache
+import org.bsplines.ltexls.settings.FileSettings
 import org.bsplines.ltexls.settings.Settings
 import org.bsplines.ltexls.settings.SettingsManager
 import org.eclipse.lsp4j.DidCloseTextDocumentParams
@@ -142,7 +143,7 @@ class DocumentCheckerCacheTest {
     checker.settingsManager.settings =
       Settings(
         _logLevel = Level.FINEST,
-        _allDictionaries = mapOf("en-US" to setOf("qwertyunknown")),
+        _allDictionaries = mapOf("en-US" to FileSettings.of("qwertyunknown")),
       )
 
     assertEquals(0, checker.check(document).first.size)

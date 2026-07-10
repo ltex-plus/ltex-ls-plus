@@ -12,6 +12,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import org.bsplines.ltexls.languagetool.LanguageToolRuleMatch
 import org.bsplines.ltexls.parsing.AnnotatedTextFragment
+import org.bsplines.ltexls.server.LtexLanguageServer.Canonical
 import org.bsplines.ltexls.settings.Settings
 import org.bsplines.ltexls.tools.FileIo
 import org.eclipse.lsp4j.Position
@@ -46,7 +47,15 @@ class NonServerChecker {
     val ltexLsJsonSettings: JsonObject = jsonSettings.getAsJsonObject("ltex-ls")
     if (!ltexLsJsonSettings.has("logLevel")) ltexLsJsonSettings.addProperty("logLevel", "warning")
 
-    this.languageServer.settingsManager.settings = Settings.fromJson(jsonSettings)
+    val root =
+      this.languageServer.workspaceRoots
+        .firstOrNull()
+        ?.canonicalPath
+        ?: Path.of(System.getProperty("user.dir"))
+
+    val settingsFileManager = this.languageServer.settingsFileManager.rooted(root)
+    this.languageServer.settingsManager.settings =
+      Settings.fromJson(jsonSettings, settingsFileManager = settingsFileManager)
   }
 
   fun check(paths: List<Path>): Int {

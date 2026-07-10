@@ -13,8 +13,8 @@ import com.google.gson.JsonObject
 import org.bsplines.ltexls.client.LtexLanguageClient
 import org.bsplines.ltexls.languagetool.LanguageToolRuleMatch
 import org.bsplines.ltexls.parsing.AnnotatedTextFragment
-import org.bsplines.ltexls.server.LtexLanguageServer.Companion.CanonicalizedPath
 import org.bsplines.ltexls.settings.Settings
+import org.bsplines.ltexls.settings.SettingsFileManager
 import org.bsplines.ltexls.tools.I18n
 import org.bsplines.ltexls.tools.Logging
 import org.bsplines.ltexls.tools.Tools
@@ -432,11 +432,15 @@ class LtexTextDocumentItem(
         workspaceSpecificConfiguration as JsonElement?
 
       this.raiseExceptionIfCanceled()
-      val relativePathRoot = relativePathRoot()
+      val relativePathRoot = languageServer.relativePathRoot(this.uri)
 
       this.raiseExceptionIfCanceled()
       this.languageServer.settingsManager.settings =
-        Settings.fromJson(jsonConfiguration, jsonWorkspaceSpecificConfiguration)
+        Settings.fromJson(
+          jsonConfiguration,
+          jsonWorkspaceSpecificConfiguration,
+          languageServer.settingsFileManager.rooted(relativePathRoot),
+        )
 
       this.raiseExceptionIfCanceled()
       val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
@@ -453,48 +457,6 @@ class LtexTextDocumentItem(
 
       this.beingChecked = false
     }
-  }
-
-  /**
-   * Guess the most appropriate workspace folder for the current file.
-   * This folder will be used as the root for resolving relative file settings paths.
-   *
-   * For real files, this directory attempts to locate their corresponding workspace root.
-   * If there are multiple candidates, it picks the deepest nested (most specific) one.
-   *
-   * For virtual (for example unnamed / unsaved) files, we use the first root of the workspace.
-   *
-   * If no suitable workspace folder is found, then the user's home directory is used as a last
-   * resort fallback.
-   */
-  fun relativePathRoot(): Path {
-    val documentPath = CanonicalizedPath.from(this.uri)?.canonicalPath
-    if (documentPath != null) {
-      val candidateRoots =
-        this.languageServer.workspaceRoots
-          .map { it.canonicalPath }
-          .filter { documentPath.startsWith(it) }
-
-      candidateRoots
-        .reduceOrNull { best, curr -> if (best.startsWith(curr)) best else curr }
-        ?.let { return it }
-    } else {
-      // This is a virtual file (unnamed/unsaved). We give it the first available root.
-      this.languageServer.workspaceRoots.firstOrNull()?.canonicalPath?.let {
-        Logging.LOGGER.info(I18n.format("workspaceFolderFallback", it, documentPath))
-        return it
-      }
-    }
-
-    // We did not find a suitable root for the file. If it was a real file, then it means it was
-    // outside all current workspaces. If it was a virtual file, then it means the workspace itself
-    // is empty. Either way, we need some sane last resort callback, which is the user's home.
-
-    // TODO Do we want to send a window/showMessageRequest to indicate the root chosen?
-    //  or even let the user choose a root if more are available
-    val home = Path.of(System.getProperty("user.home")).toRealPath()
-    Logging.LOGGER.info(I18n.format("workspaceFolderFallback", home, documentPath))
-    return home
   }
 
   fun raiseExceptionIfCanceled() {

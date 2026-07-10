@@ -12,6 +12,8 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import org.bsplines.ltexls.client.LtexLanguageClient
 import org.bsplines.ltexls.parsing.FragmentCache
+import org.bsplines.ltexls.settings.BasicSettingsFileManager
+import org.bsplines.ltexls.settings.SettingsFileManager
 import org.bsplines.ltexls.settings.SettingsManager
 import org.bsplines.ltexls.tools.I18n
 import org.bsplines.ltexls.tools.Logging
@@ -35,7 +37,6 @@ import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.lsp4j.services.TextDocumentService
 import org.eclipse.lsp4j.services.WorkspaceService
 import java.net.URI
-import java.net.URISyntaxException
 import java.nio.file.Path
 import java.time.Instant
 import java.util.Locale
@@ -52,6 +53,7 @@ class LtexLanguageServer :
   var languageClient: LtexLanguageClient? = null
   val singleThreadExecutorService: ExecutorService = Executors.newSingleThreadScheduledExecutor()
   val settingsManager = SettingsManager()
+  val settingsFileManager: SettingsFileManager = BasicSettingsFileManager()
 
   // Shared across all documents; swept periodically and cleared per-document on
   // didClose.
@@ -73,7 +75,7 @@ class LtexLanguageServer :
   var clientSupportsWorkspaceSpecificConfiguration: Boolean = false
     private set
 
-  var workspaceRoots: List<CanonicalizedPath<WorkspaceFolder>> = listOf()
+  var workspaceRoots: List<Canonical<WorkspaceFolder>> = listOf()
 
   init {
     // Sweep idle fragment-cache entries on a fixed 60 s cadence. Entries idle
@@ -165,14 +167,14 @@ class LtexLanguageServer :
     if (clientCapabilities?.workspace?.workspaceFolders == true) {
       val folders: List<WorkspaceFolder>? = params.workspaceFolders
       this.workspaceRoots = folders
-        ?.mapNotNull { CanonicalizedPath.from(it) }
+        ?.mapNotNull { Canonical.from(it) }
         ?: listOf()
     } else {
       // TODO Should we keep holding onto the rootUri? It feels like a reasonable fallback for
       //  clients lacking workspaceFolders support. Otoh it's been superseded by workspaceFolders
       //  since 2018.
       @Suppress("DEPRECATION")
-      val path = CanonicalizedPath.from(WorkspaceFolder(params.rootUri, "root"))
+      val path = Canonical.from(WorkspaceFolder(params.rootUri, "root"))
       this.workspaceRoots = listOfNotNull(path)
     }
 
@@ -207,39 +209,100 @@ class LtexLanguageServer :
 
   override fun getWorkspaceService(): WorkspaceService = this.ltexWorkspaceService
 
+  /**
+   * Guess the most appropriate workspace folder for the current file.
+   * This folder will be used as the root for resolving relative file settings paths.
+   *
+   * For real files, this directory attempts to locate their corresponding workspace root.
+   * If there are multiple candidates, it picks the deepest nested (most specific) one.
+   *
+   * For virtual (for example unnamed / unsaved) files, we use the first root of the workspace.
+   *
+   * If no suitable workspace folder is found, then the user's home directory is used as a last
+   * resort fallback.
+   */
+  fun relativePathRoot(documentUri: String): Path {
+    val documentPath = Canonical.fromUri(documentUri)?.canonicalPath
+
+    if (documentPath != null) {
+      val candidateRoots =
+        this.workspaceRoots
+          .map { it.canonicalPath }
+          .filter { documentPath.startsWith(it) }
+
+      candidateRoots
+        .reduceOrNull { best, curr -> if (best.startsWith(curr)) best else curr }
+        ?.let { return it }
+    } else {
+      // This is a virtual file (unnamed/unsaved). We give it the first available root.
+      this.workspaceRoots.firstOrNull()?.canonicalPath?.let {
+        Logging.LOGGER.info(I18n.format("workspaceFolderFallback", it, documentPath))
+        return it
+      }
+    }
+
+    // We did not find a suitable root for the file. If it was a real file, then it means it was
+    // outside all current workspaces. If it was a virtual file, then it means the workspace itself
+    // is empty. Either way, we need some sane last resort callback, which is the user's home.
+
+    // TODO Do we want to send a window/showMessageRequest to indicate the root chosen?
+    //  or even let the user choose a root if more are available
+    val home = Path.of(System.getProperty("user.home")).toRealPath()
+    Logging.LOGGER.info(I18n.format("workspaceFolderFallback", home, documentPath))
+    return home
+  }
+
+  @ConsistentCopyVisibility
+  data class Canonical<T> private constructor(
+    val canonicalPath: Path,
+    val originalUri: T,
+  ) {
+    companion object {
+      // Ideally (https://youtrack.jetbrains.com/issue/KT-7128) we could multi-catch
+      // URISyntaxException, FileSystemNotFoundException, SecurityException and
+      // IOException. The handling would be the same in all cases though -- log the
+      // error and return null, so I'm just suppressing the compiler error here.
+      @Suppress("TooGenericExceptionCaught")
+      fun fromUri(uriString: String): Canonical<String>? {
+        try {
+          val uri = URI(uriString)
+          val path = Path.of(uri)
+          val canonicalPath = path.normalize().toRealPath()
+          return Canonical(canonicalPath, uriString)
+        } catch (e: Exception) {
+          Logging.LOGGER.warning(
+            I18n.format("cannotCanonicalizeUri", e, uriString),
+          )
+          return null
+        }
+      }
+
+      // Ideally (https://youtrack.jetbrains.com/issue/KT-7128) we could multi-catch
+      // FileSystemNotFoundException, SecurityException and
+      // IOException. The handling would be the same in all cases though -- log the
+      // error and return null, so I'm just suppressing the compiler error here.
+      @Suppress("TooGenericExceptionCaught")
+      fun fromPath(pathString: String): Canonical<String>? {
+        try {
+          val path = Path.of(pathString)
+          val canonicalPath = path.normalize().toRealPath()
+          return Canonical(canonicalPath, pathString)
+        } catch (e: Exception) {
+          Logging.LOGGER.warning(
+            I18n.format("cannotCanonicalizeUri", e, pathString),
+          )
+          return null
+        }
+      }
+
+      fun from(workspaceFolder: WorkspaceFolder): Canonical<WorkspaceFolder>? =
+        fromUri(workspaceFolder.uri)
+          ?.let { Canonical(it.canonicalPath, workspaceFolder) }
+    }
+  }
+
   companion object {
     private const val FRAGMENT_CACHE_SWEEP_INTERVAL_SECONDS = 60L
     private const val MILLIS_PER_MINUTE = 60_000L
-
-    @ConsistentCopyVisibility
-    data class CanonicalizedPath<T> private constructor(
-      val canonicalPath: Path,
-      val originalUri: T,
-    ) {
-      companion object {
-        // Ideally (https://youtrack.jetbrains.com/issue/KT-7128) we could multi-catch
-        // URISyntaxException, FileSystemNotFoundException, SecurityException and
-        // IOException. The handling would be the same in all cases though -- log the
-        // error and return null, so I'm just suppressing the compiler error here.
-        @Suppress("TooGenericExceptionCaught")
-        fun from(uriString: String): CanonicalizedPath<String>? {
-          try {
-            val uri = URI(uriString)
-            val path = Path.of(uri)
-            val canonicalPath = path.normalize().toRealPath()
-            return CanonicalizedPath(canonicalPath, uriString)
-          } catch (e: Exception) {
-            Logging.LOGGER.warning(
-              I18n.format("cannotCanonicalizeUri", e, uriString),
-            )
-            return null
-          }
-        }
-
-        fun from(workspaceFolder: WorkspaceFolder): CanonicalizedPath<WorkspaceFolder>? =
-          from(workspaceFolder.uri)
-            ?.let { CanonicalizedPath(it.canonicalPath, workspaceFolder) }
-      }
-    }
   }
 }

@@ -12,8 +12,11 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import org.bsplines.ltexls.languagetool.LanguageToolRuleMatch
 import org.bsplines.ltexls.parsing.AnnotatedTextFragment
+import org.bsplines.ltexls.settings.FileSettings
 import org.bsplines.ltexls.settings.HiddenFalsePositive
+import org.bsplines.ltexls.settings.MockSettingsFileManager
 import org.bsplines.ltexls.settings.Settings
+import org.bsplines.ltexls.settings.SettingsFileManager
 import org.bsplines.ltexls.settings.SettingsManager
 import org.eclipse.lsp4j.CodeAction
 import org.eclipse.lsp4j.CodeActionContext
@@ -548,12 +551,14 @@ class DocumentCheckerTest {
     val jsonWorkspaceSpecificSettings = JsonObject()
     jsonWorkspaceSpecificSettings.add("dictionary", jsonDictionaryObject)
 
+    val settingsFileManager = MockSettingsFileManager()
     var document =
       createDocument(
         "latex",
         "This is an unknownword.\n% ltex: language=de-DE\nDies ist ein unbekannteswort.\n",
       )
-    var settings: Settings = Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings)
+    var settings: Settings =
+      Settings.fromJson(jsonSettings, jsonWorkspaceSpecificSettings, settingsFileManager)
     var checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
       checkDocument(document, settings)
     assertEquals(1, checkingResult.first.size)
@@ -562,7 +567,7 @@ class DocumentCheckerTest {
     settings = Settings(_languageShortCode = "sk-SK")
     checkingResult = checkDocument(document, settings)
     assertEquals(1, checkingResult.first.size)
-    settings = settings.copy(_allDictionaries = mapOf(Pair("sk-SK", setOf("pekn\u00e9"))))
+    settings = settings.copy(_allDictionaries = mapOf(Pair("sk-SK", FileSettings.of("pekn\u00e9"))))
     checkingResult = checkDocument(document, settings)
     assertEquals(0, checkingResult.first.size)
 
@@ -570,7 +575,7 @@ class DocumentCheckerTest {
     settings = Settings(_languageShortCode = "fr")
     checkingResult = checkDocument(document, settings)
     assertEquals(1, checkingResult.first.size)
-    settings = settings.copy(_allDictionaries = mapOf(Pair("fr", setOf("mmots"))))
+    settings = settings.copy(_allDictionaries = mapOf(Pair("fr", FileSettings.of("mmots"))))
     checkingResult = checkDocument(document, settings)
     assertEquals(0, checkingResult.first.size)
 
@@ -578,7 +583,7 @@ class DocumentCheckerTest {
     settings = Settings()
     checkingResult = checkDocument(document, settings)
     assertEquals(1, checkingResult.first.size)
-    settings = settings.copy(_allDictionaries = mapOf(Pair("en-US", setOf("LTEX LS"))))
+    settings = settings.copy(_allDictionaries = mapOf(Pair("en-US", FileSettings.of("LTEX LS"))))
     checkingResult = checkDocument(document, settings)
     assertEquals(0, checkingResult.first.size)
   }
@@ -592,7 +597,8 @@ class DocumentCheckerTest {
           mapOf(
             Pair(
               "en-US",
-              setOf(HiddenFalsePositive("MORFOLOGIK_RULE_EN_US", "This is an unknownword\\.")),
+              FileSettings
+                .of(HiddenFalsePositive("MORFOLOGIK_RULE_EN_US", "This is an unknownword\\.")),
             ),
           ),
       )
