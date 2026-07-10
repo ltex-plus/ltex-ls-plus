@@ -90,7 +90,7 @@ object I18n {
     vararg messageArguments: Any?,
   ): String {
     val builder = StringBuilder()
-    builder.append(format(key, messageArguments))
+    builder.append(format(key, *messageArguments))
     builder.append(". ")
     builder.append(format(e))
     return builder.toString()
