@@ -12,12 +12,13 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import org.bsplines.ltexls.languagetool.LanguageToolRuleMatch
 import org.bsplines.ltexls.parsing.AnnotatedTextFragment
+import org.bsplines.ltexls.settings.BasicSettingsFileManager
 import org.bsplines.ltexls.settings.FileSettings
 import org.bsplines.ltexls.settings.HiddenFalsePositive
 import org.bsplines.ltexls.settings.MockSettingsFileManager
 import org.bsplines.ltexls.settings.Settings
-import org.bsplines.ltexls.settings.SettingsFileManager
 import org.bsplines.ltexls.settings.SettingsManager
+import org.bsplines.ltexls.settings.SettingsOverride
 import org.eclipse.lsp4j.CodeAction
 import org.eclipse.lsp4j.CodeActionContext
 import org.eclipse.lsp4j.CodeActionParams
@@ -26,6 +27,7 @@ import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.TextDocumentIdentifier
 import org.eclipse.lsp4j.jsonrpc.messages.Either
+import java.nio.file.Files
 import java.util.logging.Level
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -614,6 +616,37 @@ class DocumentCheckerTest {
     settings = Settings(_languageShortCode = "nl")
     checkingResult = checkDocument(document, settings)
     assertEquals(1, checkingResult.first.size)
+  }
+
+  @Test
+  fun testSettingsFileLoading() {
+    val tempDir = Files.createTempDirectory("ltex-doc-check-test")
+    val testFile = Files.createTempFile(tempDir, "dict", ".txt")
+    Files.write(testFile, listOf("customword"))
+    try {
+      val manager = BasicSettingsFileManager().rooted(tempDir)
+      val document = createDocument("markdown", "Checking customword spelling.\n")
+
+      // Load settings via file reference
+      val fileSettings = FileSettings.fromListOfStrings(listOf(":${testFile.fileName}"), manager)
+      var settings = Settings(_allDictionaries = mapOf("en-US" to fileSettings))
+
+      var checkingResult = checkDocument(document, settings)
+      // "customword" is now in the dictionary, so there should be no errors!
+      assertEquals(0, checkingResult.first.size)
+
+      // Apply override to subtract "customword"
+      val override = SettingsOverride(settings)
+      override.updateCurrentDictionary("customword", included = false)
+      settings = override.toSettings()
+
+      checkingResult = checkDocument(document, settings)
+      // "customword" is removed, so it should be flagged as a typo now!
+      assertEquals(1, checkingResult.first.size)
+    } finally {
+      Files.deleteIfExists(testFile)
+      Files.deleteIfExists(tempDir)
+    }
   }
 
   companion object {

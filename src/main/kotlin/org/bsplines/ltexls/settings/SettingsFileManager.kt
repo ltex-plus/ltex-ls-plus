@@ -35,13 +35,15 @@ interface SettingsFileManager {
     val manager: SettingsFileManager,
     val root: Path,
   ) : Rooted {
-    override fun resolve(path: String): Canonical<String>? =
-      Canonical.fromPath(
+    override fun resolve(path: String): Canonical<String>? {
+      if (path.isEmpty()) return null
+      return Canonical.fromPath(
         when {
           path.isNotEmpty() && path.first() in arrayOf('~', '/') -> FileIo.normalizePath(path)
           else -> root.resolve(path).pathString
         },
       )
+    }
 
     override fun loadFile(path: Path): List<String> = this.manager.loadFile(path)
   }
