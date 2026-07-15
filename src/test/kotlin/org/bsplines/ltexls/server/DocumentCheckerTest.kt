@@ -627,21 +627,17 @@ class DocumentCheckerTest {
       val manager = BasicSettingsFileManager().rooted(tempDir)
       val document = createDocument("markdown", "Checking customword spelling.\n")
 
-      // Load settings via file reference
       val fileSettings = FileSettings.fromListOfStrings(listOf(":${testFile.fileName}"), manager)
       var settings = Settings(_allDictionaries = mapOf("en-US" to fileSettings))
 
       var checkingResult = checkDocument(document, settings)
-      // "customword" is now in the dictionary, so there should be no errors!
       assertEquals(0, checkingResult.first.size)
 
-      // Apply override to subtract "customword"
       val override = SettingsOverride(settings)
       override.updateCurrentDictionary("customword", included = false)
       settings = override.toSettings()
 
       checkingResult = checkDocument(document, settings)
-      // "customword" is removed, so it should be flagged as a typo now!
       assertEquals(1, checkingResult.first.size)
     } finally {
       Files.deleteIfExists(testFile)

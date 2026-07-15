@@ -20,20 +20,17 @@ class LtexLanguageServerTest {
   fun testDeepestWorkspaceRootSelection() {
     val server = LtexLanguageServer()
 
-    // Create real directories so Canonical.from can resolve toRealPath()
     val tempDir = Files.createTempDirectory("ltex-root-test")
     val subProjectDir = tempDir.resolve("subproject")
     subProjectDir.createDirectories()
 
     try {
       val root1 =
-        LtexLanguageServer.Canonical.from(
-          WorkspaceFolder(tempDir.toUri().toString(), "root"),
-        )!!
+        LtexLanguageServer.Canonical
+          .from(WorkspaceFolder(tempDir.toUri().toString(), "root"))!!
       val root2 =
-        LtexLanguageServer.Canonical.from(
-          WorkspaceFolder(subProjectDir.toUri().toString(), "sub"),
-        )!!
+        LtexLanguageServer.Canonical
+          .from(WorkspaceFolder(subProjectDir.toUri().toString(), "sub"))!!
 
       server.workspaceRoots = listOf(root1, root2)
 
@@ -60,13 +57,11 @@ class LtexLanguageServerTest {
     val extDir = Files.createTempDirectory("ltex-ext-other")
     try {
       val root =
-        LtexLanguageServer.Canonical.from(
-          WorkspaceFolder(tempDir.toUri().toString(), "root"),
-        )!!
+        LtexLanguageServer.Canonical
+          .from(WorkspaceFolder(tempDir.toUri().toString(), "root"))!!
 
       server.workspaceRoots = listOf(root)
 
-      // Resolve root for a file outside the workspace
       val externalFile = extDir.resolve("doc.md")
       Files.createFile(externalFile)
       val resolvedRoot = server.relativePathRoot(externalFile.toUri().toString())
@@ -88,16 +83,11 @@ class LtexLanguageServerTest {
     val tempDir = Files.createTempDirectory("ltex-virt-test")
     try {
       val root =
-        LtexLanguageServer.Canonical.from(
-          WorkspaceFolder(tempDir.toUri().toString(), "root"),
-        )!!
+        LtexLanguageServer.Canonical
+          .from(WorkspaceFolder(tempDir.toUri().toString(), "root"))!!
 
       server.workspaceRoots = listOf(root)
-
-      // Resolve root for an unsaved file (virtual URI scheme)
       val resolvedRoot = server.relativePathRoot("untitled:Untitled-1")
-
-      // Should fall back to the first available workspace root
       assertEquals(tempDir.toRealPath(), resolvedRoot.toRealPath())
     } finally {
       Files.deleteIfExists(tempDir)
