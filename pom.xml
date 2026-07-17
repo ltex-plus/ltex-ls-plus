@@ -49,7 +49,7 @@
     <kotlin.compiler.jvmTarget>${java.version}</kotlin.compiler.jvmTarget>
     <main.class>org.bsplines.ltexls.LtexLanguageServerLauncher</main.class>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <junit.jupiter.version>6.1.1</junit.jupiter.version>
+    <junit.jupiter.version>6.1.2</junit.jupiter.version>
     <languagetool.version>6.8</languagetool.version>
     <!-- Base version for the stamped Implementation-Version, e.g.
          ${ltex.release.label}.<commitsSinceLastReleaseTag>+<commitDate>.g<hash>
