@@ -17,6 +17,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+@Suppress("LargeClass")
 class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
   @Test
   @Suppress("LongMethod")
@@ -137,6 +138,15 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
 
       """.trimIndent(),
       "Heading. This is a test. This is another heading. This is another test. ",
+    )
+    assertPlainText(
+      """
+      \titleformat{\chapter}{\huge\normalfont\bfseries}{\thechapter}{1em}{}
+      \section{Heading}
+      Test text.
+
+      """.trimIndent(),
+      " Heading. Test text. ",
     )
     assertPlainText(
       """

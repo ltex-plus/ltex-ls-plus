@@ -459,8 +459,11 @@ class LatexAnnotatedTextBuilder(
         )
 
       if (headingArgument.isNotEmpty()) addMarkup(headingArgument)
-      this.modeStack.addLast(Mode.Heading)
-      addMarkup("{")
+
+      if ((this.pos < this.code.length) && (this.code[this.pos] == '{')) {
+        this.modeStack.addLast(Mode.Heading)
+        addMarkup("{")
+      }
     } else if ((command == "\\text") || (command == "\\intertext")) {
       this.modeStack.addLast(Mode.InlineText)
       val interpretAs: String = if (isMathMode(this.curMode)) generateDummy() else ""

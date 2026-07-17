@@ -17,6 +17,9 @@
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#206" due-to="Daniel Spitzer (@spitzerd)">
         Fix StackOverflowError for Typst, AsciiDoc, and Org documents. The issue occurred on long comments, for example.
       </action>
+      <action type="fix" issue="ltex-plus/vscode-ltex-plus#35" due-to="Daniel Spitzer (@spitzerd)">
+        Fix LaTeX section commands (e.g., `\chapter`, `\section`) used as arguments to other commands (e.g., `\titleformat{\chapter}{...}`) causing false "Two consecutive dots" LanguageTool warnings. The section heading handler previously unconditionally pushed Heading mode and consumed the next character as `{`, even when the section command appeared inside a brace group as an argument.
+      </action>
     </release>
     <release version="18.7.0" date="2026-06-13">
       <action type="add" issue="ltex-plus/ltex-ls-plus#183" due-to="Andrea Alberti (@alberti42)">
