@@ -39,12 +39,13 @@
   <properties>
     <java.version>21</java.version>
     <!--
-      Pinned to <2.3.30 because CodeQL's Kotlin extractor (code-scanning autobuild)
-      rejects newer versions: "Kotlin version X is too recent. CodeQL currently
-      supports versions below 2.3.30". Dependabot is configured to ignore
-      org.jetbrains.kotlin:* (see .github/dependabot.yml) until CodeQL catches up.
+      Kotlin version is updated manually when CodeQL supports the new release.
+      CodeQL's Kotlin extractor (code-scanning autobuild) rejects newer versions:
+      "Kotlin version X is too recent. CodeQL currently supports versions below Y".
+      Dependabot is configured to ignore org.jetbrains.kotlin:* (see 
+      .github/dependabot.yml)
     -->
-    <kotlin.version>2.3.21</kotlin.version>
+    <kotlin.version>2.4.0</kotlin.version>
     <kotlin.compiler.jvmTarget>${java.version}</kotlin.compiler.jvmTarget>
     <main.class>org.bsplines.ltexls.LtexLanguageServerLauncher</main.class>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
