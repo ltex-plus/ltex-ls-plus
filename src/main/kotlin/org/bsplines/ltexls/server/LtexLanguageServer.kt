@@ -69,6 +69,15 @@ class LtexLanguageServer :
   var clientSupportsWorkspaceSpecificConfiguration: Boolean = false
     private set
 
+  // When true, the server itself reads/writes the external setting files
+  // (e.g. an external dictionary file referenced with a ":" prefix). Driven by
+  // the client opt-in ltex.externalFiles.managedByEditor: the default (true)
+  // means the editor manages those files, so the server stays out and behaves
+  // exactly as before; only a client sending managedByEditor=false flips this on.
+  // Read at initialize because it gates executeCommandProvider (see below).
+  var serverManagesExternalFiles: Boolean = false
+    private set
+
   init {
     // Sweep idle fragment-cache entries on a fixed 60 s cadence. Entries idle
     // longer than ltex.paragraphCacheTtlMinutes are dropped; every cache hit
@@ -115,23 +124,8 @@ class LtexLanguageServer :
     val initializationOptions: JsonElement? = params.initializationOptions as JsonElement?
 
     if ((initializationOptions != null) && initializationOptions.isJsonObject) {
-      val initializationOptionsObject: JsonObject = initializationOptions.asJsonObject
-
-      // make it possible to set locale when using LSP 3.15 (that's what we currently require
-      // as minimum version; InitializeParams.locale was added in LSP 3.16)
-      if (initializationOptionsObject.has("locale")) {
-        localeLanguage = initializationOptionsObject.get("locale").asString
-      }
-
-      if (initializationOptionsObject.has("customCapabilities")) {
-        val customCapabilities: JsonObject =
-          initializationOptionsObject.getAsJsonObject("customCapabilities")
-
-        if (customCapabilities.has("workspaceSpecificConfiguration")) {
-          this.clientSupportsWorkspaceSpecificConfiguration =
-            customCapabilities.get("workspaceSpecificConfiguration").asBoolean
-        }
-      }
+      localeLanguage =
+        applyInitializationOptions(initializationOptions.asJsonObject, localeLanguage)
     }
 
     if (localeLanguage != null) I18n.setLocale(Locale.forLanguageTag(localeLanguage))
@@ -142,7 +136,7 @@ class LtexLanguageServer :
       Either.forRight(CodeActionOptions(CodeActionProvider.getCodeActionKinds()))
     serverCapabilities.completionProvider = CompletionOptions().apply { resolveProvider = false }
     serverCapabilities.executeCommandProvider =
-      ExecuteCommandOptions(LtexWorkspaceService.getCommandNames())
+      ExecuteCommandOptions(LtexWorkspaceService.getCommandNames(this.serverManagesExternalFiles))
     serverCapabilities.textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
 
     val workspaceFoldersOptions = WorkspaceFoldersOptions()
@@ -156,6 +150,52 @@ class LtexLanguageServer :
     // for nightlies (see pom.xml / git-commit-id-maven-plugin) and the plain release for releases.
     val serverInfo = ServerInfo("ltex-ls-plus", ltexLsPackage?.implementationVersion)
     return CompletableFuture.completedFuture(InitializeResult(serverCapabilities, serverInfo))
+  }
+
+  // Reads locale and the custom/opt-in flags from initializationOptions, returning
+  // the (possibly updated) locale. Split out of initialize() to keep that method's
+  // complexity and nesting within bounds.
+  private fun applyInitializationOptions(
+    initializationOptionsObject: JsonObject,
+    currentLocale: String?,
+  ): String? {
+    // make it possible to set locale when using LSP 3.15 (that's what we currently require
+    // as minimum version; InitializeParams.locale was added in LSP 3.16)
+    val localeLanguage: String? =
+      if (initializationOptionsObject.has("locale")) {
+        initializationOptionsObject.get("locale").asString
+      } else {
+        currentLocale
+      }
+
+    if (initializationOptionsObject.has("customCapabilities")) {
+      val customCapabilities: JsonObject =
+        initializationOptionsObject.getAsJsonObject("customCapabilities")
+
+      if (customCapabilities.has("workspaceSpecificConfiguration")) {
+        this.clientSupportsWorkspaceSpecificConfiguration =
+          customCapabilities.get("workspaceSpecificConfiguration").asBoolean
+      }
+    }
+
+    this.serverManagesExternalFiles = readServerManagesExternalFiles(initializationOptionsObject)
+    return localeLanguage
+  }
+
+  // ltex.externalFiles.managedByEditor (default true). Thin clients that cannot
+  // manage external setting files themselves (e.g. Zed, Helix) send false to hand
+  // that responsibility to the server. Delivered via initializationOptions because
+  // the value must be known at initialize time to decide whether
+  // _ltex.addToDictionary is advertised as a server command.
+  private fun readServerManagesExternalFiles(initializationOptionsObject: JsonObject): Boolean {
+    val ltexObject: JsonObject? =
+      initializationOptionsObject.takeIf { it.has("ltex") }?.getAsJsonObject("ltex")
+    val externalFilesObject: JsonObject? =
+      ltexObject?.takeIf { it.has("externalFiles") }?.getAsJsonObject("externalFiles")
+
+    return (externalFilesObject != null) &&
+      externalFilesObject.has("managedByEditor") &&
+      !externalFilesObject.get("managedByEditor").asBoolean
   }
 
   override fun shutdown(): CompletableFuture<Any> {

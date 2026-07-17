@@ -429,7 +429,11 @@ class LtexTextDocumentItem(
 
       this.raiseExceptionIfCanceled()
       this.languageServer.settingsManager.settings =
-        Settings.fromJson(jsonConfiguration, jsonWorkspaceSpecificConfiguration)
+        Settings.fromJson(
+          jsonConfiguration,
+          jsonWorkspaceSpecificConfiguration,
+          this.languageServer.serverManagesExternalFiles,
+        )
 
       this.raiseExceptionIfCanceled()
       val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =

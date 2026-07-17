@@ -17,6 +17,8 @@ import org.bsplines.ltexls.tools.I18n
 import org.bsplines.ltexls.tools.Logging
 import org.eclipse.lsp4j.DiagnosticSeverity
 import org.languagetool.Languages
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.logging.Level
 
 data class Settings(
@@ -247,18 +249,28 @@ data class Settings(
     fun fromJson(
       jsonSettings: JsonElement,
       jsonWorkspaceSpecificSettings: JsonElement? = null,
+      expandExternalDictionaryFiles: Boolean = false,
     ): Settings {
       val jsonWorkspaceSpecificSettings2 = jsonWorkspaceSpecificSettings ?: jsonSettings
 
       val enabled: Set<String>? = getEnabledFromJson(jsonSettings)
       val languageShortCode: String? =
         getSettingFromJsonAsString(jsonSettings, "language")?.let { normalizeLanguageShortCode(it) }
-      val allDictionaries: Map<String, Set<String>>? =
+      val rawDictionaries: Map<String, Set<String>>? =
         mergeMapOfListsIntoMapOfSets(
           convertJsonObjectToMapOfLists(
             getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "dictionary"),
           ),
         )
+      // Only when the server owns external files (client opted out) do we resolve
+      // ":"-prefixed external dictionary files here; otherwise the dictionary is
+      // passed through verbatim, exactly as before.
+      val allDictionaries: Map<String, Set<String>>? =
+        if (expandExternalDictionaryFiles && (rawDictionaries != null)) {
+          expandExternalFilesInDictionaries(rawDictionaries)
+        } else {
+          rawDictionaries
+        }
       val allDisabledRules: Map<String, Set<String>>? =
         mergeMapOfListsIntoMapOfSets(
           convertJsonObjectToMapOfLists(
@@ -515,6 +527,32 @@ data class Settings(
 
       return resolved
     }
+
+    // Resolves ":"-prefixed external dictionary files: each such entry is kept
+    // (so the server can later locate the file to write into) and the file's
+    // lines are added alongside as regular dictionary words. Missing/unreadable
+    // files are skipped. Non-":" entries pass through untouched.
+    private fun expandExternalFilesInDictionaries(
+      allDictionaries: Map<String, Set<String>>,
+    ): Map<String, Set<String>> =
+      allDictionaries.mapValues { (_, entries: Set<String>) ->
+        // Seed with all original entries (retaining the ":" markers so the server
+        // can later locate the file to write into), then add each external file's
+        // lines as regular dictionary words.
+        val expanded = LinkedHashSet<String>(entries)
+
+        for (entry: String in entries.filter { it.startsWith(":") }) {
+          val path = Paths.get(FileIo.normalizePath(entry.substring(1)))
+          if (Files.exists(path)) {
+            FileIo.readFile(path)?.lines()?.forEach { line: String ->
+              val trimmed: String = line.trim()
+              if (trimmed.isNotEmpty()) expanded.add(trimmed)
+            }
+          }
+        }
+
+        expanded
+      }
 
     private fun getEnabledFromJson(jsonSettings: JsonElement): Set<String>? {
       val jsonElement: JsonElement? = getSettingFromJsonAsJsonElement(jsonSettings, "enabled")

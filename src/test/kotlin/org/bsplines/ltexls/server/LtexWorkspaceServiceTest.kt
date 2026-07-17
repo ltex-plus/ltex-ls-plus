@@ -8,8 +8,10 @@
 
 package org.bsplines.ltexls.server
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import org.bsplines.ltexls.settings.Settings
 import org.bsplines.ltexls.tools.I18n
 import org.bsplines.ltexls.tools.Logging
 import org.eclipse.lsp4j.DidChangeConfigurationParams
@@ -73,7 +75,77 @@ class LtexWorkspaceServiceTest {
     assertTrue(result["totalMemory"].asDouble >= 0)
   }
 
+  @Test
+  fun testGetCommandNamesGatesAddToDictionary() {
+    val addToDictionary = "_ltex.addToDictionary"
+    // Editor-managed (default): command NOT advertised, init response unchanged.
+    assertFalse(LtexWorkspaceService.getCommandNames().contains(addToDictionary))
+    assertFalse(LtexWorkspaceService.getCommandNames(false).contains(addToDictionary))
+    // Server-managed: command advertised so thin clients can invoke it.
+    assertTrue(LtexWorkspaceService.getCommandNames(true).contains(addToDictionary))
+  }
+
+  @Test
+  fun testAddToDictionaryCommandAppendsToExternalFile() {
+    val dictionaryFile: File = File.createTempFile("ltex-dict-", ".txt")
+    dictionaryFile.writeText("existingword\n")
+
+    try {
+      val server = LtexLanguageServer()
+      server.settingsManager.settings =
+        Settings.fromJson(buildDictionarySettings(":" + dictionaryFile.absolutePath), null, true)
+      val service = LtexWorkspaceService(server)
+
+      val arguments: JsonObject = buildAddWordsArguments("newword")
+      val response: Any = service.executeAddToDictionaryCommand(arguments).get()
+      val result: JsonObject = (response as JsonElement).asJsonObject
+
+      assertTrue(result["success"].asBoolean)
+      val content: String = dictionaryFile.readText()
+      assertTrue(content.contains("existingword"))
+      assertTrue(content.contains("newword"))
+    } finally {
+      dictionaryFile.delete()
+    }
+  }
+
+  @Test
+  fun testAddToDictionaryCommandFailsWithoutExternalFile() {
+    val server = LtexLanguageServer()
+    // Dictionary has only a literal word, no ":"-prefixed external file entry.
+    server.settingsManager.settings =
+      Settings.fromJson(buildDictionarySettings("plainword"), null, true)
+    val service = LtexWorkspaceService(server)
+
+    val arguments: JsonObject = buildAddWordsArguments("newword")
+    val response: Any = service.executeAddToDictionaryCommand(arguments).get()
+    val result: JsonObject = (response as JsonElement).asJsonObject
+
+    assertFalse(result["success"].asBoolean)
+  }
+
   companion object {
+    private fun buildDictionarySettings(vararg enUsEntries: String): JsonObject {
+      val entries = JsonArray()
+      for (entry: String in enUsEntries) entries.add(entry)
+      val dictionary = JsonObject()
+      dictionary.add("en-US", entries)
+      val jsonSettings = JsonObject()
+      jsonSettings.add("dictionary", dictionary)
+      return jsonSettings
+    }
+
+    private fun buildAddWordsArguments(vararg words: String): JsonObject {
+      val wordArray = JsonArray()
+      for (word: String in words) wordArray.add(word)
+      val wordsObject = JsonObject()
+      wordsObject.add("en-US", wordArray)
+      val arguments = JsonObject()
+      arguments.addProperty("uri", "file:///demo")
+      arguments.add("words", wordsObject)
+      return arguments
+    }
+
     private fun assertCheckDocumentResult(
       uri: String,
       expected: Boolean,
