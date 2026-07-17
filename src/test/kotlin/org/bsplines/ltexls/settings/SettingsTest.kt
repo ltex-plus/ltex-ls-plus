@@ -11,14 +11,45 @@ package org.bsplines.ltexls.settings
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import org.eclipse.lsp4j.DiagnosticSeverity
+import java.io.File
 import java.util.logging.Level
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class SettingsTest {
+  @Test
+  fun testExpandExternalDictionaryFiles() {
+    val dictionaryFile: File = File.createTempFile("ltex-dict-", ".txt")
+    dictionaryFile.writeText("alpha\nbeta\n\n")
+
+    try {
+      val entries = JsonArray()
+      entries.add(":" + dictionaryFile.absolutePath)
+      val dictionary = JsonObject()
+      dictionary.add("en-US", entries)
+      val jsonSettings = JsonObject()
+      jsonSettings.add("dictionary", dictionary)
+
+      // Expansion on: the external file's lines become dictionary words, and the
+      // ":"-marker entry is retained so the server can later write back to it.
+      val expanded = Settings.fromJson(jsonSettings, null, true)
+      assertTrue(expanded.dictionary.contains("alpha"))
+      assertTrue(expanded.dictionary.contains("beta"))
+      assertTrue(expanded.dictionary.contains(":" + dictionaryFile.absolutePath))
+
+      // Expansion off (default / editor-managed): dictionary passes through verbatim.
+      val notExpanded = Settings.fromJson(jsonSettings, null, false)
+      assertFalse(notExpanded.dictionary.contains("alpha"))
+      assertTrue(notExpanded.dictionary.contains(":" + dictionaryFile.absolutePath))
+    } finally {
+      dictionaryFile.delete()
+    }
+  }
+
   @Test
   @Suppress("LongMethod")
   fun testProperties() {
