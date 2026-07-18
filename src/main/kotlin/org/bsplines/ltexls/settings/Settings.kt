@@ -260,6 +260,12 @@ data class Settings(
     // Prefix marking a setting entry as an external file path (LTeX convention).
     private const val EXTERNAL_FILE_PREFIX = ":"
 
+    // Prefix marking a setting entry as a removal (LTeX convention): "-x" deletes a
+    // previously added "x". Applied uniformly to inline entries and to the lines of
+    // an expanded external file, in order, so a "-x" from either source can cancel
+    // an "x" contributed by the other.
+    private const val REMOVE_PREFIX = "-"
+
     @Suppress("LongMethod")
     fun fromJson(
       jsonSettings: JsonElement,
@@ -283,30 +289,24 @@ data class Settings(
 
       val allDictionaries: Map<String, Set<String>>? =
         expandStringSetting(
-          mergeMapOfListsIntoMapOfSets(
-            convertJsonObjectToMapOfLists(
-              getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "dictionary"),
-            ),
+          convertJsonObjectToMapOfLists(
+            getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "dictionary"),
           ),
           expandExternalFiles,
           dictionaryFiles,
         )
       val allDisabledRules: Map<String, Set<String>>? =
         expandStringSetting(
-          mergeMapOfListsIntoMapOfSets(
-            convertJsonObjectToMapOfLists(
-              getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "disabledRules"),
-            ),
+          convertJsonObjectToMapOfLists(
+            getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "disabledRules"),
           ),
           expandExternalFiles,
           disabledRulesFiles,
         )
       val allEnabledRules: Map<String, Set<String>>? =
         expandStringSetting(
-          mergeMapOfListsIntoMapOfSets(
-            convertJsonObjectToMapOfLists(
-              getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "enabledRules"),
-            ),
+          convertJsonObjectToMapOfLists(
+            getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings2, "enabledRules"),
           ),
           expandExternalFiles,
           enabledRulesFiles,
@@ -581,30 +581,61 @@ data class Settings(
     ): Map<String, Map<String, String>>? =
       if (expand) filesBySetting.filterValues { it.isNotEmpty() }.ifEmpty { null } else null
 
-    // Resolves ":"-prefixed external files for a string-valued, language-keyed
-    // setting (dictionary / disabledRules / enabledRules). When expanding, a ":"
-    // entry is replaced by the file's lines (the marker itself is dropped), and
-    // the first external file per language is recorded into `fileAccumulator` so
-    // the server-side quick fixes know where to write. Not expanding → verbatim.
+    // Resolves a string-valued, language-keyed setting (dictionary / disabledRules /
+    // enabledRules) from its ordered inline entries. Each language's entries are
+    // folded in order by foldStringEntries, which applies the "-" removal convention
+    // and — when the server owns external files — splices in the lines of a
+    // ":"-prefixed file (recording the first file per language into `fileAccumulator`
+    // so the server-side quick fixes know where to write). Not expanding → ":" entries
+    // pass through verbatim; only the "-" folding is applied.
     private fun expandStringSetting(
-      raw: Map<String, Set<String>>?,
+      raw: Map<String, List<String>>?,
       expand: Boolean,
       fileAccumulator: MutableMap<String, String>,
     ): Map<String, Set<String>>? {
-      if (!expand || (raw == null)) return raw
+      if (raw == null) return null
 
-      return raw.mapValues { (language: String, entries: Set<String>) ->
-        val expanded = LinkedHashSet<String>()
+      return raw.mapValues { (language: String, entries: List<String>) ->
+        foldStringEntries(entries, language, expand, fileAccumulator)
+      }
+    }
 
-        for (entry: String in entries) {
-          if (entry.startsWith(EXTERNAL_FILE_PREFIX)) {
-            recordAndReadExternalFile(entry, language, fileAccumulator) { expanded.add(it) }
-          } else {
-            expanded.add(entry)
+    // Folds one language's ordered entries into a set, honoring the "-" removal
+    // convention and, when expanding, splicing in the lines of ":"-prefixed external
+    // files (whose lines may themselves use "-"). Order is significant: a later "-x"
+    // cancels an "x" contributed earlier by an inline entry or by a file. Shared by
+    // the string settings and by hiddenFalsePositives (which parses the survivors).
+    private fun foldStringEntries(
+      entries: List<String>,
+      language: String,
+      expand: Boolean,
+      fileAccumulator: MutableMap<String, String>,
+    ): Set<String> {
+      val resolved = LinkedHashSet<String>()
+
+      for (entry: String in entries) {
+        if (expand && entry.startsWith(EXTERNAL_FILE_PREFIX)) {
+          recordAndReadExternalFile(entry, language, fileAccumulator) {
+            applyStringEntry(it, resolved)
           }
+        } else {
+          applyStringEntry(entry, resolved)
         }
+      }
 
-        expanded
+      return resolved
+    }
+
+    // Applies one entry to `target`: a "-x" entry removes a previously added "x",
+    // any other entry adds itself. See REMOVE_PREFIX.
+    private fun applyStringEntry(
+      entry: String,
+      target: MutableSet<String>,
+    ) {
+      if (entry.startsWith(REMOVE_PREFIX)) {
+        target.remove(entry.substring(REMOVE_PREFIX.length))
+      } else {
+        target.add(entry)
       }
     }
 
@@ -673,14 +704,15 @@ data class Settings(
         convertJsonObjectToMapOfJsonObjects(
           getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings, "hiddenFalsePositives"),
         )
-      val stringMap: Map<String, Set<String>>? =
-        mergeMapOfListsIntoMapOfSets(
-          convertJsonObjectToMapOfLists(
-            getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings, "hiddenFalsePositives"),
-          ),
+      // Kept as an ordered list (not pre-merged) so the "-" removals and ":"-file
+      // expansions fold in the order written, letting a "-{...}" cancel a matching
+      // entry contributed inline or by a file.
+      val stringListMap: Map<String, List<String>>? =
+        convertJsonObjectToMapOfLists(
+          getSettingFromJsonAsJsonObject(jsonWorkspaceSpecificSettings, "hiddenFalsePositives"),
         )
 
-      if ((objectMap == null) && (stringMap == null)) return null
+      if ((objectMap == null) && (stringListMap == null)) return null
 
       val hiddenFalsePositivesMap = HashMap<String, HashSet<HiddenFalsePositive>>()
 
@@ -690,35 +722,18 @@ data class Settings(
         jsonObjectSet.forEach { set.add(HiddenFalsePositive.fromJsonObject(it)) }
       }
 
-      stringMap?.forEach { (language: String, stringSet: Set<String>) ->
+      // Each surviving string is a one-line JSON object; parse through the hardened
+      // parser so a malformed or unexpanded ":" entry is skipped with a warning, not
+      // thrown.
+      stringListMap?.forEach { (language: String, entries: List<String>) ->
         val set: HashSet<HiddenFalsePositive> =
           hiddenFalsePositivesMap.getOrPut(language) { HashSet() }
-        stringSet.forEach { entry: String ->
-          addHiddenFalsePositiveStringEntry(entry, language, expand, fileAccumulator, set)
-        }
+        val jsonStrings: Set<String> =
+          foldStringEntries(entries, language, expand, fileAccumulator)
+        jsonStrings.forEach { parseHiddenFalsePositiveOrWarn(it)?.let { hfp -> set.add(hfp) } }
       }
 
       return hiddenFalsePositivesMap
-    }
-
-    // A hiddenFalsePositives string entry is either a JSON object (the usual case)
-    // or, when the server manages external files, a ":"-prefixed file whose lines
-    // are each such a JSON object. Both routes go through the hardened parser so a
-    // malformed/unexpanded entry is skipped, not thrown.
-    private fun addHiddenFalsePositiveStringEntry(
-      entry: String,
-      language: String,
-      expand: Boolean,
-      fileAccumulator: MutableMap<String, String>,
-      set: HashSet<HiddenFalsePositive>,
-    ) {
-      if (expand && entry.startsWith(EXTERNAL_FILE_PREFIX)) {
-        recordAndReadExternalFile(entry, language, fileAccumulator) { line: String ->
-          parseHiddenFalsePositiveOrWarn(line)?.let { set.add(it) }
-        }
-      } else {
-        parseHiddenFalsePositiveOrWarn(entry)?.let { set.add(it) }
-      }
     }
 
     private fun getDiagnosticSeverityFromJson(
@@ -995,29 +1010,6 @@ data class Settings(
       }
 
       return null
-    }
-
-    private fun mergeMapOfListsIntoMapOfSets(
-      mapOfLists: Map<String, List<String>>?,
-    ): Map<String, Set<String>>? {
-      if (mapOfLists == null) return null
-      val mapOfSets = HashMap<String, HashSet<String>>()
-
-      for ((key: String, set2: List<String>) in mapOfLists) {
-        val set1 = HashSet<String>()
-
-        for (string: String in set2) {
-          if (string.startsWith("-")) {
-            set1.remove(string.substring(1))
-          } else {
-            set1.add(string)
-          }
-        }
-
-        mapOfSets[key] = set1
-      }
-
-      return mapOfSets
     }
   }
 }

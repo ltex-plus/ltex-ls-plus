@@ -85,6 +85,57 @@ class SettingsTest {
   }
 
   @Test
+  fun testRemovalPrefixInteractsWithExternalDictionaryFile() {
+    val dictionaryFile: File = File.createTempFile("ltex-dict-", ".txt")
+    // A file line may itself use the "-" removal convention: "-beta" cancels the
+    // "beta" contributed earlier by the same file.
+    dictionaryFile.writeText("alpha\nbeta\n-beta\ndelta\n")
+
+    try {
+      // Folded in order: the file expands first (alpha, beta, -beta -> beta gone,
+      // delta); then the inline "-alpha" cancels the file's alpha; then "gamma" adds.
+      val entries = JsonArray()
+      entries.add(":" + dictionaryFile.absolutePath)
+      entries.add("-alpha")
+      entries.add("gamma")
+      val dictionary = JsonObject()
+      dictionary.add("en-US", entries)
+      val jsonSettings = JsonObject()
+      jsonSettings.add("dictionary", dictionary)
+
+      val expanded = Settings.fromJson(jsonSettings, null, true)
+      assertEquals(setOf("delta", "gamma"), expanded.dictionary)
+    } finally {
+      dictionaryFile.delete()
+    }
+  }
+
+  @Test
+  fun testRemovalPrefixCancelsExternalHiddenFalsePositive() {
+    val file: File = File.createTempFile("ltex-fp-", ".txt")
+    val r1 = "{\"rule\":\"R1\",\"sentence\":\"^A\$\"}"
+    val r2 = "{\"rule\":\"R2\",\"sentence\":\"^B\$\"}"
+    file.writeText("$r1\n$r2\n")
+
+    try {
+      // Inline "-{...R1...}" cancels the R1 entry supplied by the file, leaving R2.
+      val entries = JsonArray()
+      entries.add(":" + file.absolutePath)
+      entries.add("-$r1")
+      val hiddenFalsePositives = JsonObject()
+      hiddenFalsePositives.add("en-US", entries)
+      val jsonSettings = JsonObject()
+      jsonSettings.add("hiddenFalsePositives", hiddenFalsePositives)
+
+      val expanded = Settings.fromJson(jsonSettings, null, true)
+      assertEquals(1, expanded.hiddenFalsePositives.size)
+      assertTrue(expanded.hiddenFalsePositives.any { it.ruleId == "R2" })
+    } finally {
+      file.delete()
+    }
+  }
+
+  @Test
   @Suppress("LongMethod")
   fun testProperties() {
     var settings = Settings()
