@@ -37,6 +37,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
+@Suppress("TooManyFunctions")
 class LtexWorkspaceService(
   val languageServer: LtexLanguageServer,
 ) : WorkspaceService {
@@ -90,72 +91,86 @@ class LtexWorkspaceService(
         executeAddToDictionaryCommand(params.arguments[0] as JsonObject)
       }
 
+      DISABLE_RULES_COMMAND_NAME -> {
+        executeDisableRulesCommand(params.arguments[0] as JsonObject)
+      }
+
+      HIDE_FALSE_POSITIVES_COMMAND_NAME -> {
+        executeHideFalsePositivesCommand(params.arguments[0] as JsonObject)
+      }
+
       else -> {
         failCommand(I18n.format("unknownCommand", params.command))
       }
     }
 
-  // Server-side handling of the "Add to dictionary" quick fix, active only when
-  // the client opted into server-managed external files (see LtexLanguageServer.
-  // serverManagesExternalFiles). The command carries { uri, words: { lang: [...] } };
-  // for each language we append the new words to the first external dictionary
-  // file (a ":"-prefixed entry) listed for that language, then re-check documents.
-  fun executeAddToDictionaryCommand(arguments: JsonObject): CompletableFuture<Any> {
-    val words: JsonObject = arguments.getAsJsonObject("words")
-    val allDictionaries: Map<String, Set<String>> =
-      this.languageServer.settingsManager.settings.allDictionaries
+  // The three server-side quick fixes ("Add to dictionary", "Disable rule", "Hide
+  // false positive"), active only when the client opted into server-managed
+  // external files. Each command carries { uri, <key>: { lang: [entry, ...] } };
+  // they differ only in the argument key and which setting's external file to
+  // write, so they all delegate to executeAppendToExternalFileCommand.
+  fun executeAddToDictionaryCommand(arguments: JsonObject): CompletableFuture<Any> =
+    executeAppendToExternalFileCommand(arguments, "dictionary", "words")
 
-    var addedAnyWord = false
+  fun executeDisableRulesCommand(arguments: JsonObject): CompletableFuture<Any> =
+    executeAppendToExternalFileCommand(arguments, "disabledRules", "ruleIds")
+
+  fun executeHideFalsePositivesCommand(arguments: JsonObject): CompletableFuture<Any> =
+    executeAppendToExternalFileCommand(arguments, "hiddenFalsePositives", "falsePositives")
+
+  // Appends each language's entries to the first external file configured for that
+  // setting/language (resolved during settings expansion, see Settings), then
+  // re-checks open documents. No external file for a language → warning; if nothing
+  // could be written, the command fails.
+  private fun executeAppendToExternalFileCommand(
+    arguments: JsonObject,
+    settingName: String,
+    argumentKey: String,
+  ): CompletableFuture<Any> {
+    val entriesByLanguage: JsonObject = arguments.getAsJsonObject(argumentKey)
+    val settings = this.languageServer.settingsManager.settings
+
+    var appendedAny = false
     var languageWithoutExternalFile: String? = null
 
-    for ((language: String, wordsElement) in words.entrySet()) {
-      val newWords: List<String> = wordsElement.asJsonArray.map { it.asString }
-      val externalFilePath: Path? = resolveFirstExternalDictionaryFile(allDictionaries[language])
+    for ((language: String, element) in entriesByLanguage.entrySet()) {
+      val entries: List<String> = element.asJsonArray.map { it.asString }
+      val filePath: String? = settings.firstExternalSettingFile(settingName, language)
 
-      if (externalFilePath == null) {
+      if (filePath == null) {
         languageWithoutExternalFile = language
-        Logging.LOGGER.warning(I18n.format("noExternalDictionaryFileForLanguage", language))
+        Logging.LOGGER.warning(I18n.format("noExternalFileForSetting", settingName, language))
         continue
       }
 
-      if (appendWordsToExternalFile(externalFilePath, newWords)) addedAnyWord = true
+      if (appendEntriesToExternalFile(Paths.get(filePath), entries)) appendedAny = true
     }
 
-    if (!addedAnyWord && languageWithoutExternalFile != null) {
+    if (!appendedAny && (languageWithoutExternalFile != null)) {
       return failCommand(
-        I18n.format("noExternalDictionaryFileForLanguage", languageWithoutExternalFile),
+        I18n.format("noExternalFileForSetting", settingName, languageWithoutExternalFile),
       )
     }
 
-    if (addedAnyWord) recheckAllDocuments()
+    if (appendedAny) recheckAllDocuments()
 
     val jsonObject = JsonObject()
     jsonObject.addProperty("success", true)
     return CompletableFuture.completedFuture(jsonObject)
   }
 
-  // Returns the resolved path of the first ":"-prefixed (external file) entry in
-  // the given dictionary, or null if none is present. A leading "~" is expanded
-  // to the home directory; the demo assumes absolute paths (no workspace-root
-  // resolution yet).
-  private fun resolveFirstExternalDictionaryFile(dictionaryEntries: Set<String>?): Path? {
-    val entry: String =
-      dictionaryEntries?.firstOrNull { it.startsWith(EXTERNAL_FILE_PREFIX) } ?: return null
-    return Paths.get(FileIo.normalizePath(entry.substring(EXTERNAL_FILE_PREFIX.length)))
-  }
-
-  // Appends the given words to the external dictionary file. Mirrors the format of
+  // Appends the given entries to the external file. Mirrors the format of
   // vscode-ltex-plus's ExternalFileManager.appendToFile so a file stays compatible
   // across editors: the existing content is preserved verbatim, a trailing line
   // separator is ensured, and each new entry is appended on its own line using the
   // platform line separator. Like the VS Code extension, this does not deduplicate
   // (duplicate lines collapse anyway when the file is read back into the set-valued
-  // dictionary). Returns true if the file was modified.
-  private fun appendWordsToExternalFile(
+  // setting). Returns true if the file was modified.
+  private fun appendEntriesToExternalFile(
     path: Path,
-    newWords: List<String>,
+    newEntries: List<String>,
   ): Boolean {
-    if (newWords.isEmpty()) return false
+    if (newEntries.isEmpty()) return false
 
     val lineSeparator: String = System.lineSeparator()
     val existingContents: String = if (Files.exists(path)) (FileIo.readFile(path) ?: "") else ""
@@ -165,12 +180,12 @@ class LtexWorkspaceService(
     // does not already end with one (treating space/CR/LF as ignorable).
     val hasContent: Boolean = existingContents.any { (it != ' ') && (it != '\r') && (it != '\n') }
     if (hasContent && !existingContents.endsWith(lineSeparator)) builder.append(lineSeparator)
-    builder.append(newWords.joinToString(lineSeparator)).append(lineSeparator)
+    builder.append(newEntries.joinToString(lineSeparator)).append(lineSeparator)
 
     path.parent?.let { Files.createDirectories(it) }
     FileIo.writeFile(path, builder.toString())
     Logging.LOGGER.info(
-      I18n.format("addedWordsToExternalDictionaryFile", newWords.size, path.toString()),
+      I18n.format("addedEntriesToExternalSettingFile", newEntries.size, path.toString()),
     )
     return true
   }
@@ -306,9 +321,8 @@ class LtexWorkspaceService(
     private const val CHECK_DOCUMENT_COMMAND_NAME = "_ltex.checkDocument"
     private const val GET_SERVER_STATUS_COMMAND_NAME = "_ltex.getServerStatus"
     private const val ADD_TO_DICTIONARY_COMMAND_NAME = "_ltex.addToDictionary"
-
-    // Prefix marking a dictionary entry as an external file path (LTeX convention).
-    private const val EXTERNAL_FILE_PREFIX = ":"
+    private const val DISABLE_RULES_COMMAND_NAME = "_ltex.disableRules"
+    private const val HIDE_FALSE_POSITIVES_COMMAND_NAME = "_ltex.hideFalsePositives"
 
     private const val CHECK_CHECKING_STATUS_MILLISECONDS = 10L
     private const val MILLISECONDS_PER_SECOND = 1e3
@@ -321,14 +335,18 @@ class LtexWorkspaceService(
       return CompletableFuture.completedFuture(jsonObject)
     }
 
-    // _ltex.addToDictionary is advertised as a server command only when the client
-    // delegates external-file management to the server. Editor-managed clients
-    // (the default) keep handling that quick fix themselves, so the advertised
-    // command set — and the init response — stay byte-identical for them.
+    // The external-file quick-fix commands are advertised as server commands only
+    // when the client delegates external-file management to the server. Editor-
+    // managed clients (the default) keep handling these quick fixes themselves, so
+    // the advertised command set — and the init response — stay byte-identical.
     fun getCommandNames(serverManagesExternalFiles: Boolean = false): List<String> {
       val commandNames: MutableList<String> =
         mutableListOf(CHECK_DOCUMENT_COMMAND_NAME, GET_SERVER_STATUS_COMMAND_NAME)
-      if (serverManagesExternalFiles) commandNames.add(ADD_TO_DICTIONARY_COMMAND_NAME)
+      if (serverManagesExternalFiles) {
+        commandNames.add(ADD_TO_DICTIONARY_COMMAND_NAME)
+        commandNames.add(DISABLE_RULES_COMMAND_NAME)
+        commandNames.add(HIDE_FALSE_POSITIVES_COMMAND_NAME)
+      }
       return commandNames
     }
   }
