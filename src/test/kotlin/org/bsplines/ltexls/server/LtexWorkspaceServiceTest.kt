@@ -76,13 +76,18 @@ class LtexWorkspaceServiceTest {
   }
 
   @Test
-  fun testGetCommandNamesGatesAddToDictionary() {
-    val addToDictionary = "_ltex.addToDictionary"
-    // Editor-managed (default): command NOT advertised, init response unchanged.
-    assertFalse(LtexWorkspaceService.getCommandNames().contains(addToDictionary))
-    assertFalse(LtexWorkspaceService.getCommandNames(false).contains(addToDictionary))
-    // Server-managed: command advertised so thin clients can invoke it.
-    assertTrue(LtexWorkspaceService.getCommandNames(true).contains(addToDictionary))
+  fun testGetCommandNamesGatesExternalFileCommands() {
+    val externalFileCommands =
+      listOf("_ltex.addToDictionary", "_ltex.disableRules", "_ltex.hideFalsePositives")
+    // Editor-managed (default): commands NOT advertised, init response unchanged.
+    for (command: String in externalFileCommands) {
+      assertFalse(LtexWorkspaceService.getCommandNames().contains(command))
+      assertFalse(LtexWorkspaceService.getCommandNames(false).contains(command))
+    }
+    // Server-managed: all three advertised so thin clients can invoke them.
+    for (command: String in externalFileCommands) {
+      assertTrue(LtexWorkspaceService.getCommandNames(true).contains(command))
+    }
   }
 
   @Test
@@ -93,10 +98,14 @@ class LtexWorkspaceServiceTest {
     try {
       val server = LtexLanguageServer()
       server.settingsManager.settings =
-        Settings.fromJson(buildDictionarySettings(":" + dictionaryFile.absolutePath), null, true)
+        Settings.fromJson(
+          buildSettings("dictionary", ":" + dictionaryFile.absolutePath),
+          null,
+          true,
+        )
       val service = LtexWorkspaceService(server)
 
-      val arguments: JsonObject = buildAddWordsArguments("newword")
+      val arguments: JsonObject = buildCommandArguments("words", "newword")
       val response: Any = service.executeAddToDictionaryCommand(arguments).get()
       val result: JsonObject = (response as JsonElement).asJsonObject
 
@@ -110,14 +119,65 @@ class LtexWorkspaceServiceTest {
   }
 
   @Test
+  fun testDisableRulesCommandAppendsToExternalFile() {
+    val rulesFile: File = File.createTempFile("ltex-rules-", ".txt")
+
+    try {
+      val server = LtexLanguageServer()
+      server.settingsManager.settings =
+        Settings.fromJson(
+          buildSettings("disabledRules", ":" + rulesFile.absolutePath),
+          null,
+          true,
+        )
+      val service = LtexWorkspaceService(server)
+
+      val arguments: JsonObject = buildCommandArguments("ruleIds", "SOME_RULE")
+      val response: Any = service.executeDisableRulesCommand(arguments).get()
+      val result: JsonObject = (response as JsonElement).asJsonObject
+
+      assertTrue(result["success"].asBoolean)
+      assertTrue(rulesFile.readText().contains("SOME_RULE"))
+    } finally {
+      rulesFile.delete()
+    }
+  }
+
+  @Test
+  fun testHideFalsePositivesCommandAppendsToExternalFile() {
+    val falsePositivesFile: File = File.createTempFile("ltex-fp-", ".txt")
+
+    try {
+      val server = LtexLanguageServer()
+      server.settingsManager.settings =
+        Settings.fromJson(
+          buildSettings("hiddenFalsePositives", ":" + falsePositivesFile.absolutePath),
+          null,
+          true,
+        )
+      val service = LtexWorkspaceService(server)
+
+      val falsePositive = "{\"rule\":\"SOME_RULE\",\"sentence\":\"^Foo\$\"}"
+      val arguments: JsonObject = buildCommandArguments("falsePositives", falsePositive)
+      val response: Any = service.executeHideFalsePositivesCommand(arguments).get()
+      val result: JsonObject = (response as JsonElement).asJsonObject
+
+      assertTrue(result["success"].asBoolean)
+      assertTrue(falsePositivesFile.readText().contains("SOME_RULE"))
+    } finally {
+      falsePositivesFile.delete()
+    }
+  }
+
+  @Test
   fun testAddToDictionaryCommandFailsWithoutExternalFile() {
     val server = LtexLanguageServer()
     // Dictionary has only a literal word, no ":"-prefixed external file entry.
     server.settingsManager.settings =
-      Settings.fromJson(buildDictionarySettings("plainword"), null, true)
+      Settings.fromJson(buildSettings("dictionary", "plainword"), null, true)
     val service = LtexWorkspaceService(server)
 
-    val arguments: JsonObject = buildAddWordsArguments("newword")
+    val arguments: JsonObject = buildCommandArguments("words", "newword")
     val response: Any = service.executeAddToDictionaryCommand(arguments).get()
     val result: JsonObject = (response as JsonElement).asJsonObject
 
@@ -125,24 +185,34 @@ class LtexWorkspaceServiceTest {
   }
 
   companion object {
-    private fun buildDictionarySettings(vararg enUsEntries: String): JsonObject {
+    // Builds { <settingName>: { "en-US": [entries...] } } — the ltex settings
+    // section as the server receives it via workspace/configuration.
+    private fun buildSettings(
+      settingName: String,
+      vararg enUsEntries: String,
+    ): JsonObject {
       val entries = JsonArray()
       for (entry: String in enUsEntries) entries.add(entry)
-      val dictionary = JsonObject()
-      dictionary.add("en-US", entries)
+      val setting = JsonObject()
+      setting.add("en-US", entries)
       val jsonSettings = JsonObject()
-      jsonSettings.add("dictionary", dictionary)
+      jsonSettings.add(settingName, setting)
       return jsonSettings
     }
 
-    private fun buildAddWordsArguments(vararg words: String): JsonObject {
-      val wordArray = JsonArray()
-      for (word: String in words) wordArray.add(word)
-      val wordsObject = JsonObject()
-      wordsObject.add("en-US", wordArray)
+    // Builds { uri, <argumentKey>: { "en-US": [entries...] } } — an external-file
+    // quick-fix command's argument payload.
+    private fun buildCommandArguments(
+      argumentKey: String,
+      vararg entries: String,
+    ): JsonObject {
+      val entryArray = JsonArray()
+      for (entry: String in entries) entryArray.add(entry)
+      val byLanguage = JsonObject()
+      byLanguage.add("en-US", entryArray)
       val arguments = JsonObject()
       arguments.addProperty("uri", "file:///demo")
-      arguments.add("words", wordsObject)
+      arguments.add(argumentKey, byLanguage)
       return arguments
     }
 

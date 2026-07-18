@@ -18,6 +18,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class SettingsTest {
@@ -34,19 +35,52 @@ class SettingsTest {
       val jsonSettings = JsonObject()
       jsonSettings.add("dictionary", dictionary)
 
-      // Expansion on: the external file's lines become dictionary words, and the
-      // ":"-marker entry is retained so the server can later write back to it.
+      // Expansion on: the external file's lines become dictionary words, the ":"
+      // marker is dropped, and the resolved file path is recorded for write-back.
       val expanded = Settings.fromJson(jsonSettings, null, true)
       assertTrue(expanded.dictionary.contains("alpha"))
       assertTrue(expanded.dictionary.contains("beta"))
-      assertTrue(expanded.dictionary.contains(":" + dictionaryFile.absolutePath))
+      assertFalse(expanded.dictionary.contains(":" + dictionaryFile.absolutePath))
+      assertEquals(
+        dictionaryFile.absolutePath,
+        expanded.firstExternalSettingFile("dictionary", "en-US"),
+      )
 
-      // Expansion off (default / editor-managed): dictionary passes through verbatim.
+      // Expansion off (default / editor-managed): raw ":" entry passes through
+      // verbatim and no external file is recorded.
       val notExpanded = Settings.fromJson(jsonSettings, null, false)
       assertFalse(notExpanded.dictionary.contains("alpha"))
       assertTrue(notExpanded.dictionary.contains(":" + dictionaryFile.absolutePath))
+      assertNull(notExpanded.firstExternalSettingFile("dictionary", "en-US"))
     } finally {
       dictionaryFile.delete()
+    }
+  }
+
+  @Test
+  fun testExpandExternalHiddenFalsePositivesFileSkipsMalformed() {
+    val file: File = File.createTempFile("ltex-fp-", ".txt")
+    file.writeText(
+      "{\"rule\":\"R1\",\"sentence\":\"^A\$\"}\nnot-json\n{\"rule\":\"R2\",\"sentence\":\"^B\$\"}\n",
+    )
+
+    try {
+      val entries = JsonArray()
+      entries.add(":" + file.absolutePath)
+      val hiddenFalsePositives = JsonObject()
+      hiddenFalsePositives.add("en-US", entries)
+      val jsonSettings = JsonObject()
+      jsonSettings.add("hiddenFalsePositives", hiddenFalsePositives)
+
+      // One JSON object per line; the malformed middle line is skipped (not thrown).
+      val expanded = Settings.fromJson(jsonSettings, null, true)
+      assertEquals(2, expanded.hiddenFalsePositives.size)
+      assertEquals(
+        file.absolutePath,
+        expanded.firstExternalSettingFile("hiddenFalsePositives", "en-US"),
+      )
+    } finally {
+      file.delete()
     }
   }
 
