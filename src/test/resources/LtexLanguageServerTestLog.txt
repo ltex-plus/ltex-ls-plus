@@ -290,6 +290,9 @@ Result: {
                 "supported": true,
                 "changeNotifications": true
             }
+        },
+        "experimental": {
+            "manageExternalFiles": true
         }
     },
     "serverInfo": {

@@ -144,6 +144,15 @@ class LtexLanguageServer :
     workspaceFoldersOptions.setChangeNotifications(Either.forRight(true))
     serverCapabilities.workspace = WorkspaceServerCapabilities(workspaceFoldersOptions)
 
+    // Advertise, unconditionally, that this server can manage external setting
+    // files itself (read ":"-prefixed files and persist the quick fixes). Clients
+    // that cannot do this themselves (e.g. Zed, Helix) detect support here rather
+    // than sniffing the version, then opt in with ltex.externalFiles.managedByEditor
+    // = false. "experimental" is simply LSP's slot for non-standard capabilities.
+    val experimentalCapabilities = JsonObject()
+    experimentalCapabilities.addProperty("manageExternalFiles", true)
+    serverCapabilities.experimental = experimentalCapabilities
+
     // Advertise the server's identity and version to the client via serverInfo so it can,
     // e.g., gate features on a minimum version. The version is the JAR manifest's
     // Implementation-Version, stamped at build time as <label>.<commitsSinceReleaseTag>+g<hash>
