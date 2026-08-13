@@ -32,10 +32,17 @@ import org.languagetool.markup.TextPart
 // (Unicode-aware, via Char.isLetterOrDigit() — not a regex `\b`, whose `\w` is
 // ASCII-only and mishandles accented letters). So `GreenTeam` is not masked
 // inside `GreenTeamer`, and surrounding punctuation (`(GreenTeam Penciltest).`)
-// is left untouched. Matching is case-sensitive, preserving the exact semantics
-// of the former `dictionary.contains(span)` suppression. On overlap the longest
-// entry wins, so a lone `GreenTeam` is masked only when `GreenTeam` is itself an
-// entry — not as a by-product of the phrase entry `GreenTeam Penciltest`.
+// is left untouched. On overlap the longest entry wins, so a lone `GreenTeam`
+// is masked only when `GreenTeam` is itself an entry — not as a by-product of
+// the phrase entry `GreenTeam Penciltest`.
+//
+// Case handling follows the hunspell / LanguageTool-speller convention for
+// accepted words: an entry matches its own case exactly, plus — when the entry
+// begins with a lowercase letter — its sentence-initial titlecase variant
+// (`foobar` also accepts `Foobar.` at a sentence start), plus its all-uppercase
+// variant (`GreenTeam` also accepts `GREENTEAM` in headings). General
+// case-insensitivity is deliberately not offered: adding `IT` must not accept
+// `it`.
 class DictionaryMasker(
   dictionary: Set<String>,
 ) {
@@ -51,10 +58,19 @@ class DictionaryMasker(
       get() = if (type == TextPart.Type.TEXT) code else interpretAs
   }
 
-  // Longest first so the longest matching entry wins on overlap; blank entries
-  // dropped (a whitespace-only entry would otherwise try to mask runs of space).
+  // Each entry plus its generated case variants (sentence-initial titlecase for
+  // lowercase-initial entries, all-uppercase), matched literally. Longest first
+  // so the longest matching entry wins on overlap; blank entries dropped (a
+  // whitespace-only entry would otherwise try to mask runs of space).
   private val entries: List<String> =
-    dictionary.filter { it.isNotBlank() }.sortedByDescending { it.length }
+    buildSet {
+      for (entry: String in dictionary) {
+        if (entry.isBlank()) continue
+        add(entry)
+        if (entry.first().isLowerCase()) add(entry.replaceFirstChar { it.titlecaseChar() })
+        add(entry.uppercase())
+      }
+    }.sortedByDescending { it.length }
 
   val isEmpty: Boolean = entries.isEmpty()
 

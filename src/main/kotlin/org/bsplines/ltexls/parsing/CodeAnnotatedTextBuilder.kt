@@ -140,6 +140,10 @@ abstract class CodeAnnotatedTextBuilder(
   override fun build(): AnnotatedText {
     finalizeCurrentPart()
 
+    // Always the default (consonant-initial) dummy: the vowel variant "Ina<n>"
+    // is itself flagged by LanguageTool Premium's AI rules, which would surface
+    // a diagnostic exactly on the masked dictionary word (caught by
+    // LanguageToolPremiumIntegrationTest).
     val outParts: List<DictionaryMasker.Part> =
       this.dictionaryMasker?.maskParts(this.parts) {
         this.dummyGenerator.generate(this.language, this.dummyCounter++)
