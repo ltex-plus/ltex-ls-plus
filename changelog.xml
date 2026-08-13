@@ -14,6 +14,12 @@
   </properties>
   <body>
     <release version="18.7.1" date="upcoming">
+      <action type="add" issue="ltex-plus/ltex-ls-plus#141" due-to="Andrea Alberti (@alberti42)">
+        Support multi-word `ltex.dictionary` entries: a phrase such as `GreenTeam Penciltest` is accepted only when its words appear together, while a lone `GreenTeam` is still flagged. Dictionary entries are now removed from the text before it reaches LanguageTool — replaced by a placeholder word, as inline math (`$x$`) already is — rather than filtered out of LanguageTool's matches afterwards, so the local Java backend, the free HTTP tier and Premium behave identically, without relying on LanguageTool's per-account Premium dictionary. Matching is whole-word and runs over the text as LanguageTool sees it, so an entry is also honored when its occurrence is interrupted in the source — by inline markup (`LT&lt;sub&gt;E&lt;/sub&gt;X LS`), a LaTeX accent command (`M\"uller` for the entry `Müller`), a soft line break wrapping a phrase, or a LaTeX tie (`GreenTeam~Penciltest`). See ltex-plus/ltex-ls-plus#196 for details.
+      </action>
+      <action type="update" issue="ltex-plus/ltex-ls-plus#141" due-to="Andrea Alberti (@alberti42)">
+        `ltex.dictionary` entries now also accept their conventional case variants, following the hunspell / LanguageTool speller convention: a lowercase-initial entry also accepts its sentence-initial titlecase form (`foobar` → `Foobar`), and every entry also accepts its all-uppercase form (`GreenTeam` → `GREENTEAM`). Entries otherwise remain case-sensitive.
+      </action>
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#206" due-to="Daniel Spitzer (@spitzerd)">
         Fix StackOverflowError for Typst, AsciiDoc, and Org documents. The issue occurred on long comments, for example.
       </action>
