@@ -9,23 +9,44 @@
 package org.bsplines.ltexls.parsing
 
 import org.bsplines.ltexls.settings.Settings
+import org.languagetool.markup.TextPart
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class DictionaryMaskerTest {
-  private fun split(
+  private fun matches(
     dictionary: Set<String>,
     text: String,
-  ): List<Pair<String, Boolean>> =
-    DictionaryMasker(dictionary).split(text).map { Pair(it.text, it.masked) }
+  ): List<String> = DictionaryMasker(dictionary).findMatches(text).map { text.substring(it) }
+
+  private fun textPart(text: String): DictionaryMasker.Part =
+    DictionaryMasker.Part(TextPart.Type.TEXT, text)
+
+  private fun markupPart(
+    code: String,
+    interpretAs: String = "",
+  ): DictionaryMasker.Part = DictionaryMasker.Part(TextPart.Type.MARKUP, code, interpretAs)
+
+  private fun maskParts(
+    dictionary: Set<String>,
+    parts: List<DictionaryMasker.Part>,
+  ): List<DictionaryMasker.Part> {
+    var dummyCounter = 0
+    return DictionaryMasker(dictionary).maskParts(parts) { "Dummy${dummyCounter++}" }
+  }
+
+  // --- findMatches: whole-token, case-sensitive, longest-match-wins scan ---
 
   @Test
   fun emptyDictionaryIsNoOp() {
     val masker = DictionaryMasker(emptySet())
     assertTrue(masker.isEmpty)
-    assertEquals(listOf(Pair("hello world", false)), split(emptySet(), "hello world"))
+    assertTrue(masker.findMatches("hello world").isEmpty())
+
+    val parts: List<DictionaryMasker.Part> = listOf(textPart("hello world"))
+    assertEquals(parts, maskParts(emptySet(), parts))
   }
 
   @Test
@@ -34,79 +55,206 @@ class DictionaryMaskerTest {
   }
 
   @Test
-  fun singleWordIsMaskedOnWholeTokenBoundaries() {
-    assertEquals(
-      listOf(Pair("I met ", false), Pair("GreenTeam", true), Pair(" today.", false)),
-      split(setOf("GreenTeam"), "I met GreenTeam today."),
-    )
+  fun singleWordIsMatchedOnWholeTokenBoundaries() {
+    assertEquals(listOf("GreenTeam"), matches(setOf("GreenTeam"), "I met GreenTeam today."))
   }
 
   @Test
-  fun singleWordNotMaskedInsideLongerWord() {
+  fun singleWordNotMatchedInsideLongerWord() {
     // "GreenTeam" must not match inside "GreenTeamer" / "aGreenTeam".
-    assertEquals(
-      listOf(Pair("a GreenTeamer b", false)),
-      split(setOf("GreenTeam"), "a GreenTeamer b"),
-    )
-    assertEquals(listOf(Pair("a aGreenTeam b", false)), split(setOf("GreenTeam"), "a aGreenTeam b"))
+    assertTrue(matches(setOf("GreenTeam"), "a GreenTeamer b").isEmpty())
+    assertTrue(matches(setOf("GreenTeam"), "a aGreenTeam b").isEmpty())
   }
 
   @Test
-  fun multiWordPhraseIsMaskedWhenAdjacent() {
+  fun multiWordPhraseIsMatchedWhenAdjacent() {
     assertEquals(
-      listOf(Pair("the ", false), Pair("GreenTeam Penciltest", true), Pair(" firm", false)),
-      split(setOf("GreenTeam Penciltest"), "the GreenTeam Penciltest firm"),
+      listOf("GreenTeam Penciltest"),
+      matches(setOf("GreenTeam Penciltest"), "the GreenTeam Penciltest firm"),
     )
   }
 
   @Test
-  fun loneFirstWordNotMaskedWhenOnlyPhraseIsAnEntry() {
+  fun loneFirstWordNotMatchedWhenOnlyPhraseIsAnEntry() {
     // The whole point of multi-word support: a bare "GreenTeam" stays visible
     // unless "GreenTeam" is itself an entry.
-    assertEquals(
-      listOf(Pair("a GreenTeam here", false)),
-      split(setOf("GreenTeam Penciltest"), "a GreenTeam here"),
-    )
+    assertTrue(matches(setOf("GreenTeam Penciltest"), "a GreenTeam here").isEmpty())
   }
 
   @Test
   fun longestEntryWinsOnOverlap() {
     // Both "GreenTeam" and the phrase are entries; the phrase wins where present.
     assertEquals(
-      listOf(Pair("GreenTeam Penciltest", true)),
-      split(setOf("GreenTeam", "GreenTeam Penciltest"), "GreenTeam Penciltest"),
+      listOf("GreenTeam Penciltest"),
+      matches(setOf("GreenTeam", "GreenTeam Penciltest"), "GreenTeam Penciltest"),
     )
-    // ...but a lone "GreenTeam" is still masked because it is also an entry.
+    // ...but a lone "GreenTeam" still matches because it is also an entry.
     assertEquals(
-      listOf(Pair("GreenTeam", true), Pair(" alone", false)),
-      split(setOf("GreenTeam", "GreenTeam Penciltest"), "GreenTeam alone"),
+      listOf("GreenTeam"),
+      matches(setOf("GreenTeam", "GreenTeam Penciltest"), "GreenTeam alone"),
     )
   }
 
   @Test
   fun matchingIsCaseSensitive() {
-    assertEquals(
-      listOf(Pair("greenteam penciltest", false)),
-      split(setOf("GreenTeam Penciltest"), "greenteam penciltest"),
-    )
+    assertTrue(matches(setOf("GreenTeam Penciltest"), "greenteam penciltest").isEmpty())
   }
 
   @Test
-  fun surroundingPunctuationIsPreserved() {
+  fun surroundingPunctuationIsExcluded() {
     assertEquals(
-      listOf(Pair("(", false), Pair("GreenTeam Penciltest", true), Pair(").", false)),
-      split(setOf("GreenTeam Penciltest"), "(GreenTeam Penciltest)."),
+      listOf("GreenTeam Penciltest"),
+      matches(setOf("GreenTeam Penciltest"), "(GreenTeam Penciltest)."),
     )
   }
 
   @Test
   fun unicodeWordBoundariesAreRespected() {
     // Accented letters are word characters (Char.isLetterOrDigit, not ASCII \b),
-    // so "café" is not masked inside "cafés", but a standalone accented entry is.
-    assertEquals(listOf(Pair("les cafés ici", false)), split(setOf("café"), "les cafés ici"))
+    // so "café" is not matched inside "cafés", but a standalone accented entry is.
+    assertTrue(matches(setOf("café"), "les cafés ici").isEmpty())
+    assertEquals(listOf("café"), matches(setOf("café"), "un café noir"))
+  }
+
+  // --- maskParts: masking over the assembled plain text of a part list ---
+
+  @Test
+  fun maskPartsMasksWithinSingleTextPart() {
     assertEquals(
-      listOf(Pair("un ", false), Pair("café", true), Pair(" noir", false)),
-      split(setOf("café"), "un café noir"),
+      listOf(textPart("I met "), markupPart("GreenTeam", "Dummy0"), textPart(" today.")),
+      maskParts(setOf("GreenTeam"), listOf(textPart("I met GreenTeam today."))),
+    )
+  }
+
+  @Test
+  fun maskPartsMasksMultipleOccurrencesWithDistinctDummies() {
+    assertEquals(
+      listOf(
+        markupPart("GreenTeam", "Dummy0"),
+        textPart(" and "),
+        markupPart("GreenTeam", "Dummy1"),
+      ),
+      maskParts(setOf("GreenTeam"), listOf(textPart("GreenTeam and GreenTeam"))),
+    )
+  }
+
+  @Test
+  fun maskPartsMasksMarkupSplitPhrase() {
+    // `LT<sub>E</sub>X LS` assembles to the plain text `LTEX LS`; the covered
+    // parts coalesce into one markup part whose source is the original code.
+    assertEquals(
+      listOf(
+        textPart("This is "),
+        markupPart("LT<sub>E</sub>X LS", "Dummy0"),
+        textPart("."),
+      ),
+      maskParts(
+        setOf("LTEX LS"),
+        listOf(
+          textPart("This is LT"),
+          markupPart("<sub>"),
+          textPart("E"),
+          markupPart("</sub>"),
+          textPart("X LS."),
+        ),
+      ),
+    )
+  }
+
+  @Test
+  fun maskPartsMasksWordSplitByAccentCommand() {
+    // LaTeX `M\"uller` becomes TEXT(M) + MARKUP(\"u -> u-umlaut) + TEXT(ller);
+    // the entry matches the assembled plain text `Müller`.
+    assertEquals(
+      listOf(
+        textPart("Herr "),
+        markupPart("M\\\"uller", "Dummy0"),
+        textPart(" kommt."),
+      ),
+      maskParts(
+        setOf("Müller"),
+        listOf(
+          textPart("Herr M"),
+          markupPart("\\\"u", "ü"),
+          textPart("ller kommt."),
+        ),
+      ),
+    )
+  }
+
+  @Test
+  fun maskPartsMasksPhraseAcrossSoftLineBreak() {
+    // A Markdown soft line break is markup interpreted as a space, so a phrase
+    // wrapped over the break is contiguous only in the assembled plain text.
+    assertEquals(
+      listOf(
+        textPart("the "),
+        markupPart("GreenTeam\nPenciltest", "Dummy0"),
+        textPart(" firm"),
+      ),
+      maskParts(
+        setOf("GreenTeam Penciltest"),
+        listOf(
+          textPart("the GreenTeam"),
+          markupPart("\n", " "),
+          textPart("Penciltest firm"),
+        ),
+      ),
+    )
+  }
+
+  @Test
+  fun maskPartsMasksEntryEqualToWholeInterpretAs() {
+    // Match boundaries at part edges are fine even when the whole match lies
+    // inside one markup's interpretAs.
+    assertEquals(
+      listOf(textPart("use "), markupPart("\\LaTeX", "Dummy0"), textPart(" now")),
+      maskParts(
+        setOf("LaTeX"),
+        listOf(textPart("use "), markupPart("\\LaTeX", "LaTeX"), textPart(" now")),
+      ),
+    )
+  }
+
+  @Test
+  fun maskPartsSkipsMatchWithBoundaryInsideInterpretAs() {
+    // The match would start in the middle of the markup's interpretAs; its
+    // source cannot be split at a plain-text position, so the match is skipped.
+    val parts: List<DictionaryMasker.Part> =
+      listOf(
+        markupPart("\\shorthand{}", "e.g. GreenTeam"),
+        textPart(" Penciltest here"),
+      )
+    assertEquals(parts, maskParts(setOf("GreenTeam Penciltest"), parts))
+  }
+
+  @Test
+  fun maskPartsKeepsZeroPlainMarkupAtMatchEdgesOutside() {
+    // Zero-plain-length markup exactly at a match boundary stays outside the
+    // masked span (minimal span), on both sides.
+    assertEquals(
+      listOf(
+        textPart("met "),
+        markupPart("GreenTeam", "Dummy0"),
+        markupPart("**"),
+        textPart(" more"),
+      ),
+      maskParts(
+        setOf("GreenTeam"),
+        listOf(textPart("met GreenTeam"), markupPart("**"), textPart(" more")),
+      ),
+    )
+    assertEquals(
+      listOf(
+        textPart("met "),
+        markupPart("**"),
+        markupPart("GreenTeam", "Dummy0"),
+        textPart(" more"),
+      ),
+      maskParts(
+        setOf("GreenTeam"),
+        listOf(textPart("met "), markupPart("**"), textPart("GreenTeam more")),
+      ),
     )
   }
 

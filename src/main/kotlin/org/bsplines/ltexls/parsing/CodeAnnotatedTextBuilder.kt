@@ -44,9 +44,18 @@ abstract class CodeAnnotatedTextBuilder(
   protected var dummyGenerator: DummyGenerator = DummyGenerator.getInstance()
   protected var dummyCounter = 0
 
-  // null when the per-language dictionary is empty (the common case), so the
-  // TEXT fast path stays a single super.addText() with zero overhead.
+  // null when the per-language dictionary is empty (the common case); build()
+  // then replays the buffered parts verbatim, byte-for-byte what the eager
+  // emission used to produce.
   protected var dictionaryMasker: DictionaryMasker? = null
+
+  // Finalized parts awaiting emission into LanguageTool's AnnotatedTextBuilder.
+  // Emission is deferred to build() so the dictionary masker can match entries
+  // over the *assembled* plain text — a phrase wrapped over a Markdown soft
+  // line break or a word containing a LaTeX accent command is contiguous only
+  // there, never within a single TEXT part. Nothing observes the underlying
+  // builder's state before build(), so the deferral is invisible.
+  private val parts = mutableListOf<DictionaryMasker.Part>()
 
   abstract fun addCode(code: String): CodeAnnotatedTextBuilder
 
@@ -123,46 +132,45 @@ abstract class CodeAnnotatedTextBuilder(
     return this
   }
 
+  // Mask any user-dictionary occurrences as markup with a dummy interpretation
+  // (the same mechanism inline math `$x$` uses), so LanguageTool never sees the
+  // dictionary word — single- and multi-word entries alike — while a real typo
+  // after a masked span still reprojects to the correct source position (the
+  // dummy contributes plain-text length but zero source offset).
   override fun build(): AnnotatedText {
     finalizeCurrentPart()
+
+    val outParts: List<DictionaryMasker.Part> =
+      this.dictionaryMasker?.maskParts(this.parts) {
+        this.dummyGenerator.generate(this.language, this.dummyCounter++)
+      } ?: this.parts
+
+    for (part: DictionaryMasker.Part in outParts) {
+      if (part.type == TextPart.Type.TEXT) {
+        super.addText(part.code)
+      } else {
+        super.addMarkup(part.code, part.interpretAs)
+      }
+    }
+
     return super.build()
   }
 
   private fun finalizeCurrentPart() {
     if (curType == TextPart.Type.MARKUP) {
-      super.addMarkup(curMarkup.toString(), curInterpretAs.toString())
+      parts.add(
+        DictionaryMasker.Part(
+          TextPart.Type.MARKUP,
+          curMarkup.toString(),
+          curInterpretAs.toString(),
+        ),
+      )
       curMarkup.clear()
       curInterpretAs.clear()
     }
     if (curType == TextPart.Type.TEXT) {
-      emitTextWithDictionaryMasking(curText.toString())
+      parts.add(DictionaryMasker.Part(TextPart.Type.TEXT, curText.toString()))
       curText.clear()
-    }
-  }
-
-  // Emit a finalized TEXT part, masking any user-dictionary occurrences as
-  // markup with a dummy interpretation (the same mechanism inline math `$x$`
-  // uses), so LanguageTool never sees the dictionary word — single- and
-  // multi-word entries alike — while a real typo after a masked span still
-  // reprojects to the correct source position (the dummy contributes plain-text
-  // length but zero source offset).
-  private fun emitTextWithDictionaryMasking(text: String) {
-    val masker: DictionaryMasker? = this.dictionaryMasker
-
-    if (masker == null) {
-      super.addText(text)
-      return
-    }
-
-    for (segment: DictionaryMasker.Segment in masker.split(text)) {
-      if (segment.masked) {
-        super.addMarkup(
-          segment.text,
-          this.dummyGenerator.generate(this.language, this.dummyCounter++),
-        )
-      } else {
-        super.addText(segment.text)
-      }
     }
   }
 
