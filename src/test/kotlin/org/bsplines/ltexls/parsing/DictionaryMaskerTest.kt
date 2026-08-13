@@ -101,6 +101,24 @@ class DictionaryMaskerTest {
   }
 
   @Test
+  fun lowercaseEntryMatchesSentenceInitialTitlecase() {
+    // hunspell / LT-speller convention: a lowercase-initial entry also accepts
+    // its titlecase variant (sentence start) — but no other case variant.
+    assertEquals(listOf("Foobar"), matches(setOf("foobar"), "Foobar is here."))
+    assertTrue(matches(setOf("foobar"), "fooBar is here.").isEmpty())
+    // The reverse does not hold: a capitalized entry stays capitalized.
+    assertTrue(matches(setOf("Foobar"), "foobar is here.").isEmpty())
+  }
+
+  @Test
+  fun entryMatchesAllUppercaseVariant() {
+    assertEquals(
+      listOf("GREENTEAM PENCILTEST"),
+      matches(setOf("GreenTeam Penciltest"), "GREENTEAM PENCILTEST ROADMAP"),
+    )
+  }
+
+  @Test
   fun surroundingPunctuationIsExcluded() {
     assertEquals(
       listOf("GreenTeam Penciltest"),
@@ -204,6 +222,25 @@ class DictionaryMaskerTest {
   }
 
   @Test
+  fun maskPartsMasksNbspEntryOverLatexTie() {
+    // Matching is whitespace-literal: a LaTeX tie (`~`) puts a non-breaking
+    // space (U+00A0) into the plain text, which a normal-space entry does not
+    // match. The supported remedy is adding the NBSP variant as its own entry,
+    // which matches literally — this test pins that workaround.
+    assertEquals(
+      listOf(textPart("the "), markupPart("GreenTeam~Penciltest", "Dummy0"), textPart(" firm")),
+      maskParts(
+        setOf("GreenTeam\u00a0Penciltest"),
+        listOf(
+          textPart("the GreenTeam"),
+          markupPart("~", "\u00a0"),
+          textPart("Penciltest firm"),
+        ),
+      ),
+    )
+  }
+
+  @Test
   fun maskPartsMasksEntryEqualToWholeInterpretAs() {
     // Match boundaries at part edges are fine even when the whole match lies
     // inside one markup's interpretAs.
@@ -289,5 +326,17 @@ class DictionaryMaskerTest {
   @Test
   fun builderWithoutDictionaryIsUnchanged() {
     assertFalse(plainTextWithDictionary("I met GreenTeam today.\n", emptySet()).contains("Dummy"))
+  }
+
+  @Test
+  fun builderAlwaysUsesDefaultDummy() {
+    // Deliberately NOT the vowel-initial dummy ("Ina0") for vowel-initial
+    // masked words: LanguageTool Premium's AI rules flag "Ina0" itself, which
+    // would surface a diagnostic exactly on the masked dictionary word
+    // (pinned by LanguageToolPremiumIntegrationTest).
+    assertEquals(
+      "I have an Dummy0 here.\n",
+      plainTextWithDictionary("I have an iPhone here.\n", setOf("iPhone")),
+    )
   }
 }
