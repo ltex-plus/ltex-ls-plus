@@ -221,4 +221,20 @@ class MarkdownAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("markdown"
       "This is a test.\n\nDummy0\n\nThis is another test.\n\n\n\n\n",
     )
   }
+
+  @Test
+  fun testDictionaryMasking() {
+    // Dictionary entries are masked over the assembled plain text, so a
+    // multi-word entry matches even when the phrase is wrapped over a soft
+    // line break (markup interpreted as a space).
+    assertPlainText(
+      """
+      the GreenTeam
+      Penciltest firm
+
+      """.trimIndent(),
+      "the Dummy0 firm\n",
+      Settings(_allDictionaries = mapOf(Pair("en-US", setOf("GreenTeam Penciltest")))),
+    )
+  }
 }

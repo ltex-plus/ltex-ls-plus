@@ -8,12 +8,24 @@
 
 package org.bsplines.ltexls.parsing
 
-// Splits a run of plain text into verbatim and "masked" segments based on the
-// user dictionary, so that masked segments can be replaced by a dummy token
-// before the text reaches LanguageTool. This is what gives LTeX+ multi-word
-// dictionary support: LanguageTool checks the text per token and never sees a
-// phrase like `GreenTeam Penciltest` as a unit, so a phrase entry can only be
-// honoured by removing its occurrences from the text up front.
+import org.languagetool.markup.TextPart
+
+// Masks user-dictionary occurrences in a builder's part list so that masked
+// spans can be replaced by a dummy token before the text reaches LanguageTool.
+// This is what gives LTeX+ multi-word dictionary support: LanguageTool checks
+// the text per token and never sees a phrase like `GreenTeam Penciltest` as a
+// unit, so a phrase entry can only be honoured by removing its occurrences from
+// the text up front.
+//
+// Matching runs over the *assembled plain text* — TEXT parts joined with the
+// interpretAs of MARKUP parts — i.e. exactly the string LanguageTool checks.
+// An entry therefore also matches when its occurrence is split across parts in
+// the source: a phrase wrapped over a Markdown soft line break (the newline is
+// markup interpreted as a space), a word containing a LaTeX accent command
+// (`M\"uller`), or a phrase interrupted by inline tags (`LT<sub>E</sub>X LS`).
+// The covered parts are coalesced into a single markup part whose source is the
+// concatenation of the covered source pieces, so the plain-text-to-source
+// mapping outside masked spans stays exact.
 //
 // A dictionary entry matches only as a whole token sequence: the characters
 // immediately before and after the matched span must not be letters or digits
@@ -27,10 +39,17 @@ package org.bsplines.ltexls.parsing
 class DictionaryMasker(
   dictionary: Set<String>,
 ) {
-  data class Segment(
-    val text: String,
-    val masked: Boolean,
-  )
+  // One builder part awaiting emission into LanguageTool's AnnotatedTextBuilder.
+  // TEXT: code is the plain text itself (interpretAs unused). MARKUP: code is
+  // the source markup, interpretAs its (possibly empty) plain-text stand-in.
+  data class Part(
+    val type: TextPart.Type,
+    val code: String,
+    val interpretAs: String = "",
+  ) {
+    val plainText: String
+      get() = if (type == TextPart.Type.TEXT) code else interpretAs
+  }
 
   // Longest first so the longest matching entry wins on overlap; blank entries
   // dropped (a whitespace-only entry would otherwise try to mask runs of space).
@@ -39,11 +58,12 @@ class DictionaryMasker(
 
   val isEmpty: Boolean = entries.isEmpty()
 
-  fun split(text: String): List<Segment> {
-    if (entries.isEmpty() || text.isEmpty()) return listOf(Segment(text, false))
+  // Non-overlapping match ranges in [text], ascending, each built with `until`
+  // (half-open, so text.substring(range) yields the matched entry).
+  fun findMatches(text: String): List<IntRange> {
+    if (entries.isEmpty() || text.isEmpty()) return emptyList()
 
-    val segments = ArrayList<Segment>()
-    var emittedUpTo = 0
+    val matches = ArrayList<IntRange>()
     var pos = 0
 
     while (pos < text.length) {
@@ -52,15 +72,32 @@ class DictionaryMasker(
       if (matchEnd < 0) {
         pos++
       } else {
-        if (pos > emittedUpTo) segments.add(Segment(text.substring(emittedUpTo, pos), false))
-        segments.add(Segment(text.substring(pos, matchEnd), true))
-        emittedUpTo = matchEnd
+        matches.add(pos until matchEnd)
         pos = matchEnd
       }
     }
 
-    if (emittedUpTo < text.length) segments.add(Segment(text.substring(emittedUpTo), false))
-    return segments
+    return matches
+  }
+
+  // Returns [parts] with every dictionary occurrence in the assembled plain
+  // text coalesced into one markup part interpreted as dummyProvider(). Matches
+  // whose start or end falls strictly inside a markup's interpretAs are skipped
+  // (the markup source cannot be split at a plain-text position); such a
+  // boundary requires an interpretAs of length >= 2, which is rare.
+  fun maskParts(
+    parts: List<Part>,
+    dummyProvider: () -> String,
+  ): List<Part> {
+    if (this.isEmpty || parts.isEmpty()) return parts
+
+    val plainStarts: IntArray = computePlainStarts(parts)
+    val plainText: String = parts.joinToString("") { it.plainText }
+    val matches: List<IntRange> =
+      findMatches(plainText).filter { isMaskable(it, parts, plainStarts) }
+    if (matches.isEmpty()) return parts
+
+    return PartRebuilder(parts, plainStarts, matches, dummyProvider).rebuild()
   }
 
   // Exclusive end offset of the longest entry matching [text] at [start] on
@@ -88,5 +125,134 @@ class DictionaryMasker(
       text.regionMatches(start, entry, 0, entry.length, ignoreCase = false)
     val trailingBoundaryOk: Boolean = (end >= text.length) || !text[end].isLetterOrDigit()
     return matchesLiterally && trailingBoundaryOk
+  }
+
+  // Rebuilds a part list with the given plain-text match ranges replaced by
+  // dummy markup parts. TEXT parts straddling a match boundary are split; parts
+  // covered by a match contribute their source (text or markup) to the masked
+  // part's source, so the total source is preserved and offsets outside masked
+  // spans stay exact.
+  private class PartRebuilder(
+    private val parts: List<Part>,
+    private val plainStarts: IntArray,
+    matches: List<IntRange>,
+    private val dummyProvider: () -> String,
+  ) {
+    // (start, exclusive end) plain-text offsets of the pending matches.
+    private val matchQueue = ArrayDeque(matches.map { Pair(it.first, it.last + 1) })
+    private val result = ArrayList<Part>()
+    private val maskedSource = StringBuilder()
+
+    fun rebuild(): List<Part> {
+      for ((partIndex: Int, part: Part) in parts.withIndex()) {
+        if (part.type == TextPart.Type.TEXT) {
+          consumeTextPart(part, plainStarts[partIndex], plainStarts[partIndex + 1])
+        } else {
+          consumeMarkupPart(part, plainStarts[partIndex], plainStarts[partIndex + 1])
+        }
+      }
+
+      return result
+    }
+
+    private fun consumeTextPart(
+      part: Part,
+      partStart: Int,
+      partEnd: Int,
+    ) {
+      var pos: Int = partStart
+
+      while (pos < partEnd) {
+        val match: Pair<Int, Int>? = matchQueue.firstOrNull()
+
+        if ((match == null) || (match.first >= partEnd)) {
+          result.add(Part(TextPart.Type.TEXT, part.code.substring(pos - partStart)))
+          pos = partEnd
+        } else if (pos < match.first) {
+          result.add(
+            Part(TextPart.Type.TEXT, part.code.substring(pos - partStart, match.first - partStart)),
+          )
+          pos = match.first
+        } else {
+          val pieceEnd: Int = minOf(match.second, partEnd)
+          maskedSource.append(part.code, pos - partStart, pieceEnd - partStart)
+          pos = pieceEnd
+          if (pos == match.second) closeMask()
+        }
+      }
+    }
+
+    private fun consumeMarkupPart(
+      part: Part,
+      partStart: Int,
+      partEnd: Int,
+    ) {
+      val match: Pair<Int, Int>? = matchQueue.firstOrNull()
+      // A zero-plain-length markup (empty interpretAs) exactly at a match
+      // boundary stays outside the mask (minimal span); with a nonzero plain
+      // contribution the markup is inside whenever the match covers it (a match
+      // boundary strictly inside its interpretAs was filtered out upstream).
+      val insideMask: Boolean =
+        (match != null) &&
+          if (partStart == partEnd) {
+            (match.first < partStart) && (partStart < match.second)
+          } else {
+            (match.first <= partStart) && (partEnd <= match.second)
+          }
+
+      if (insideMask) {
+        maskedSource.append(part.code)
+        if (partEnd == match.second) closeMask()
+      } else {
+        result.add(part)
+      }
+    }
+
+    private fun closeMask() {
+      result.add(Part(TextPart.Type.MARKUP, maskedSource.toString(), dummyProvider()))
+      maskedSource.clear()
+      matchQueue.removeFirst()
+    }
+  }
+
+  companion object {
+    // plainStarts[i] is the plain-text offset where part i begins; the extra
+    // trailing element is the total plain-text length.
+    private fun computePlainStarts(parts: List<Part>): IntArray {
+      val plainStarts = IntArray(parts.size + 1)
+
+      for ((partIndex: Int, part: Part) in parts.withIndex()) {
+        plainStarts[partIndex + 1] = plainStarts[partIndex] + part.plainText.length
+      }
+
+      return plainStarts
+    }
+
+    // A match is maskable iff neither boundary falls strictly inside a MARKUP
+    // part's plain-text contribution (its interpretAs cannot be split at a
+    // plain-text position — which half of the source would each piece map to?).
+    private fun isMaskable(
+      match: IntRange,
+      parts: List<Part>,
+      plainStarts: IntArray,
+    ): Boolean =
+      isSplittableBoundary(match.first, parts, plainStarts) &&
+        isSplittableBoundary(match.last + 1, parts, plainStarts)
+
+    private fun isSplittableBoundary(
+      pos: Int,
+      parts: List<Part>,
+      plainStarts: IntArray,
+    ): Boolean {
+      for (partIndex: Int in parts.indices) {
+        if (plainStarts[partIndex] >= pos) break
+
+        if (pos < plainStarts[partIndex + 1]) {
+          return parts[partIndex].type == TextPart.Type.TEXT
+        }
+      }
+
+      return true
+    }
   }
 }

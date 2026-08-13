@@ -576,9 +576,7 @@ class DocumentCheckerTest {
 
     // Multi-word dictionary entry: the phrase is masked out before LanguageTool
     // sees it, so a contiguous phrase is accepted as a unit, while a lone first
-    // word stays flagged. (A phrase split by markup in the source — e.g.
-    // `LT<sub>E</sub>X LS` — is not covered by this plain-text masking; matching
-    // verbatim source-form entries is handled separately.)
+    // word stays flagged.
     document = createDocument("markdown", "This is GreenTeam Penciltest here.\n")
     settings = Settings()
     checkingResult = checkDocument(document, settings)
@@ -590,6 +588,17 @@ class DocumentCheckerTest {
     document = createDocument("markdown", "This is GreenTeam here.\n")
     checkingResult = checkDocument(document, settings)
     assertEquals(1, checkingResult.first.size)
+
+    // A phrase split by markup in the source is masked too: the masker matches
+    // over the assembled plain text (`LTEX LS`), and the covered parts —
+    // including the <sub>/</sub> tags — coalesce into one masked markup part.
+    document = createDocument("markdown", "This is LT<sub>E</sub>X LS.\n")
+    settings = Settings()
+    checkingResult = checkDocument(document, settings)
+    assertEquals(1, checkingResult.first.size)
+    settings = settings.copy(_allDictionaries = mapOf(Pair("en-US", setOf("LTEX LS"))))
+    checkingResult = checkDocument(document, settings)
+    assertEquals(0, checkingResult.first.size)
   }
 
   @Test

@@ -606,6 +606,23 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
     assertTrue(originalTextStartPos < originalTextEndPos)
   }
 
+  @Test
+  fun testDictionaryMasking() {
+    val settings =
+      Settings(
+        _allDictionaries =
+          mapOf(Pair("en-US", setOf("Müller", "GreenTeam Penciltest"))),
+      )
+
+    // Dictionary entries are masked over the assembled plain text, so an entry
+    // matches even when the word is split by an accent command in the source.
+    assertPlainText("Herr M\\\"uller kommt.\n", "Herr Dummy0 kommt. ", settings)
+
+    // A phrase wrapped over a source line break is contiguous in the plain
+    // text (the newline collapses to a space) and is masked as a unit.
+    assertPlainText("the GreenTeam\nPenciltest firm\n", "the Dummy0 firm ", settings)
+  }
+
   private fun assertPlainTextPositions(
     code: String,
     originalTextStartPos: Int,
