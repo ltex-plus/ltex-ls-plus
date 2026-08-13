@@ -51,7 +51,20 @@ class DictionaryMaskerTest {
 
   @Test
   fun blankEntriesAreDropped() {
-    assertTrue(DictionaryMasker(setOf("", "  ", "\t")).isEmpty)
+    // Includes a no-break-space-only entry, which is blank after space
+    // normalization.
+    assertTrue(DictionaryMasker(setOf("", "  ", "\t", "\u00a0")).isEmpty)
+  }
+
+  @Test
+  fun spaceSeparatorsAreNormalizedForMatching() {
+    // A no-break space (U+00A0) in the text matches a normal-space entry.
+    assertEquals(
+      listOf("GreenTeam\u00a0Penciltest"),
+      matches(setOf("GreenTeam Penciltest"), "the GreenTeam\u00a0Penciltest firm"),
+    )
+    // Newlines are structural, not space separators: no match across them.
+    assertTrue(matches(setOf("GreenTeam Penciltest"), "GreenTeam\nPenciltest").isEmpty())
   }
 
   @Test
@@ -222,22 +235,21 @@ class DictionaryMaskerTest {
   }
 
   @Test
-  fun maskPartsMasksNbspEntryOverLatexTie() {
-    // Matching is whitespace-literal: a LaTeX tie (`~`) puts a non-breaking
-    // space (U+00A0) into the plain text, which a normal-space entry does not
-    // match. The supported remedy is adding the NBSP variant as its own entry,
-    // which matches literally — this test pins that workaround.
-    assertEquals(
-      listOf(textPart("the "), markupPart("GreenTeam~Penciltest", "Dummy0"), textPart(" firm")),
-      maskParts(
-        setOf("GreenTeam\u00a0Penciltest"),
-        listOf(
-          textPart("the GreenTeam"),
-          markupPart("~", "\u00a0"),
-          textPart("Penciltest firm"),
-        ),
-      ),
-    )
+  fun maskPartsMasksPlainSpaceEntryOverLatexTie() {
+    // A LaTeX tie (`~`) puts a no-break space (U+00A0) into the plain text;
+    // space separators are normalized to a plain space on both sides of the
+    // comparison, so the normal-space entry masks the tied occurrence — and
+    // an entry containing the no-break space works just the same.
+    val parts: List<DictionaryMasker.Part> =
+      listOf(
+        textPart("the GreenTeam"),
+        markupPart("~", "\u00a0"),
+        textPart("Penciltest firm"),
+      )
+    val expected: List<DictionaryMasker.Part> =
+      listOf(textPart("the "), markupPart("GreenTeam~Penciltest", "Dummy0"), textPart(" firm"))
+    assertEquals(expected, maskParts(setOf("GreenTeam Penciltest"), parts))
+    assertEquals(expected, maskParts(setOf("GreenTeam\u00a0Penciltest"), parts))
   }
 
   @Test
