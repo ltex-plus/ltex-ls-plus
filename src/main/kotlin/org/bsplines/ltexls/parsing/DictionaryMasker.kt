@@ -43,6 +43,14 @@ import org.languagetool.markup.TextPart
 // variant (`GreenTeam` also accepts `GREENTEAM` in headings). General
 // case-insensitivity is deliberately not offered: adding `IT` must not accept
 // `it`.
+//
+// Unicode space separators (e.g. the no-break space a LaTeX tie `~` puts into
+// the plain text) are normalized to a plain space on both sides of the
+// comparison — in the entries and in the checked text — so the entry
+// `GreenTeam Penciltest` also masks `GreenTeam~Penciltest`. The replacement is
+// one-for-one, so all offsets stay valid. Newlines and tabs are deliberately
+// left alone: they are structural (a heading ending, a paragraph break), and a
+// single-space entry must not match across them.
 class DictionaryMasker(
   dictionary: Set<String>,
 ) {
@@ -58,13 +66,15 @@ class DictionaryMasker(
       get() = if (type == TextPart.Type.TEXT) code else interpretAs
   }
 
-  // Each entry plus its generated case variants (sentence-initial titlecase for
-  // lowercase-initial entries, all-uppercase), matched literally. Longest first
-  // so the longest matching entry wins on overlap; blank entries dropped (a
-  // whitespace-only entry would otherwise try to mask runs of space).
+  // Each entry, space-normalized, plus its generated case variants
+  // (sentence-initial titlecase for lowercase-initial entries, all-uppercase),
+  // matched literally. Longest first so the longest matching entry wins on
+  // overlap; blank entries dropped (a space-only entry would otherwise try to
+  // mask runs of space).
   private val entries: List<String> =
     buildSet {
-      for (entry: String in dictionary) {
+      for (rawEntry: String in dictionary) {
+        val entry: String = normalizeSpaceSeparators(rawEntry)
         if (entry.isBlank()) continue
         add(entry)
         if (entry.first().isLowerCase()) add(entry.replaceFirstChar { it.titlecaseChar() })
@@ -75,15 +85,18 @@ class DictionaryMasker(
   val isEmpty: Boolean = entries.isEmpty()
 
   // Non-overlapping match ranges in [text], ascending, each built with `until`
-  // (half-open, so text.substring(range) yields the matched entry).
+  // (half-open, so text.substring(range) yields the matched span). Matching
+  // runs over the space-normalized text; normalization is one-for-one, so the
+  // ranges are valid for the original [text] as well.
   fun findMatches(text: String): List<IntRange> {
     if (entries.isEmpty() || text.isEmpty()) return emptyList()
 
+    val normalizedText: String = normalizeSpaceSeparators(text)
     val matches = ArrayList<IntRange>()
     var pos = 0
 
-    while (pos < text.length) {
-      val matchEnd: Int = matchAt(text, pos)
+    while (pos < normalizedText.length) {
+      val matchEnd: Int = matchAt(normalizedText, pos)
 
       if (matchEnd < 0) {
         pos++
@@ -232,6 +245,24 @@ class DictionaryMasker(
   }
 
   companion object {
+    // One-for-one replacement of Unicode space separators (no-break space,
+    // thin space, ...) by a plain space, preserving length and all offsets.
+    // Returns [text] itself when nothing needs replacing (the common case).
+    // Newlines and tabs are not space separators and pass through untouched.
+    private fun normalizeSpaceSeparators(text: String): String {
+      if (text.none(::isNonStandardSpaceSeparator)) return text
+
+      return String(
+        CharArray(text.length) { charIndex ->
+          val curChar: Char = text[charIndex]
+          if (isNonStandardSpaceSeparator(curChar)) ' ' else curChar
+        },
+      )
+    }
+
+    private fun isNonStandardSpaceSeparator(curChar: Char): Boolean =
+      (curChar != ' ') && (curChar.category == CharCategory.SPACE_SEPARATOR)
+
     // plainStarts[i] is the plain-text offset where part i begins; the extra
     // trailing element is the total plain-text length.
     private fun computePlainStarts(parts: List<Part>): IntArray {

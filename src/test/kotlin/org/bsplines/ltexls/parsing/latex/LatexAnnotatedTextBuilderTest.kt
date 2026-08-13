@@ -621,6 +621,10 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
     // A phrase wrapped over a source line break is contiguous in the plain
     // text (the newline collapses to a space) and is masked as a unit.
     assertPlainText("the GreenTeam\nPenciltest firm\n", "the Dummy0 firm ", settings)
+
+    // A tie (`~`) becomes a no-break space in the plain text; space separators
+    // are normalized before matching, so the normal-space entry still masks.
+    assertPlainText("the GreenTeam~Penciltest firm\n", "the Dummy0 firm ", settings)
   }
 
   private fun assertPlainTextPositions(
