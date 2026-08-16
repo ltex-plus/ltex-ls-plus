@@ -20,6 +20,9 @@
       <action type="update" issue="ltex-plus/ltex-ls-plus#141" due-to="Andrea Alberti (@alberti42)">
         `ltex.dictionary` entries now also accept their conventional case variants, following the hunspell / LanguageTool speller convention: a lowercase-initial entry also accepts its sentence-initial titlecase form (`foobar` → `Foobar`), and every entry also accepts its all-uppercase form (`GreenTeam` → `GREENTEAM`). Entries otherwise remain case-sensitive.
       </action>
+      <action type="update">
+        Update LSP4J to 1.0.0
+      </action>
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#206" due-to="Daniel Spitzer (@spitzerd)">
         Fix StackOverflowError for Typst, AsciiDoc, and Org documents. The issue occurred on long comments, for example.
       </action>
