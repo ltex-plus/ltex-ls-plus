@@ -22,7 +22,9 @@ import org.eclipse.lsp4j.Command
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.TextDocumentIdentifier
+import org.eclipse.lsp4j.jsonrpc.json.MessageJsonHandler
 import org.eclipse.lsp4j.jsonrpc.messages.Either
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseMessage
 import java.util.logging.Level
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -515,6 +517,55 @@ class DocumentCheckerTest {
     val result: List<Either<Command, CodeAction>> =
       codeActionProvider.generate(params, document, checkingResult)
     assertEquals(4, result.size)
+  }
+
+  @Test
+  fun testCodeActionWireFormatIsUnchangedByLsp4jEitherFields() {
+    // Regression: lsp4j 1.0.0 (LSP 3.18) widened two fields that this server writes:
+    // `Diagnostic.message` became Either<String, MarkupContent> and `TextDocumentEdit.edits`
+    // became List<Either<TextEdit, SnippetTextEdit>>. Wrapping with Either.forLeft keeps the
+    // JSON identical to LSP 3.17, so clients that predate 3.18 keep working. Only the wire
+    // form guarantees that; the Kotlin types compile either way. Hence assert the JSON.
+    val document: LtexTextDocumentItem =
+      createDocument(
+        "markdown",
+        "This is an unknownword.\n",
+      )
+    val checkingResult: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
+      checkDocument(document)
+    val params =
+      CodeActionParams(
+        TextDocumentIdentifier(document.uri),
+        Range(Position(0, 0), Position(100, 0)),
+        CodeActionContext(emptyList()),
+      )
+    val codeActionProvider = CodeActionProvider(SettingsManager())
+    val result: List<Either<Command, CodeAction>> =
+      codeActionProvider.generate(params, document, checkingResult)
+
+    val acceptSuggestionsCodeAction: CodeAction =
+      result
+        .mapNotNull { it.right }
+        .first { it.kind == "quickfix.ltex.acceptSuggestions" }
+
+    val responseMessage = ResponseMessage()
+    responseMessage.result = acceptSuggestionsCodeAction
+    val json: String = MessageJsonHandler(emptyMap()).serialize(responseMessage)
+
+    // Diagnostic.message must stay a plain JSON string, not a MarkupContent object.
+    assertTrue(
+      Regex("\"message\":\"[^\"]").containsMatchIn(json),
+      "expected string diagnostic message, got: $json",
+    )
+    // TextDocumentEdit.edits must stay a list of plain TextEdit objects.
+    assertTrue(
+      Regex("\"edits\":\\[\\{\"range\":").containsMatchIn(json),
+      "expected plain TextEdit entries in edits, got: $json",
+    )
+    assertTrue(
+      !json.contains("\"snippet\"") && !json.contains("\"kind\":\"markdown\""),
+      "expected no LSP 3.18-only payload, got: $json",
+    )
   }
 
   @Test
