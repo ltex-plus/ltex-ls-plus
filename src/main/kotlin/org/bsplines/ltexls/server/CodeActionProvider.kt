@@ -55,7 +55,7 @@ class CodeActionProvider(
     diagnostic.severity = diagnosticSeverity
 
     diagnostic.source = "LTeX"
-    diagnostic.message = match.message.replace(SUGGESTION_REGEX, "'$1'")
+    diagnostic.message = Either.forLeft(match.message.replace(SUGGESTION_REGEX, "'$1'"))
     diagnostic.code = Either.forLeft(match.ruleId)
 
     val urlBuilder = StringBuilder("https://community.languagetool.org/rule/show/")
@@ -168,7 +168,9 @@ class CodeActionProvider(
 
       diagnostics.add(diagnostic)
       documentChanges.add(
-        Either.forLeft(TextDocumentEdit(textDocument, listOf(TextEdit(range, newWord)))),
+        Either.forLeft(
+          TextDocumentEdit(textDocument, listOf(Either.forLeft(TextEdit(range, newWord)))),
+        ),
       )
     }
 
