@@ -214,13 +214,14 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       #show: resume.with(
         author: name,
       )
+      #show: abbr.show-rule
       More text.
       #show link: underline
       #show link: set text(rgb(0, 0, 255))
       More text.
 
       """.trimIndent(),
-      "\nMore text.\n\n\nMore text.\n",
+      "\n\nMore text.\n\n\nMore text.\n",
     )
   }
 
@@ -382,6 +383,42 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       More text.
       """.trimIndent(),
       "The sky is blue.\nThe sea is blue.\nMore text.",
+    )
+  }
+
+  @Test
+  fun testReferences() {
+    assertPlainText(
+      """
+      See @source-one, @source.two; and @source:three.
+      The Worm #footnote[a self-replicating program] @source-four. Next sentence.
+      A new sentence follows the citation.
+      """.trimIndent(),
+      """
+      See Dummy0, Dummy1; and Dummy2.
+      The Worm Dummy3. Next sentence.
+      A new sentence follows the citation.
+      """.trimIndent(),
+    )
+  }
+
+  @Test
+  fun testAbbreviationReferences() {
+    assertPlainText(
+      """
+      #abbr.add(short: "ABI", entry: "application binary interface")
+      #abbr.add("MOL", "method of lines")
+      An @ABI protects memory.
+      The @MOL is a procedure.
+      @ABI:pls are interfaces.
+      """.trimIndent(),
+      """
+      Dummy53 application binary interface
+      Dummy54 method of lines
+      An element protects memory.
+      The object is a procedure.
+      Elements are interfaces.
+      """.trimIndent(),
     )
   }
 

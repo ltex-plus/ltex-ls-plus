@@ -44,10 +44,10 @@ abstract class CodeAnnotatedTextBuilder(
   protected var dummyGenerator: DummyGenerator = DummyGenerator.getInstance()
   protected var dummyCounter = 0
 
-  // null when the per-language dictionary is empty (the common case); build()
-  // then replays the buffered parts verbatim, byte-for-byte what the eager
-  // emission used to produce.
-  protected var dictionaryMasker: DictionaryMasker? = null
+  // Entries from settings plus format-specific entries discovered while parsing.
+  // The masker is created in build(), after subclasses have seen the whole document.
+  private var configuredDictionary: Set<String> = emptySet()
+  private val additionalDictionaryEntries = mutableSetOf<String>()
 
   // Finalized parts awaiting emission into LanguageTool's AnnotatedTextBuilder.
   // Emission is deferred to build() so the dictionary masker can match entries
@@ -78,7 +78,7 @@ abstract class CodeAnnotatedTextBuilder(
     // HTTP path), so settings.dictionary — keyed on the literal "auto" — is
     // empty at build time; fall back to masking the union of every language's
     // entries so a user-added word is still honoured on the first check.
-    val dictionary: Set<String> =
+    this.configuredDictionary =
       if (settings.languageShortCode == "auto") {
         settings.allDictionaries.values
           .flatten()
@@ -86,8 +86,10 @@ abstract class CodeAnnotatedTextBuilder(
       } else {
         settings.dictionary
       }
-    val masker = DictionaryMasker(dictionary)
-    this.dictionaryMasker = if (masker.isEmpty) null else masker
+  }
+
+  protected fun addDictionaryEntry(entry: String) {
+    additionalDictionaryEntries.add(entry)
   }
 
   override fun addText(text: String?): CodeAnnotatedTextBuilder {
@@ -132,20 +134,26 @@ abstract class CodeAnnotatedTextBuilder(
     return this
   }
 
-  // Mask any user-dictionary occurrences as markup with a dummy interpretation
-  // (the same mechanism inline math `$x$` uses), so LanguageTool never sees the
-  // dictionary word — single- and multi-word entries alike — while a real typo
-  // after a masked span still reprojects to the correct source position (the
-  // dummy contributes plain-text length but zero source offset).
+  // Mask dictionary occurrences as markup with a dummy interpretation (the same
+  // mechanism inline math `$x$` uses), so LanguageTool never sees the accepted
+  // word while diagnostics after a masked span still map to the right source.
   override fun build(): AnnotatedText {
     finalizeCurrentPart()
+
+    val dictionaryMasker: DictionaryMasker? =
+      when {
+        configuredDictionary.isEmpty() && additionalDictionaryEntries.isEmpty() -> null
+        additionalDictionaryEntries.isEmpty() -> DictionaryMasker(configuredDictionary)
+        configuredDictionary.isEmpty() -> DictionaryMasker(additionalDictionaryEntries)
+        else -> DictionaryMasker(configuredDictionary + additionalDictionaryEntries)
+      }
 
     // Always the default (consonant-initial) dummy: the vowel variant "Ina<n>"
     // is itself flagged by LanguageTool Premium's AI rules, which would surface
     // a diagnostic exactly on the masked dictionary word (caught by
     // LanguageToolPremiumIntegrationTest).
     val outParts: List<DictionaryMasker.Part> =
-      this.dictionaryMasker?.maskParts(this.parts) {
+      dictionaryMasker?.maskParts(this.parts) {
         this.dummyGenerator.generate(this.language, this.dummyCounter++)
       } ?: this.parts
 

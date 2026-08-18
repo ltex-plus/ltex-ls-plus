@@ -16,6 +16,9 @@ open class TypstAnnotatedTextBuilder(
 ) : CharacterBasedCodeAnnotatedTextBuilder(codeLanguageId) {
   private val headingParser = CharacterBasedCodeAnnotatedHeadingParser(this)
   private val modeHandler = TypstModeHandler(this)
+  private val abbreviationLabels = mutableSetOf<String>()
+
+  private var lastAbbreviationPlaceholder = ""
 
   override fun processCharacter() {
     addMarkup(NO_TEXT_INLINE_MATH_REGEX, "", true)
@@ -34,7 +37,8 @@ open class TypstAnnotatedTextBuilder(
     addMarkup(RAW_CODE_REGEX_3, "", true)
     addMarkup(CITE_REGEX)
     addMarkup(ENUM_REGEX, "\n")
-    addMarkup(FOOTNOTE_REGEX)
+    processFootnote()
+    registerAbbreviation()
     addMarkup(CODE_REGEX, "", false, true)
     addMarkup(CODE_CURLY_BRACKETS_REGEX, "", false, true, BracketType.CurlyBracket)
     addMarkup(SQUARE_BRACKETS_REGEX_MID, "\n")
@@ -69,11 +73,71 @@ open class TypstAnnotatedTextBuilder(
     addMarkup(IMPORT_REGEX, "\n")
     addMarkup(SHOW_REGEX, "\n")
     addMarkup(STYLE_REGEX)
-    addMarkup(LABEL_REGEX, " ", true)
-    addMarkup(LABEL_REF_REGEX)
+    processReference()
+    addMarkup(LABEL_REGEX)
     addMarkup(VARIABLE_REGEX, "", true)
     addMarkup(QUOTATION_MARK_REGEX)
     addMarkup(CONDITIONAL_HYPHEN_REGEX)
+  }
+
+  private fun registerAbbreviation() {
+    if (characterProcessed || this.curString != "#") return
+    val match = matchFromPosition(ABBREVIATION_DEFINITION_REGEX) ?: return
+    val label = match.groupValues[1]
+    if (abbreviationLabels.add(label)) addDictionaryEntry(label)
+  }
+
+  private fun processFootnote() {
+    if (characterProcessed || this.curString != "#") return
+    if (this.pos > 0 && this.code[this.pos - 1] in HORIZONTAL_WHITESPACE) {
+      addMarkup(FOOTNOTE_WITH_TRAILING_WHITESPACE_REGEX)
+    }
+    addMarkup(FOOTNOTE_REGEX)
+  }
+
+  private fun processReference() {
+    if (characterProcessed || this.curString != "@") return
+    val match = matchFromPosition(REFERENCE_REGEX) ?: return
+    val reference = match.value.drop(1)
+    val label = reference.substringBefore(':')
+    val interpretAs =
+      if (label !in abbreviationLabels) {
+        generateDummy()
+      } else {
+        abbreviationPlaceholder(
+          label,
+          reference.substringAfter(':', "") in PLURAL_ABBREVIATION_SPECIFIERS,
+        )
+      }
+    addMarkup(match.value, interpretAs)
+  }
+
+  private fun abbreviationPlaceholder(
+    label: String,
+    plural: Boolean,
+  ): String {
+    val vowelSound = label.first().uppercaseChar() in VOWEL_SOUND_ABBREVIATION_INITIALS
+    val candidates =
+      when {
+        vowelSound && plural -> VOWEL_SOUND_PLURAL_PLACEHOLDERS
+        vowelSound -> VOWEL_SOUND_SINGULAR_PLACEHOLDERS
+        plural -> CONSONANT_SOUND_PLURAL_PLACEHOLDERS
+        else -> CONSONANT_SOUND_SINGULAR_PLACEHOLDERS
+      }
+    val placeholder = candidates.first { it != lastAbbreviationPlaceholder }
+    lastAbbreviationPlaceholder = placeholder
+    return if (isStartOfSentence()) {
+      placeholder.replaceFirstChar { it.titlecaseChar() }
+    } else {
+      placeholder
+    }
+  }
+
+  private fun isStartOfSentence(): Boolean {
+    if (this.isStartOfLine) return true
+    var previousPos = this.pos - 1
+    while (previousPos >= 0 && this.code[previousPos].isWhitespace()) previousPos--
+    return previousPos < 0 || this.code[previousPos] in SENTENCE_ENDINGS
   }
 
   private fun processEscapeCharacter() {
@@ -104,6 +168,8 @@ open class TypstAnnotatedTextBuilder(
     private val CITE_REGEX = Regex("^#cite\\(\\S+\\)")
     private val ENUM_REGEX = Regex("^#enum(\\([\\s\\S]*?\\)\\[|\\[)")
     private val FOOTNOTE_REGEX = Regex("^#footnote\\[[\\s\\S]*?\\]")
+    private val FOOTNOTE_WITH_TRAILING_WHITESPACE_REGEX =
+      Regex("^#footnote\\[[\\s\\S]*?\\][\\t ]+")
     private val CODE_REGEX = Regex("^#.*?\\(")
     private val CODE_CURLY_BRACKETS_REGEX = Regex("^#\\{")
     private val SQUARE_BRACKETS_REGEX_MID = Regex("^\\]\\[")
@@ -114,13 +180,28 @@ open class TypstAnnotatedTextBuilder(
     private val MULTILINELINE_COMMENT_REGEX = Regex("^\\/\\*[\\s\\S]*?\\*\\/")
     private val MARKUP_REGEX = Regex("^(\\*|\\_)")
     private val IMPORT_REGEX = Regex("^(#import|#include)\\s.*\r?\n")
-    private val SHOW_REGEX = Regex("^#show\\s.*\r?\n")
+    private val SHOW_REGEX = Regex("^#show(?::|\\s).*\r?\n")
     private val STYLE_REGEX =
       Regex("^#(highlight|lower|upper|overline|smallcaps|strike|sub|super|underline|strong)(?=\\[)")
-    private val LABEL_REGEX = Regex("^\\s@[^\\s]*")
-    private val LABEL_REF_REGEX = Regex("^<[^\\s]*>")
+    private val ABBREVIATION_DEFINITION_REGEX =
+      Regex(
+        "^#abbr\\.add\\(\\s*(?:short\\s*:\\s*)?\"([\\p{L}\\p{N}\\p{M}_-]+)\"" +
+          "\\s*,\\s*(?:(?:long|entry)\\s*:\\s*)?\"([^\"]+)\"",
+      )
+    private val REFERENCE_REGEX =
+      Regex("^@[\\p{L}\\p{N}\\p{M}_-](?:[\\p{L}\\p{N}\\p{M}_:.-]*[\\p{L}\\p{N}\\p{M}_-])?")
+    private val LABEL_REGEX = Regex("^<[^\\s]*>")
     private val VARIABLE_REGEX = Regex("^#\\w*")
     private val QUOTATION_MARK_REGEX = Regex("^\"")
     private val CONDITIONAL_HYPHEN_REGEX = Regex("^-\\?")
+    private val PLURAL_ABBREVIATION_SPECIFIERS = setOf("pls", "pll", "pllo", "pla")
+    private val HORIZONTAL_WHITESPACE = charArrayOf(' ', '\t')
+    private val VOWEL_SOUND_SINGULAR_PLACEHOLDERS = arrayOf("element", "object", "item")
+    private val VOWEL_SOUND_PLURAL_PLACEHOLDERS = arrayOf("elements", "objects", "items")
+    private val CONSONANT_SOUND_SINGULAR_PLACEHOLDERS = arrayOf("device", "system", "unit")
+    private val CONSONANT_SOUND_PLURAL_PLACEHOLDERS = arrayOf("devices", "systems", "units")
+    private val SENTENCE_ENDINGS = charArrayOf('.', '!', '?')
+    private val VOWEL_SOUND_ABBREVIATION_INITIALS =
+      setOf('A', 'E', 'F', 'H', 'I', 'L', 'M', 'N', 'O', 'R', 'S', 'X')
   }
 }
