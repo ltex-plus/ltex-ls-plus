@@ -100,14 +100,27 @@ open class TypstAnnotatedTextBuilder(
     val match = matchFromPosition(REFERENCE_REGEX) ?: return
     val reference = match.value.drop(1)
     val label = reference.substringBefore(':')
+    var nextPos = this.pos + match.value.length
+    while (nextPos < this.code.length && this.code[nextPos] in HORIZONTAL_WHITESPACE) nextPos++
+    val citationContext =
+      !reference.contains(':') &&
+        (nextPos >= this.code.length || this.code[nextPos] in CITATION_FOLLOWING_CHARACTERS)
     val interpretAs =
-      if (label !in abbreviationLabels) {
-        generateDummy()
-      } else {
-        abbreviationPlaceholder(
-          label,
-          reference.substringAfter(':', "") in PLURAL_ABBREVIATION_SPECIFIERS,
-        )
+      when {
+        label in abbreviationLabels -> {
+          abbreviationPlaceholder(
+            label,
+            reference.substringAfter(':', "") in PLURAL_ABBREVIATION_SPECIFIERS,
+          )
+        }
+
+        citationContext -> {
+          CITATION_PLACEHOLDER
+        }
+
+        else -> {
+          generateDummy()
+        }
       }
     addMarkup(match.value, interpretAs)
   }
@@ -195,6 +208,9 @@ open class TypstAnnotatedTextBuilder(
     private val QUOTATION_MARK_REGEX = Regex("^\"")
     private val CONDITIONAL_HYPHEN_REGEX = Regex("^-\\?")
     private val PLURAL_ABBREVIATION_SPECIFIERS = setOf("pls", "pll", "pllo", "pla")
+    private const val CITATION_PLACEHOLDER = "(citation)"
+    private val CITATION_FOLLOWING_CHARACTERS =
+      charArrayOf('.', ',', ';', ':', '!', '?', ')', ']', '@')
     private val HORIZONTAL_WHITESPACE = charArrayOf(' ', '\t')
     private val VOWEL_SOUND_SINGULAR_PLACEHOLDERS = arrayOf("element", "object", "item")
     private val VOWEL_SOUND_PLURAL_PLACEHOLDERS = arrayOf("elements", "objects", "items")
