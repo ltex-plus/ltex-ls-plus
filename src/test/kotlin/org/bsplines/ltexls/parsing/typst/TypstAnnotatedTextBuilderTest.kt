@@ -390,14 +390,18 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
   fun testReferences() {
     assertPlainText(
       """
-      See @source-one, @source.two; and @source:three.
+      See @source-one, @source.two; and @source-three.
       The Worm #footnote[a self-replicating program] @source-four. Next sentence.
-      A new sentence follows the citation.
+      Attacks are documented by Aleph One's work, which sparked further investigation @burow2019.
+      Multiple sources support this @first-source @second-source.
+      Open @section:three for details.
       """.trimIndent(),
       """
-      See Dummy0, Dummy1; and Dummy2.
-      The Worm Dummy3. Next sentence.
-      A new sentence follows the citation.
+      See (citation), (citation); and (citation).
+      The Worm (citation). Next sentence.
+      Attacks are documented by Aleph One's work, which sparked further investigation (citation).
+      Multiple sources support this (citation) (citation).
+      Open Dummy0 for details.
       """.trimIndent(),
     )
   }

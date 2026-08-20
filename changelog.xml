@@ -30,7 +30,7 @@
         Fix LaTeX section commands (e.g., `\chapter`, `\section`) used as arguments to other commands (e.g., `\titleformat{\chapter}{...}`) causing false "Two consecutive dots" LanguageTool warnings. The section heading handler previously unconditionally pushed Heading mode and consumed the next character as `{`, even when the section command appeared inside a brace group as an argument.
       </action>
       <action type="fix">
-        Fix false Typst diagnostics around `@` references. Reference parsing now preserves trailing sentence punctuation. Labels registered with `abbr.add` are distinguished from bibliography and document references, accepted as declared terms, and replaced with grammar-safe singular or plural words for checking. Inline footnotes followed by citations no longer leave doubled whitespace, and colon-style show rules such as `#show: abbr.show-rule` are ignored as code.
+        Fix false Typst diagnostics around `@` references. Reference parsing now preserves trailing sentence punctuation. Bibliography-style references before punctuation are represented parenthetically so LanguageTool does not read a citation key as part of the sentence grammar. Labels registered with `abbr.add` are distinguished from bibliography and document references, accepted as declared terms, and replaced with grammar-safe singular or plural words for checking. Inline footnotes followed by citations no longer leave doubled whitespace, and colon-style show rules such as `#show: abbr.show-rule` are ignored as code.
       </action>
     </release>
     <release version="18.7.0" date="2026-06-13">
