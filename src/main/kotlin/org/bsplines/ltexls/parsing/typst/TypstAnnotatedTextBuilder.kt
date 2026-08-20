@@ -85,7 +85,7 @@ open class TypstAnnotatedTextBuilder(
     if (characterProcessed || this.curString != "#") return
     val match = matchFromPosition(ABBREVIATION_DEFINITION_REGEX) ?: return
     val label = match.groupValues[1]
-    if (abbreviationLabels.add(label)) addDictionaryEntry(label)
+    if (abbreviationLabels.add(label) && !this.code.contains("$label-")) addDictionaryEntry(label)
   }
 
   private fun processFootnote() {
@@ -196,7 +196,9 @@ open class TypstAnnotatedTextBuilder(
     private val IMPORT_REGEX = Regex("^(#import|#include)\\s.*\r?\n")
     private val SHOW_REGEX = Regex("^#show(?::|\\s).*\r?\n")
     private val STYLE_REGEX =
-      Regex("^#(highlight|lower|upper|overline|smallcaps|strike|sub|super|underline|strong)(?=\\[)")
+      Regex(
+        "^#(emph|highlight|lower|upper|overline|smallcaps|strike|sub|super|underline|strong)(?=\\[)",
+      )
     private val ABBREVIATION_DEFINITION_REGEX =
       Regex(
         "^#abbr\\.add\\(\\s*(?:short\\s*:\\s*)?\"([\\p{L}\\p{N}\\p{M}_-]+)\"" +
