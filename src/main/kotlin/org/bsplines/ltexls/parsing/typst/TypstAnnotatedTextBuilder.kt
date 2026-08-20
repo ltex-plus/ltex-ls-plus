@@ -74,6 +74,7 @@ open class TypstAnnotatedTextBuilder(
     addMarkup(SHOW_REGEX, "\n")
     addMarkup(STYLE_REGEX)
     processReference()
+    addMarkup(TRAILING_LABEL_REGEX)
     addMarkup(LABEL_REGEX)
     addMarkup(VARIABLE_REGEX, "", true)
     addMarkup(QUOTATION_MARK_REGEX)
@@ -206,6 +207,7 @@ open class TypstAnnotatedTextBuilder(
     private val LABEL_REGEX = Regex("^<[^\\s]*>")
     private val VARIABLE_REGEX = Regex("^#\\w*")
     private val QUOTATION_MARK_REGEX = Regex("^\"")
+    private val TRAILING_LABEL_REGEX = Regex("^[\\t ]*<[^\\s>]+>(?=\r?\n|$)")
     private val CONDITIONAL_HYPHEN_REGEX = Regex("^-\\?")
     private val PLURAL_ABBREVIATION_SPECIFIERS = setOf("pls", "pll", "pllo", "pla")
     private const val CITATION_PLACEHOLDER = "(citation)"
