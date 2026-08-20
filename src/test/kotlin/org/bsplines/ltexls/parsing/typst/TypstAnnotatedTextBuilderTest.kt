@@ -36,6 +36,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       === That is a bold statement!
       More text to read
       === A heading with a dot.
+      == Control-flow hijacking and code reuse attacks <sec:control-flow-hijacking-code-reuse-attacks>
       More text
       """.trimIndent(),
       """
@@ -46,6 +47,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       That is a bold statement!
       More text to read
       A heading with a dot.
+      Control-flow hijacking and code reuse attacks.
       More text
       """.trimIndent(),
     )
