@@ -318,9 +318,9 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
   fun testStyle() {
     assertPlainText(
       """
-      Text #highlight[can] #upper[be] #sub[styled] in #strong[different] ways.
+      Text #highlight[can] #upper[be] #sub[styled] in #strong[different] ways and #emph[emphasized].
       """.trimIndent(),
-      "Text can be styled in different ways.",
+      "Text can be styled in different ways and emphasized.",
     )
   }
 
@@ -424,6 +424,20 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       An element protects memory.
       The object is a procedure.
       Elements are interfaces.
+      """.trimIndent(),
+    )
+  }
+
+  @Test
+  fun testHyphenatedAbbreviation() {
+    assertPlainText(
+      """
+      #abbr.add("RISC", "reduced instruction set computer")
+      RISC-V uses @RISC:s.
+      """.trimIndent(),
+      """
+      RISC reduced instruction set computer
+      RISC-V uses element.
       """.trimIndent(),
     )
   }
