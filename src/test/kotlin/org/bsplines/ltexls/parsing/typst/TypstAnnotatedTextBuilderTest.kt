@@ -36,7 +36,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       === That is a bold statement!
       More text to read
       === A heading with a dot.
-      == Control-flow hijacking and code reuse attacks <sec:control-flow-hijacking-code-reuse-attacks>
+      == A heading with a spaced label <sec:spaced-heading>
       More text
       """.trimIndent(),
       """
@@ -47,7 +47,7 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       That is a bold statement!
       More text to read
       A heading with a dot.
-      Control-flow hijacking and code reuse attacks.
+      A heading with a spaced label.
       More text
       """.trimIndent(),
     )
@@ -393,15 +393,15 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
     assertPlainText(
       """
       See @source-one, @source.two; and @source-three.
-      The Worm #footnote[a self-replicating program] @source-four. Next sentence.
-      Attacks are documented by Aleph One's work, which sparked further investigation @burow2019.
+      The claim #footnote[an explanatory note] @source-four. Next sentence.
+      The observation motivated further research @study-2024.
       Multiple sources support this @first-source @second-source.
       Open @section:three for details.
       """.trimIndent(),
       """
       See (citation), (citation); and (citation).
-      The Worm (citation). Next sentence.
-      Attacks are documented by Aleph One's work, which sparked further investigation (citation).
+      The claim (citation). Next sentence.
+      The observation motivated further research (citation).
       Multiple sources support this (citation) (citation).
       Open Dummy0 for details.
       """.trimIndent(),
@@ -432,12 +432,12 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
   fun testHyphenatedAbbreviation() {
     assertPlainText(
       """
-      #abbr.add("RISC", "reduced instruction set computer")
-      RISC-V uses @RISC:s.
+      #abbr.add("API", "application programming interface")
+      API-based clients use @API:s.
       """.trimIndent(),
       """
-      RISC reduced instruction set computer
-      RISC-V uses element.
+      API application programming interface
+      API-based clients use element.
       """.trimIndent(),
     )
   }
