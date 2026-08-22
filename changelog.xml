@@ -23,6 +23,9 @@
       <action type="update">
         Update LSP4J to 1.0.0
       </action>
+      <action type="update">
+        Update to lsp-cli-plus 3.0.0. See [lsp-cli-plus release notes](https://github.com/ltex-plus/lsp-cli-plus/releases/tag/3.0.0).
+      </action>
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#206" due-to="Daniel Spitzer (@spitzerd)">
         Fix StackOverflowError for Typst, AsciiDoc, and Org documents. The issue occurred on long comments, for example.
       </action>
