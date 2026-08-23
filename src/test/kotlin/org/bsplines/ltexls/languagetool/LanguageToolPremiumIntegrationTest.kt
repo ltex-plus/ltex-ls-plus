@@ -31,8 +31,12 @@ import kotlin.test.assertTrue
  * variable makes the whole class auto-skip via [RequirePremiumCredentials];
  * no failure, no CI noise.
  *
- * If these tests fail in CI, the maintainer has two options:
+ * If these tests fail in CI, the maintainer has three options:
  *
+ *   - Re-probe [SAMPLE_TEXT]. These tests assert live Premium behavior on one
+ *     fixed passage, so LanguageTool retraining its QB_NEW_ and AI_ rule
+ *     families can break them without any change on our side. The notes on
+ *     that constant say what to check and why each property is load-bearing.
  *   - Rotate the credentials (renewed subscription, API key cycled, ...).
  *   - Delete LANGUAGETOOL_USERNAME and LANGUAGETOOL_API_KEY from the repository
  *     secrets. The tests will then auto-skip, keeping CI green without any
@@ -41,12 +45,13 @@ import kotlin.test.assertTrue
  * The assertion-failure message produced by [withPremiumFailureHint] repeats
  * this so a future maintainer doesn't need to open the source to recover.
  *
- * The behavior under test is Premium's QB_NEW_* rule family returning spans
- * that include adjacent punctuation (e.g. `amazng!` length 7, bare `amazng`
- * length 6, `"amazng"` length 8 — all for the same misspelling in different
- * contexts). The DictionaryWord.normalize call on the add path and on the
- * check-path lookup key together ensure that a single stored entry `amazng`
- * suppresses every variant.
+ * The behavior under test is Premium's QB_NEW_ rule family returning spans that
+ * include adjacent punctuation: for one misspelling in three contexts it emits
+ * `enviroment` (length 10), `enviroment!` (length 11) and `"enviroment"`
+ * (length 12). The DictionaryWord.normalize call on the add path is what makes
+ * the stored entry the bare word, so one entry covers every variant. (There is
+ * no longer a check-path lookup: dictionary entries are masked out of the text
+ * before LanguageTool sees them — see DictionaryMasker.)
  */
 @ExtendWith(RequirePremiumCredentials::class)
 class LanguageToolPremiumIntegrationTest {
@@ -58,7 +63,7 @@ class LanguageToolPremiumIntegrationTest {
       assertTrue(
         spans.size >= 2,
         "Expected the Premium endpoint to return at least two matches for " +
-          "\"$SAMPLE_TEXT\" (the misspelling \"amazng\" appears in multiple " +
+          "\"$SAMPLE_TEXT\" (the misspelling \"$MISSPELLING\" appears in three " +
           "punctuation contexts), but got: $spans.",
       )
 
@@ -66,8 +71,9 @@ class LanguageToolPremiumIntegrationTest {
       assertTrue(
         withPunct.isNotEmpty(),
         "Expected at least one returned span to include adjacent punctuation " +
-          "(e.g. \"amazng!\" or \"\\\"amazng\\\"\"), but every span was already " +
-          "bare. Observed spans: $spans. Either Premium behavior changed or " +
+          "(here \"$MISSPELLING!\" and \"\\\"$MISSPELLING\\\"\"), but every " +
+          "span was already bare. " +
+          "Observed spans: $spans. Either Premium behavior changed or " +
           "the current subscription tier no longer emits punctuation-inclusive " +
           "spans for this input — re-evaluate whether the normalization fix " +
           "is still needed.",
@@ -75,9 +81,9 @@ class LanguageToolPremiumIntegrationTest {
 
       val normalizedSet: Set<String> = spans.map { DictionaryWord.normalize(it) }.toSet()
       assertTrue(
-        normalizedSet == setOf("amazng"),
+        normalizedSet == setOf(MISSPELLING),
         "After normalization every span should reduce to the same bare word " +
-          "\"amazng\", but the normalized set is $normalizedSet (from spans $spans).",
+          "\"$MISSPELLING\", but the normalized set is $normalizedSet (from spans $spans).",
       )
     }
 
@@ -85,31 +91,61 @@ class LanguageToolPremiumIntegrationTest {
   fun testPremiumPunctuationSpansSuppressedAfterBareWordAdd() =
     withPremiumFailureHint {
       val spans: List<String> =
-        collectMatchSpans(buildSettings(dictionary = setOf("amazng")))
+        collectMatchSpans(buildSettings(dictionary = setOf(MISSPELLING)))
 
       assertTrue(
         spans.isEmpty(),
-        "After adding the bare word \"amazng\" to the en-US dictionary, every " +
-          "Premium variant (with or without adjacent punctuation) should be " +
-          "suppressed. Still seeing spans: $spans.",
+        "After adding the bare word \"$MISSPELLING\" to the en-US dictionary, " +
+          "every Premium variant (with or without adjacent punctuation) should " +
+          "be suppressed. Still seeing spans: $spans. If a span looks like a " +
+          "`Dummy<n>` placeholder, Premium flagged the masking placeholder " +
+          "rather than the user's word — re-probe SAMPLE_TEXT, see the notes " +
+          "on that constant.",
       )
     }
 
   companion object {
     private const val PREMIUM_ENDPOINT: String = "https://api.languagetoolplus.com"
 
-    // Probed against api.languagetoolplus.com on 2026-05-15: this text
-    // yields exactly three QB_NEW_EN_ORTHOGRAPHY_ERROR_IDS_1 matches:
-    //   'amazng'    (bare, length 6)
-    //   'amazng!'   (with trailing !, length 7)
-    //   '"amazng"'  (surrounded by quotes, length 8)
-    // All three normalize to "amazng". Other phrasings caused Premium's
-    // QB_NEW_EN_MERGED_MATCH / QB_NEW_EN_OTHER to collapse the misspelling
-    // with an adjacent legitimate word (e.g. "said amazng!"), which would
-    // break the "every span normalizes to amazng" assertion below — avoid
-    // changing this text without re-probing.
+    private const val MISSPELLING: String = "enviroment"
+
+    // Probed against api.languagetoolplus.com on 2026-08-23 (four repeat runs,
+    // identical every time): this text yields exactly three matches, one per
+    // occurrence, each in a different punctuation context:
+    //   'enviroment'    (bare, length 10)
+    //   'enviroment!'   (with trailing !, length 11)
+    //   '"enviroment"'  (surrounded by quotes, length 12)
+    // All three normalize to "enviroment", which is what the assertions check.
+    // The two punctuation-inclusive spans are the behavior that makes
+    // DictionaryWord.normalize necessary on the add path.
+    //
+    // The second test masks these occurrences out — DictionaryMasker replaces
+    // each with a `Dummy<n>` placeholder — and expects no matches at all. That
+    // holds only because Premium leaves this particular masked form alone:
+    //
+    //   The report repeats Dummy0 later. Our team called it Dummy1! The summary
+    //   lists "Dummy2" as the top risk.
+    //
+    // Premium's QB_NEW_ and AI_ rules do flag `Dummy<n>` in other contexts, and
+    // then the test fails on a diagnostic belonging to the placeholder rather
+    // than to the user's word. Re-probe BOTH the plain and the masked form
+    // before changing this text. What probing established:
+    //
+    //   - The choice of word matters as much as the phrasing. This same
+    //     three-occurrence shape with `amazng` gets its placeholders flagged;
+    //     `enviroment` and `occurence` do not. It is not a rule about how many
+    //     occurrences there are.
+    //   - Adjacent punctuation is safe: `Dummy1!` is not flagged.
+    //   - An article in front of a masked vowel-initial word is NOT safe.
+    //     `What an amazng evening` masks to `an Dummy1` — vowel-initial word,
+    //     consonant-initial placeholder — and trips
+    //     QB_NEW_EN_OTHER_ERROR_IDS_11. Avoid a/an before the misspelling here.
+    //     (That artefact is a real limitation of masking, not just a test
+    //     concern, but no user has reported it.)
+    //   - Incoherent filler prose provokes the placeholder. Keep this ordinary.
     private const val SAMPLE_TEXT: String =
-      "I think amazng. Or amazng! Or even \"amazng\" works."
+      "The report repeats $MISSPELLING later. Our team called it $MISSPELLING! " +
+        "The summary lists \"$MISSPELLING\" as the top risk."
 
     private val FAILURE_HINT: String =
       """
