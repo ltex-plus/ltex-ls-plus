@@ -9,8 +9,13 @@ name: "CI"
 
 on:
   push:
+    # "**" and not "*": in GitHub's filter globs `*` does not cross a `/`, so
+    # "*" silently skipped every branch with a slash in its name — CI never ran
+    # on a push to e.g. "fix/typst-references" or "experimental/foo", only on
+    # single-segment branches like "develop". Tags keep "*" because this project
+    # tags releases as "18.7.1" and "nightly", which have no slash.
     branches:
-      - "*"
+      - "**"
     tags:
       - "*"
   pull_request:
