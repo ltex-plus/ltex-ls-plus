@@ -9,6 +9,7 @@
 package org.bsplines.ltexls.server
 
 import com.google.gson.JsonObject
+import com.google.gson.JsonElement
 import com.sun.management.OperatingSystemMXBean
 import org.bsplines.ltexls.tools.FileIo
 import org.bsplines.ltexls.tools.I18n
