@@ -80,7 +80,8 @@ class LtexWorkspaceService(
   override fun executeCommand(params: ExecuteCommandParams): CompletableFuture<Any> =
     when (params.command) {
       CHECK_DOCUMENT_COMMAND_NAME -> {
-        executeCheckDocumentCommand(params.arguments[0] as JsonObject)
+        commandArguments(params)?.let(::executeCheckDocumentCommand)
+          ?: failCommand("Invalid arguments for command '${params.command}'")
       }
 
       GET_SERVER_STATUS_COMMAND_NAME -> {
@@ -158,6 +159,9 @@ class LtexWorkspaceService(
     jsonObject.addProperty("success", true)
     return CompletableFuture.completedFuture(jsonObject)
   }
+
+  private fun commandArguments(params: ExecuteCommandParams): JsonObject? =
+    (params.arguments.firstOrNull() as? JsonElement)?.takeIf { it.isJsonObject }?.asJsonObject
 
   // Appends the given entries to the external file. Mirrors the format of
   // vscode-ltex-plus's ExternalFileManager.appendToFile so a file stays compatible

@@ -60,6 +60,19 @@ class LtexWorkspaceServiceTest {
   }
 
   @Test
+  fun testCheckDocumentRejectsMissingOrIncompatibleArguments() {
+    val service = LtexWorkspaceService(LtexLanguageServer())
+
+    for (arguments in listOf(emptyList(), listOf(JsonArray()))) {
+      val params = ExecuteCommandParams("_ltex.checkDocument", arguments)
+      val result = (service.executeCommand(params).get() as JsonElement).asJsonObject
+
+      assertFalse(result["success"].asBoolean)
+      assertTrue(result["errorMessage"].asString.contains("Invalid arguments"))
+    }
+  }
+
+  @Test
   fun testGetServerStatus() {
     val server = LtexLanguageServer()
     val service = LtexWorkspaceService(server)
