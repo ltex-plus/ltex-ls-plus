@@ -48,10 +48,10 @@ import kotlin.test.assertTrue
  * The behavior under test is Premium's QB_NEW_ rule family returning spans that
  * include adjacent punctuation: for one misspelling in three contexts it emits
  * `enviroment` (length 10), `enviroment!` (length 11) and `"enviroment"`
- * (length 12). The DictionaryWord.normalize call on the add path is what makes
- * the stored entry the bare word, so one entry covers every variant. (There is
- * no longer a check-path lookup: dictionary entries are masked out of the text
- * before LanguageTool sees them — see DictionaryMasker.)
+ * (length 12). DictionaryWord.normalize is applied on the add path, so the
+ * stored entry is the bare word, and again on the check path, so one stored
+ * entry suppresses every punctuation variant — see
+ * LanguageToolInterface.isCoveredByDictionary.
  */
 @ExtendWith(RequirePremiumCredentials::class)
 class LanguageToolPremiumIntegrationTest {
@@ -97,15 +97,52 @@ class LanguageToolPremiumIntegrationTest {
         spans.isEmpty(),
         "After adding the bare word \"$MISSPELLING\" to the en-US dictionary, " +
           "every Premium variant (with or without adjacent punctuation) should " +
-          "be suppressed. Still seeing spans: $spans. If a span looks like a " +
-          "`Dummy<n>` placeholder, Premium flagged the masking placeholder " +
-          "rather than the user's word — re-probe SAMPLE_TEXT, see the notes " +
-          "on that constant.",
+          "be suppressed. Still seeing spans: $spans — the check-path " +
+          "normalization in LanguageToolInterface.isCoveredByDictionary no " +
+          "longer reduces every variant to the stored bare word.",
+      )
+    }
+
+  @Test
+  fun testPremiumVerdictIsUnchangedByAcceptingAWord() =
+    withPremiumFailureHint {
+      // The invariant, stated as a comparison rather than as "no matches":
+      // accepting a word must never change what Premium reports about the rest
+      // of the sentence. Asserting emptiness alone would be vacuous here,
+      // because this sentence is clean either way — it would pass even if
+      // dictionary handling did nothing.
+      //
+      // This is the case a Premium user reported. Substituting an invented
+      // placeholder for the entry made Premium object to the placeholder
+      // instead: `Dummy0` mid-sentence drew QB_NEW_EN_DECAPITALIZE_ERROR_IDS_6,
+      // a diagnostic on the very word the user had accepted. A single-word
+      // entry is now left in the text, so there is nothing to object to.
+      val before: List<String> = collectMatchSpans(buildSettings(), text = REPORTED_TEXT)
+      val after: List<String> =
+        collectMatchSpans(
+          buildSettings(dictionary = setOf(REPORTED_ENTRY)),
+          text = REPORTED_TEXT,
+        )
+
+      assertTrue(
+        after == before,
+        "Accepting \"$REPORTED_ENTRY\" changed what Premium reports for " +
+          "\"$REPORTED_TEXT\": $before without the entry, $after with it. " +
+          "Accepting a word may only ever remove a diagnostic on that word; " +
+          "anything appearing or moving means the text we send no longer says " +
+          "what the user wrote.",
       )
     }
 
   companion object {
     private const val PREMIUM_ENDPOINT: String = "https://api.languagetoolplus.com"
+
+    // Reported by a Premium user (2026-08-23). Verified against the endpoint:
+    // the sentence is clean on its own, so anything reported once
+    // `eigenstates` is accepted would be an artefact of how we handle the entry.
+    private const val REPORTED_ENTRY: String = "eigenstates"
+    private const val REPORTED_TEXT: String =
+      "The $REPORTED_ENTRY of Eq. 1 are Fock states."
 
     private const val MISSPELLING: String = "enviroment"
 
@@ -115,34 +152,15 @@ class LanguageToolPremiumIntegrationTest {
     //   'enviroment'    (bare, length 10)
     //   'enviroment!'   (with trailing !, length 11)
     //   '"enviroment"'  (surrounded by quotes, length 12)
-    // All three normalize to "enviroment", which is what the assertions check.
-    // The two punctuation-inclusive spans are the behavior that makes
-    // DictionaryWord.normalize necessary on the add path.
+    // The two punctuation-inclusive spans are the whole reason
+    // DictionaryWord.normalize exists: all three normalize to "enviroment", so
+    // one stored entry has to cover them, which is what the tests below check.
     //
-    // The second test masks these occurrences out — DictionaryMasker replaces
-    // each with a `Dummy<n>` placeholder — and expects no matches at all. That
-    // holds only because Premium leaves this particular masked form alone:
-    //
-    //   The report repeats Dummy0 later. Our team called it Dummy1! The summary
-    //   lists "Dummy2" as the top risk.
-    //
-    // Premium's QB_NEW_ and AI_ rules do flag `Dummy<n>` in other contexts, and
-    // then the test fails on a diagnostic belonging to the placeholder rather
-    // than to the user's word. Re-probe BOTH the plain and the masked form
-    // before changing this text. What probing established:
-    //
-    //   - The choice of word matters as much as the phrasing. This same
-    //     three-occurrence shape with `amazng` gets its placeholders flagged;
-    //     `enviroment` and `occurence` do not. It is not a rule about how many
-    //     occurrences there are.
-    //   - Adjacent punctuation is safe: `Dummy1!` is not flagged.
-    //   - An article in front of a masked vowel-initial word is NOT safe.
-    //     `What an amazng evening` masks to `an Dummy1` — vowel-initial word,
-    //     consonant-initial placeholder — and trips
-    //     QB_NEW_EN_OTHER_ERROR_IDS_11. Avoid a/an before the misspelling here.
-    //     (That artefact is a real limitation of masking, not just a test
-    //     concern, but no user has reported it.)
-    //   - Incoherent filler prose provokes the placeholder. Keep this ordinary.
+    // A single-word entry is not substituted before checking, so the second test
+    // exercises the check-path suppression on the real word in all three
+    // contexts. Re-probe this text before changing it: the assertions depend on
+    // Premium still emitting a punctuation-inclusive span for at least one
+    // occurrence, which is its behavior and not ours.
     private const val SAMPLE_TEXT: String =
       "The report repeats $MISSPELLING later. Our team called it $MISSPELLING! " +
         "The summary lists \"$MISSPELLING\" as the top risk."
@@ -177,11 +195,14 @@ class LanguageToolPremiumIntegrationTest {
       return settings
     }
 
-    private fun collectMatchSpans(settings: Settings): List<String> {
+    private fun collectMatchSpans(
+      settings: Settings,
+      text: String = SAMPLE_TEXT,
+    ): List<String> {
       val settingsManager = SettingsManager(settings)
       val documentChecker = DocumentChecker(settingsManager)
       val document: LtexTextDocumentItem =
-        DocumentCheckerTest.createDocument("markdown", SAMPLE_TEXT)
+        DocumentCheckerTest.createDocument("markdown", text)
       val result: Pair<List<LanguageToolRuleMatch>, List<AnnotatedTextFragment>> =
         documentChecker.check(document)
       val (matches, fragments) = result

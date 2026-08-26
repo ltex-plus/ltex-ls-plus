@@ -22,9 +22,26 @@ class AnnotatedTextFragment(
   val annotatedText: AnnotatedText,
   val codeFragment: CodeFragment,
   val document: LtexTextDocumentItem,
+  // Accepted words the builder discovered while parsing this fragment (Typst
+  // abbreviation labels), which are not in Settings and so cannot be looked up
+  // by language. A set of entries is position-free, which is why it is carried
+  // rather than a set of offsets: it survives the paragraph slicing and merging
+  // that would invalidate stored positions.
+  val additionalDictionary: Set<String> = emptySet(),
 ) {
   private var plainText: String? = null
   private var inverseAnnotatedText: AnnotatedText? = null
+
+  // Matched against the *collapsed* entry forms, exactly as the configured
+  // dictionary is, so a multi-word label joined by the builder is recognized too.
+  private val additionalEntryMatcher: DictionaryMasker by lazy {
+    DictionaryMasker(
+      this.additionalDictionary.mapTo(mutableSetOf()) { DictionaryMasker.collapseSeparators(it) },
+    )
+  }
+
+  fun isAdditionalDictionaryEntry(word: String): Boolean =
+    this.additionalDictionary.isNotEmpty() && this.additionalEntryMatcher.isEntry(word)
 
   fun getSubstringOfPlainText(
     fromPos: Int,

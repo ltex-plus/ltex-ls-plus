@@ -233,7 +233,7 @@ class MarkdownAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("markdown"
       Penciltest firm
 
       """.trimIndent(),
-      "the Dummy0 firm\n",
+      "the GreenTeamPenciltest firm\n",
       Settings(_allDictionaries = mapOf(Pair("en-US", setOf("GreenTeam Penciltest")))),
     )
   }

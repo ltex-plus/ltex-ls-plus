@@ -36,10 +36,14 @@ abstract class CodeAnnotatedTextBuilder(
   protected var curInterpretAs = StringBuilder()
   protected var curType: TextPart.Type? = null
 
-  // Dummy-token state, shared by every subclass so that markup dummies (e.g.
-  // inline math `$x$`) and dictionary-masking dummies draw from one monotonic
-  // counter — two identical adjacent dummy tokens would otherwise trip
-  // LanguageTool's repeated-word rule.
+  // Dummy-token state for markup stand-ins (inline math `$x$`, an ignored LaTeX
+  // command, a Typst filename), lifted to the base class so every subclass draws
+  // from one monotonic counter — two identical adjacent dummy tokens would
+  // otherwise trip LanguageTool's repeated-word rule.
+  //
+  // Dictionary entries do not use this. They are never replaced by an invented
+  // token: a single-word entry is left alone, and a multi-word one is joined
+  // into a token derived from the user's own text. See build().
   protected var language: String = "en-US"
   protected var dummyGenerator: DummyGenerator = DummyGenerator.getInstance()
   protected var dummyCounter = 0
@@ -48,6 +52,13 @@ abstract class CodeAnnotatedTextBuilder(
   // The masker is created in build(), after subclasses have seen the whole document.
   private var configuredDictionary: Set<String> = emptySet()
   private val additionalDictionaryEntries = mutableSetOf<String>()
+
+  // Entries a subclass discovered while parsing (Typst abbreviation labels).
+  // Unlike the configured dictionary these are not in Settings, so the check
+  // path cannot look them up there; DocumentChecker carries them on the
+  // AnnotatedTextFragment instead. Read after build().
+  val additionalDictionary: Set<String>
+    get() = this.additionalDictionaryEntries
 
   // Finalized parts awaiting emission into LanguageTool's AnnotatedTextBuilder.
   // Emission is deferred to build() so the dictionary masker can match entries
@@ -134,28 +145,39 @@ abstract class CodeAnnotatedTextBuilder(
     return this
   }
 
-  // Mask dictionary occurrences as markup with a dummy interpretation (the same
-  // mechanism inline math `$x$` uses), so LanguageTool never sees the accepted
-  // word while diagnostics after a masked span still map to the right source.
+  // Join each multi-word dictionary occurrence into a single token before the
+  // text reaches LanguageTool: `GreenTeam Penciltest` is emitted as markup
+  // interpreted as `GreenTeamPenciltest`. LanguageTool then reports at most one
+  // match, spanning exactly the entry, which the check path suppresses (see
+  // LanguageToolInterface.isCoveredByDictionary). Without the join it tokenizes
+  // the phrase and flags `Penciltest` alone — a span that matches no entry,
+  // which is why phrase entries were not honoured before.
+  //
+  // Single-word entries are deliberately NOT touched. They need no join, and
+  // leaving them in place is what keeps LanguageTool's grammar judgements sound:
+  // the words it sees are the user's own, with their real number, gender,
+  // initial sound and capitalization. Substituting an invented token (the former
+  // `Dummy<n>`) made LanguageTool Premium report the resulting disagreement
+  // anywhere in the sentence — an article before it, a verb many words later —
+  // where no post-filter can tell an invented complaint from a real one.
+  //
+  // The joined token is likewise derived from the user's text rather than
+  // invented, so it inherits those same properties and only its spelling is
+  // novel. Its plain-text length differs from the source, which is exactly what
+  // interpretAs exists for; offsets outside the joined span stay exact.
   override fun build(): AnnotatedText {
     finalizeCurrentPart()
 
-    val dictionaryMasker: DictionaryMasker? =
-      when {
-        configuredDictionary.isEmpty() && additionalDictionaryEntries.isEmpty() -> null
-        additionalDictionaryEntries.isEmpty() -> DictionaryMasker(configuredDictionary)
-        configuredDictionary.isEmpty() -> DictionaryMasker(additionalDictionaryEntries)
-        else -> DictionaryMasker(configuredDictionary + additionalDictionaryEntries)
-      }
+    val multiWordEntries: Set<String> =
+      (configuredDictionary + additionalDictionaryEntries)
+        .filterTo(mutableSetOf()) { it != DictionaryMasker.collapseSeparators(it) }
 
-    // Always the default (consonant-initial) dummy: the vowel variant "Ina<n>"
-    // is itself flagged by LanguageTool Premium's AI rules, which would surface
-    // a diagnostic exactly on the masked dictionary word (caught by
-    // LanguageToolPremiumIntegrationTest).
+    val dictionaryMasker: DictionaryMasker? =
+      if (multiWordEntries.isEmpty()) null else DictionaryMasker(multiWordEntries)
+
     val outParts: List<DictionaryMasker.Part> =
-      dictionaryMasker?.maskParts(this.parts) {
-        this.dummyGenerator.generate(this.language, this.dummyCounter++)
-      } ?: this.parts
+      dictionaryMasker?.maskParts(this.parts) { DictionaryMasker.collapseSeparators(it) }
+        ?: this.parts
 
     for (part: DictionaryMasker.Part in outParts) {
       if (part.type == TextPart.Type.TEXT) {

@@ -121,7 +121,13 @@ class DocumentChecker(
 
     builder.setSettings(codeFragment.settings)
     builder.addCode(codeFragment.code)
-    return AnnotatedTextFragment(builder.build(), codeFragment, document)
+    val annotatedText: AnnotatedText = builder.build()
+    return AnnotatedTextFragment(
+      annotatedText,
+      codeFragment,
+      document,
+      builder.additionalDictionary,
+    )
   }
 
   private fun checkAnnotatedTextFragments(
@@ -555,7 +561,12 @@ class DocumentChecker(
       )
     val mergedAnnotatedText: AnnotatedText =
       AnnotatedTextSlicer.mergeAnnotatedTexts(run.map { it.annotatedText })
-    return AnnotatedTextFragment(mergedAnnotatedText, mergedCodeFragment, document)
+    return AnnotatedTextFragment(
+      mergedAnnotatedText,
+      mergedCodeFragment,
+      document,
+      run.flatMapTo(mutableSetOf()) { it.additionalDictionary },
+    )
   }
 
   private fun cacheParagraph(
@@ -640,7 +651,12 @@ class DocumentChecker(
           region.settings,
           region.languageShortCode,
         )
-      AnnotatedTextFragment(slice.annotatedText, paragraphCodeFragment, document)
+      AnnotatedTextFragment(
+        slice.annotatedText,
+        paragraphCodeFragment,
+        document,
+        regionFragment.additionalDictionary,
+      )
     }
   }
 

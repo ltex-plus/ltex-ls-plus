@@ -109,14 +109,36 @@ class DictionaryMasker(
     return matches
   }
 
+  // True iff [text] is in its entirety a single dictionary entry, i.e. one
+  // match covering the whole string. Space normalization and the accepted case
+  // variants apply exactly as in findMatches, so `GREENTEAM` and
+  // `GreenTeam Penciltest` both qualify.
+  //
+  // The check path uses this against a masker built over the *collapsed* entry
+  // forms, to recognize a LanguageTool match whose span is exactly an accepted
+  // word — see LanguageToolInterface.isCoveredByDictionary.
+  fun isEntry(text: String): Boolean {
+    val matches: List<IntRange> = findMatches(text)
+    return (matches.size == 1) && (matches[0].first == 0) && (matches[0].last == text.length - 1)
+  }
+
   // Returns [parts] with every dictionary occurrence in the assembled plain
-  // text coalesced into one markup part interpreted as dummyProvider(). Matches
-  // whose start or end falls strictly inside a markup's interpretAs are skipped
-  // (the markup source cannot be split at a plain-text position); such a
-  // boundary requires an interpretAs of length >= 2, which is rare.
+  // text coalesced into one markup part, interpreted as
+  // replacementProvider(<matched plain text>). Matches whose start or end falls
+  // strictly inside a markup's interpretAs are skipped (the markup source cannot
+  // be split at a plain-text position); such a boundary requires an interpretAs
+  // of length >= 2, which is rare.
+  //
+  // The provider is handed the matched plain text rather than nothing, so the
+  // replacement can be *derived* from what the user wrote instead of invented.
+  // That is what keeps LanguageTool's grammatical judgements honest: an invented
+  // token carries its own number, gender, initial sound and capitalization, and
+  // LanguageTool then reports the disagreement wherever the sentence puts it —
+  // possibly far from the substitution, where no filter can attribute it. See
+  // CodeAnnotatedTextBuilder.build for the replacement actually used.
   fun maskParts(
     parts: List<Part>,
-    dummyProvider: () -> String,
+    replacementProvider: (String) -> String,
   ): List<Part> {
     if (this.isEmpty || parts.isEmpty()) return parts
 
@@ -126,7 +148,7 @@ class DictionaryMasker(
       findMatches(plainText).filter { isMaskable(it, parts, plainStarts) }
     if (matches.isEmpty()) return parts
 
-    return PartRebuilder(parts, plainStarts, matches, dummyProvider).rebuild()
+    return PartRebuilder(parts, plainStarts, matches, replacementProvider).rebuild()
   }
 
   // Exclusive end offset of the longest entry matching [text] at [start] on
@@ -165,12 +187,18 @@ class DictionaryMasker(
     private val parts: List<Part>,
     private val plainStarts: IntArray,
     matches: List<IntRange>,
-    private val dummyProvider: () -> String,
+    private val replacementProvider: (String) -> String,
   ) {
     // (start, exclusive end) plain-text offsets of the pending matches.
     private val matchQueue = ArrayDeque(matches.map { Pair(it.first, it.last + 1) })
     private val result = ArrayList<Part>()
     private val maskedSource = StringBuilder()
+
+    // The plain text the match covered, accumulated alongside the source so the
+    // replacement can be derived from it. For a TEXT part the two are the same
+    // string; for a MARKUP part the source is its code and the plain
+    // contribution its interpretAs.
+    private val maskedPlain = StringBuilder()
 
     fun rebuild(): List<Part> {
       for ((partIndex: Int, part: Part) in parts.withIndex()) {
@@ -205,6 +233,7 @@ class DictionaryMasker(
         } else {
           val pieceEnd: Int = minOf(match.second, partEnd)
           maskedSource.append(part.code, pos - partStart, pieceEnd - partStart)
+          maskedPlain.append(part.code, pos - partStart, pieceEnd - partStart)
           pos = pieceEnd
           if (pos == match.second) closeMask()
         }
@@ -231,6 +260,7 @@ class DictionaryMasker(
 
       if (insideMask) {
         maskedSource.append(part.code)
+        maskedPlain.append(part.interpretAs)
         if (partEnd == match.second) closeMask()
       } else {
         result.add(part)
@@ -238,13 +268,28 @@ class DictionaryMasker(
     }
 
     private fun closeMask() {
-      result.add(Part(TextPart.Type.MARKUP, maskedSource.toString(), dummyProvider()))
+      result.add(
+        Part(
+          TextPart.Type.MARKUP,
+          maskedSource.toString(),
+          replacementProvider(maskedPlain.toString()),
+        ),
+      )
       maskedSource.clear()
+      maskedPlain.clear()
       matchQueue.removeFirst()
     }
   }
 
   companion object {
+    // Join a multi-word entry or occurrence into a single token by dropping its
+    // space separators: `GreenTeam Penciltest` -> `GreenTeamPenciltest`, and
+    // likewise for a no-break space from a LaTeX tie. Both sides of the
+    // mechanism call this — the builder to produce the replacement, the check
+    // path to build the forms it compares against — so they cannot disagree.
+    fun collapseSeparators(text: String): String =
+      text.filterNot { (it == ' ') || (it.category == CharCategory.SPACE_SEPARATOR) }
+
     // One-for-one replacement of Unicode space separators (no-break space,
     // thin space, ...) by a plain space, preserving length and all offsets.
     // Returns [text] itself when nothing needs replacing (the common case).
