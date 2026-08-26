@@ -308,7 +308,7 @@ class DictionaryMaskerTest {
   }
 
   // --- builder-level wiring (PlaintextAnnotatedTextBuilder is verbatim, so the
-  // plain text shows the dummy substituted for the masked span) ---
+  // plain text shows the joined form substituted for the matched span) ---
 
   private fun plainTextWithDictionary(
     code: String,
@@ -320,9 +320,11 @@ class DictionaryMaskerTest {
   }
 
   @Test
-  fun builderMasksMultiWordEntryWithDummy() {
+  fun builderJoinsMultiWordEntryIntoOneToken() {
+    // The separator is dropped so LanguageTool tokenizes the phrase as one word
+    // and can report at most one match, spanning exactly the entry.
     assertEquals(
-      "I met Dummy0 today.\n",
+      "I met GreenTeamPenciltest today.\n",
       plainTextWithDictionary("I met GreenTeam Penciltest today.\n", setOf("GreenTeam Penciltest")),
     )
   }
@@ -337,17 +339,22 @@ class DictionaryMaskerTest {
 
   @Test
   fun builderWithoutDictionaryIsUnchanged() {
-    assertFalse(plainTextWithDictionary("I met GreenTeam today.\n", emptySet()).contains("Dummy"))
+    assertEquals(
+      "I met GreenTeam today.\n",
+      plainTextWithDictionary("I met GreenTeam today.\n", emptySet()),
+    )
   }
 
   @Test
-  fun builderAlwaysUsesDefaultDummy() {
-    // Deliberately NOT the vowel-initial dummy ("Ina0") for vowel-initial
-    // masked words: LanguageTool Premium's AI rules flag "Ina0" itself, which
-    // would surface a diagnostic exactly on the masked dictionary word
-    // (pinned by LanguageToolPremiumIntegrationTest).
+  fun builderLeavesSingleWordEntryInPlace() {
+    // A single-word entry needs no joining, so the text reaches LanguageTool
+    // untouched. This is what keeps its grammatical judgements sound: the word
+    // it sees carries the user's own number, gender, initial sound and case. An
+    // invented placeholder here made Premium report the disagreement it caused
+    // anywhere in the sentence — `an iPhone` became `an Dummy0`, and a plural
+    // entry made a distant verb look wrong.
     assertEquals(
-      "I have an Dummy0 here.\n",
+      "I have an iPhone here.\n",
       plainTextWithDictionary("I have an iPhone here.\n", setOf("iPhone")),
     )
   }

@@ -14,28 +14,28 @@ import kotlin.test.Test
 
 class ElispAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("elisp") {
   @Test
-  fun testDictionaryEntriesAreMaskedInCommentsAndDocstrings() {
-    // User-dictionary words are masked (replaced by a dummy) before the prose
-    // reaches LanguageTool. This exercises the elisp path end to end: it only
-    // works because ElispAnnotatedTextBuilder forwards setSettings to its inner
-    // Markdown builder, which builds the masker. Multi-word entries work because
-    // the phrase is contiguous in the comment/docstring text; longest-match-wins
-    // masks the whole "GreenTeam Penciltest" rather than the bare "GreenTeam".
+  fun testDictionaryEntriesInCommentsAndDocstrings() {
+    // A multi-word entry is joined into one token before the prose reaches
+    // LanguageTool; a single-word entry is left exactly as written. This
+    // exercises the elisp path end to end: it only works because
+    // ElispAnnotatedTextBuilder forwards setSettings to its inner Markdown
+    // builder. Longest-match-wins means the phrase is joined as a unit rather
+    // than the bare "GreenTeam" inside it.
     val dictionary =
       Settings(_allDictionaries = mapOf("en-US" to setOf("GreenTeam Penciltest", "GreenTeam")))
 
     // Multi-word entry inside a line comment.
     assertPlainText(
       ";; The GreenTeam Penciltest audit was thorough.\n",
-      "\n\n\nThe Dummy0 audit was thorough.",
+      "\n\n\nThe GreenTeamPenciltest audit was thorough.",
       "elisp",
       dictionary,
     )
 
-    // Single-word entry inside a defun docstring.
+    // Single-word entry inside a defun docstring: untouched.
     assertPlainText(
       "(defun foo ()\n  \"Run the GreenTeam audit now.\"\n  nil)\n",
-      "\n\n\nRun the Dummy0 audit now.",
+      "\n\n\nRun the GreenTeam audit now.",
       "elisp",
       dictionary,
     )

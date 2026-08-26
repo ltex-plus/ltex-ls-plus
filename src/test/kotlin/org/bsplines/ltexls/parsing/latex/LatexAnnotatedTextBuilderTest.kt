@@ -607,24 +607,30 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
   }
 
   @Test
-  fun testDictionaryMasking() {
+  fun testDictionaryEntryJoining() {
     val settings =
       Settings(
         _allDictionaries =
           mapOf(Pair("en-US", setOf("Müller", "GreenTeam Penciltest"))),
       )
 
-    // Dictionary entries are masked over the assembled plain text, so an entry
-    // matches even when the word is split by an accent command in the source.
-    assertPlainText("Herr M\\\"uller kommt.\n", "Herr Dummy0 kommt. ", settings)
+    // A single-word entry is left exactly as written, even when the source
+    // splits it with an accent command: nothing needs joining, so LanguageTool
+    // sees the user's own word.
+    assertPlainText("Herr M\\\"uller kommt.\n", "Herr M\u00fcller kommt. ", settings)
 
-    // A phrase wrapped over a source line break is contiguous in the plain
-    // text (the newline collapses to a space) and is masked as a unit.
-    assertPlainText("the GreenTeam\nPenciltest firm\n", "the Dummy0 firm ", settings)
+    // A phrase wrapped over a source line break is contiguous in the plain text
+    // (the newline collapses to a space), so it is joined into one token.
+    assertPlainText("the GreenTeam\nPenciltest firm\n", "the GreenTeamPenciltest firm ", settings)
 
     // A tie (`~`) becomes a no-break space in the plain text; space separators
-    // are normalized before matching, so the normal-space entry still masks.
-    assertPlainText("the GreenTeam~Penciltest firm\n", "the Dummy0 firm ", settings)
+    // are normalized before matching, so the normal-space entry still matches,
+    // and the tie is dropped by the join along with a plain space.
+    assertPlainText(
+      "the GreenTeam~Penciltest firm\n",
+      "the GreenTeamPenciltest firm ",
+      settings,
+    )
   }
 
   private fun assertPlainTextPositions(

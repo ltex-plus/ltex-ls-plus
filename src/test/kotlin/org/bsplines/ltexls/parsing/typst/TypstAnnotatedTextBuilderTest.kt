@@ -419,8 +419,8 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       @ABI:pls are interfaces.
       """.trimIndent(),
       """
-      Dummy53 application binary interface
-      Dummy54 method of lines
+      ABI application binary interface
+      MOL method of lines
       An element protects memory.
       The object is a procedure.
       Elements are interfaces.
