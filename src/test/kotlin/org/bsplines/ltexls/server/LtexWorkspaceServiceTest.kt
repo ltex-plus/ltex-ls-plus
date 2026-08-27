@@ -60,34 +60,6 @@ class LtexWorkspaceServiceTest {
   }
 
   @Test
-  fun testCheckDocumentRejectsMissingOrIncompatibleArguments() {
-    val service = LtexWorkspaceService(LtexLanguageServer())
-
-    val nonPrimitiveUri = JsonObject()
-    nonPrimitiveUri.add("uri", JsonArray())
-
-    val invalidArgumentLists: List<List<Any>?> =
-      listOf(
-        null,
-        emptyList(),
-        listOf(JsonArray()),
-        listOf(JsonObject()),
-        listOf(nonPrimitiveUri),
-      )
-
-    for (arguments in invalidArgumentLists) {
-      val params = ExecuteCommandParams("_ltex.checkDocument", arguments)
-      val result = (service.executeCommand(params).get() as JsonElement).asJsonObject
-
-      assertFalse(result["success"].asBoolean)
-      assertEquals(
-        I18n.format("invalidCommandArguments", "_ltex.checkDocument"),
-        result["errorMessage"].asString,
-      )
-    }
-  }
-
-  @Test
   fun testGetServerStatus() {
     val server = LtexLanguageServer()
     val service = LtexWorkspaceService(server)
@@ -197,6 +169,63 @@ class LtexWorkspaceServiceTest {
     }
   }
 
+  // All four object-payload commands share one argument gate, so all four must
+  // reject a payload the server cannot interpret rather than abort the request.
+  @Test
+  fun testCommandsRejectMissingOrIncompatibleArguments() {
+    val service = LtexWorkspaceService(LtexLanguageServer())
+
+    val nonPrimitiveUri = JsonObject()
+    nonPrimitiveUri.add("uri", JsonArray())
+
+    val invalidArgumentLists: List<List<Any>?> =
+      listOf(
+        null,
+        emptyList(),
+        listOf(JsonArray()),
+        listOf(JsonObject()),
+      )
+
+    for (command: String in COMMANDS_TAKING_AN_OBJECT) {
+      for (arguments in invalidArgumentLists) {
+        assertInvalidArguments(service, command, arguments)
+      }
+    }
+
+    // `uri` is the one key _ltex.checkDocument requires; the other three ignore it.
+    assertInvalidArguments(service, "_ltex.checkDocument", listOf(nonPrimitiveUri))
+  }
+
+  // The entries key is a { language: [entry, ...] } object. Gson throws rather than
+  // returning null on the wrong shape, so each level needs a guard.
+  @Test
+  fun testExternalFileCommandsRejectMalformedEntries() {
+    val service = LtexWorkspaceService(LtexLanguageServer())
+
+    val entriesNotAnObject = JsonObject()
+    entriesNotAnObject.add("words", JsonArray())
+
+    val languageNotAnArray = JsonObject()
+    val notAnArray = JsonObject()
+    notAnArray.addProperty("en-US", "newword")
+    languageNotAnArray.add("words", notAnArray)
+
+    val entryNotAPrimitive = JsonObject()
+    val arrayOfObjects = JsonArray()
+    arrayOfObjects.add(JsonObject())
+    val byLanguage = JsonObject()
+    byLanguage.add("en-US", arrayOfObjects)
+    entryNotAPrimitive.add("words", byLanguage)
+
+    // A payload missing the entries key entirely, plus the three wrong shapes.
+    val malformedPayloads =
+      listOf(JsonObject(), entriesNotAnObject, languageNotAnArray, entryNotAPrimitive)
+
+    for (argument in malformedPayloads) {
+      assertInvalidArguments(service, "_ltex.addToDictionary", listOf(argument))
+    }
+  }
+
   @Test
   fun testAddToDictionaryCommandFailsWithoutExternalFile() {
     val server = LtexLanguageServer()
@@ -213,6 +242,30 @@ class LtexWorkspaceServiceTest {
   }
 
   companion object {
+    private val COMMANDS_TAKING_AN_OBJECT =
+      listOf(
+        "_ltex.checkDocument",
+        "_ltex.addToDictionary",
+        "_ltex.disableRules",
+        "_ltex.hideFalsePositives",
+      )
+
+    private fun assertInvalidArguments(
+      service: LtexWorkspaceService,
+      command: String,
+      arguments: List<Any>?,
+    ) {
+      val params = ExecuteCommandParams(command, arguments)
+      val result: JsonObject = (service.executeCommand(params).get() as JsonElement).asJsonObject
+
+      assertFalse(result["success"].asBoolean, command)
+      assertEquals(
+        I18n.format("invalidCommandArguments", command),
+        result["errorMessage"].asString,
+        command,
+      )
+    }
+
     // Builds { <settingName>: { "en-US": [entries...] } } — the ltex settings
     // section as the server receives it via workspace/configuration.
     private fun buildSettings(

@@ -8,6 +8,8 @@
 
 package org.bsplines.ltexls.server
 
+import com.google.gson.JsonArray
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.sun.management.OperatingSystemMXBean
 import org.bsplines.ltexls.tools.FileIo
@@ -80,8 +82,7 @@ class LtexWorkspaceService(
   override fun executeCommand(params: ExecuteCommandParams): CompletableFuture<Any> =
     when (params.command) {
       CHECK_DOCUMENT_COMMAND_NAME -> {
-        commandArgument(params)?.let(::executeCheckDocumentCommand)
-          ?: failCommand(I18n.format("invalidCommandArguments", params.command))
+        withCommandArgument(params, ::executeCheckDocumentCommand)
       }
 
       GET_SERVER_STATUS_COMMAND_NAME -> {
@@ -89,15 +90,15 @@ class LtexWorkspaceService(
       }
 
       ADD_TO_DICTIONARY_COMMAND_NAME -> {
-        executeAddToDictionaryCommand(params.arguments[0] as JsonObject)
+        withCommandArgument(params, ::executeAddToDictionaryCommand)
       }
 
       DISABLE_RULES_COMMAND_NAME -> {
-        executeDisableRulesCommand(params.arguments[0] as JsonObject)
+        withCommandArgument(params, ::executeDisableRulesCommand)
       }
 
       HIDE_FALSE_POSITIVES_COMMAND_NAME -> {
-        executeHideFalsePositivesCommand(params.arguments[0] as JsonObject)
+        withCommandArgument(params, ::executeHideFalsePositivesCommand)
       }
 
       else -> {
@@ -111,13 +112,28 @@ class LtexWorkspaceService(
   // they differ only in the argument key and which setting's external file to
   // write, so they all delegate to executeAppendToExternalFileCommand.
   fun executeAddToDictionaryCommand(arguments: JsonObject): CompletableFuture<Any> =
-    executeAppendToExternalFileCommand(arguments, "dictionary", "words")
+    executeAppendToExternalFileCommand(
+      arguments,
+      ADD_TO_DICTIONARY_COMMAND_NAME,
+      "dictionary",
+      "words",
+    )
 
   fun executeDisableRulesCommand(arguments: JsonObject): CompletableFuture<Any> =
-    executeAppendToExternalFileCommand(arguments, "disabledRules", "ruleIds")
+    executeAppendToExternalFileCommand(
+      arguments,
+      DISABLE_RULES_COMMAND_NAME,
+      "disabledRules",
+      "ruleIds",
+    )
 
   fun executeHideFalsePositivesCommand(arguments: JsonObject): CompletableFuture<Any> =
-    executeAppendToExternalFileCommand(arguments, "hiddenFalsePositives", "falsePositives")
+    executeAppendToExternalFileCommand(
+      arguments,
+      HIDE_FALSE_POSITIVES_COMMAND_NAME,
+      "hiddenFalsePositives",
+      "falsePositives",
+    )
 
   // Appends each language's entries to the first external file configured for that
   // setting/language (resolved during settings expansion, see Settings), then
@@ -125,17 +141,22 @@ class LtexWorkspaceService(
   // could be written, the command fails.
   private fun executeAppendToExternalFileCommand(
     arguments: JsonObject,
+    commandName: String,
     settingName: String,
     argumentKey: String,
   ): CompletableFuture<Any> {
-    val entriesByLanguage: JsonObject = arguments.getAsJsonObject(argumentKey)
+    val entriesByLanguage: JsonObject =
+      arguments.get(argumentKey)?.takeIf { it.isJsonObject }?.asJsonObject
+        ?: return failCommand(I18n.format("invalidCommandArguments", commandName))
     val settings = this.languageServer.settingsManager.settings
 
     var appendedAny = false
     var languageWithoutExternalFile: String? = null
 
     for ((language: String, element) in entriesByLanguage.entrySet()) {
-      val entries: List<String> = element.asJsonArray.map { it.asString }
+      val entries: List<String> =
+        stringArray(element)
+          ?: return failCommand(I18n.format("invalidCommandArguments", commandName))
       val filePath: String? = settings.firstExternalSettingFile(settingName, language)
 
       if (filePath == null) {
@@ -160,13 +181,26 @@ class LtexWorkspaceService(
     return CompletableFuture.completedFuture(jsonObject)
   }
 
-  // A command payload is a single JSON object passed as the first argument. All
-  // three ways a client can deviate from that — omitting `arguments` entirely
+  // Every command payload is a single JSON object passed as the first argument.
+  // All three ways a client can deviate from that — omitting `arguments` entirely
   // (the field is optional per the LSP spec), sending an empty list, or sending a
   // non-object — used to abort the request with an InternalError instead of a
   // failed command result.
-  private fun commandArgument(params: ExecuteCommandParams): JsonObject? =
-    params.arguments?.firstOrNull() as? JsonObject
+  private fun withCommandArgument(
+    params: ExecuteCommandParams,
+    execute: (JsonObject) -> CompletableFuture<Any>,
+  ): CompletableFuture<Any> =
+    (params.arguments?.firstOrNull() as? JsonObject)?.let(execute)
+      ?: failCommand(I18n.format("invalidCommandArguments", params.command))
+
+  // A per-language entry list. Gson is lenient in ways that throw rather than
+  // return null — `asJsonArray` on a non-array and `asString` on an object both
+  // raise — so both are checked before conversion.
+  private fun stringArray(element: JsonElement): List<String>? {
+    if (!element.isJsonArray) return null
+    val array: JsonArray = element.asJsonArray
+    return if (array.all { it.isJsonPrimitive }) array.map { it.asString } else null
+  }
 
   // Appends the given entries to the external file. Mirrors the format of
   // vscode-ltex-plus's ExternalFileManager.appendToFile so a file stays compatible
