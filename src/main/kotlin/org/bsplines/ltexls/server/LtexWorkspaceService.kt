@@ -9,7 +9,6 @@
 package org.bsplines.ltexls.server
 
 import com.google.gson.JsonObject
-import com.google.gson.JsonElement
 import com.sun.management.OperatingSystemMXBean
 import org.bsplines.ltexls.tools.FileIo
 import org.bsplines.ltexls.tools.I18n
@@ -81,8 +80,8 @@ class LtexWorkspaceService(
   override fun executeCommand(params: ExecuteCommandParams): CompletableFuture<Any> =
     when (params.command) {
       CHECK_DOCUMENT_COMMAND_NAME -> {
-        commandArguments(params)?.let(::executeCheckDocumentCommand)
-          ?: failCommand("Invalid arguments for command '${params.command}'")
+        commandArgument(params)?.let(::executeCheckDocumentCommand)
+          ?: failCommand(I18n.format("invalidCommandArguments", params.command))
       }
 
       GET_SERVER_STATUS_COMMAND_NAME -> {
@@ -161,8 +160,13 @@ class LtexWorkspaceService(
     return CompletableFuture.completedFuture(jsonObject)
   }
 
-  private fun commandArguments(params: ExecuteCommandParams): JsonObject? =
-    (params.arguments.firstOrNull() as? JsonElement)?.takeIf { it.isJsonObject }?.asJsonObject
+  // A command payload is a single JSON object passed as the first argument. All
+  // three ways a client can deviate from that — omitting `arguments` entirely
+  // (the field is optional per the LSP spec), sending an empty list, or sending a
+  // non-object — used to abort the request with an InternalError instead of a
+  // failed command result.
+  private fun commandArgument(params: ExecuteCommandParams): JsonObject? =
+    params.arguments?.firstOrNull() as? JsonObject
 
   // Appends the given entries to the external file. Mirrors the format of
   // vscode-ltex-plus's ExternalFileManager.appendToFile so a file stays compatible
@@ -196,7 +200,11 @@ class LtexWorkspaceService(
   }
 
   fun executeCheckDocumentCommand(arguments: JsonObject): CompletableFuture<Any> {
-    val uriStr: String = arguments.get("uri").asString
+    val uriStr: String =
+      arguments.get("uri")?.takeIf { it.isJsonPrimitive }?.asString
+        ?: return failCommand(
+          I18n.format("invalidCommandArguments", CHECK_DOCUMENT_COMMAND_NAME),
+        )
     var codeLanguageId: String? = arguments.get("codeLanguageId")?.asString
     var text: String? = arguments.get("text")?.asString
 
