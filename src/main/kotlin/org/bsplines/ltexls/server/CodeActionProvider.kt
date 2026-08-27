@@ -38,6 +38,10 @@ import java.net.URLEncoder
 class CodeActionProvider(
   val settingsManager: SettingsManager,
 ) {
+  // Mirrors LtexLanguageServer.serverManagesExternalFiles, which is only known
+  // once initializationOptions have been read — after this provider is built.
+  var serverManagesExternalFiles: Boolean = false
+
   fun createDiagnostic(
     match: LanguageToolRuleMatch,
     document: LtexTextDocumentItem,
@@ -131,23 +135,23 @@ class CodeActionProvider(
     }
 
     if (hideFalsePositivesMatches.isNotEmpty()) {
-      result.add(
-        Either.forRight(
-          getHideFalsePositivesCodeAction(
-            document,
-            hideFalsePositivesMatches,
-            annotatedTextFragments,
-          ),
-        ),
-      )
+      val hideFalsePositivesCodeAction: CodeAction? =
+        getHideFalsePositivesCodeAction(
+          document,
+          hideFalsePositivesMatches,
+          annotatedTextFragments,
+        )
+      if (hideFalsePositivesCodeAction != null) {
+        result.add(Either.forRight(hideFalsePositivesCodeAction))
+      }
     }
 
     if (disableRulesMatches.isNotEmpty()) {
-      result.add(
-        Either.forRight(
-          getDisableRulesCodeAction(document, disableRulesMatches, annotatedTextFragments),
-        ),
-      )
+      val disableRulesCodeAction: CodeAction? =
+        getDisableRulesCodeAction(document, disableRulesMatches, annotatedTextFragments)
+      if (disableRulesCodeAction != null) {
+        result.add(Either.forRight(disableRulesCodeAction))
+      }
     }
 
     return result
@@ -238,6 +242,7 @@ class CodeActionProvider(
     }
 
     if (unknownWordsMap.isEmpty()) return null
+    if (!canPersistExternally("dictionary", unknownWordsMap.keys)) return null
 
     val arguments = JsonObject()
     arguments.addProperty("uri", document.uri)
@@ -261,12 +266,30 @@ class CodeActionProvider(
     return codeAction
   }
 
+  // When the server persists these settings itself, a quick fix can only
+  // complete if at least one of the payload's languages has a ":"-prefixed
+  // external file: the command appends to the first file listed for a language
+  // and fails outright when it could write nothing at all. Lean clients discard
+  // a failed command result without showing it — Helix does not implement
+  // window/showMessage either — so an action we already know cannot complete
+  // would look like it worked and silently do nothing. Offer it only when it can
+  // actually be carried out. Editor-managed clients are unaffected: there the
+  // client performs the write, so no external file need be configured for us.
+  private fun canPersistExternally(
+    settingName: String,
+    languages: Set<String>,
+  ): Boolean {
+    if (!this.serverManagesExternalFiles) return true
+    val settings = this.settingsManager.settings
+    return languages.any { settings.firstExternalSettingFile(settingName, it) != null }
+  }
+
   @Suppress("LoopWithTooManyJumpStatements")
   private fun getHideFalsePositivesCodeAction(
     document: LtexTextDocumentItem,
     hideFalsePositivesMatches: List<LanguageToolRuleMatch>,
     annotatedTextFragments: List<AnnotatedTextFragment>,
-  ): CodeAction {
+  ): CodeAction? {
     val ruleIdSentencePairs = ArrayList<Pair<String, String>>()
     val hiddenFalsePositivesMap = HashMap<String, MutableList<String>>()
     val falsePositivesJsonObject = JsonObject()
@@ -324,6 +347,8 @@ class CodeActionProvider(
       diagnostics.add(createDiagnostic(match, document))
     }
 
+    if (!canPersistExternally("hiddenFalsePositives", hiddenFalsePositivesMap.keys)) return null
+
     val arguments = JsonObject()
     arguments.addProperty("uri", document.uri)
     arguments.add("falsePositives", falsePositivesJsonObject)
@@ -351,7 +376,7 @@ class CodeActionProvider(
     document: LtexTextDocumentItem,
     disableRuleMatches: List<LanguageToolRuleMatch>,
     annotatedTextFragments: List<AnnotatedTextFragment>,
-  ): CodeAction {
+  ): CodeAction? {
     val ruleIdsMap = HashMap<String, MutableList<String>>()
     val ruleIdsJsonObject = JsonObject()
     val diagnostics = ArrayList<Diagnostic>()
@@ -374,6 +399,8 @@ class CodeActionProvider(
 
       diagnostics.add(createDiagnostic(match, document))
     }
+
+    if (!canPersistExternally("disabledRules", ruleIdsMap.keys)) return null
 
     val arguments = JsonObject()
     arguments.addProperty("uri", document.uri)
