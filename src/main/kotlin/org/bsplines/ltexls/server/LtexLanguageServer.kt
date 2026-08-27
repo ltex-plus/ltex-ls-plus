@@ -188,6 +188,9 @@ class LtexLanguageServer :
     }
 
     this.serverManagesExternalFiles = readServerManagesExternalFiles(initializationOptionsObject)
+    // The code action provider needs the same flag: in server-managed mode it
+    // only offers a quick fix whose external file actually exists.
+    this.codeActionProvider.serverManagesExternalFiles = this.serverManagesExternalFiles
     return localeLanguage
   }
 
