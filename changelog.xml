@@ -29,6 +29,9 @@
       <action type="update">
         Update to lsp-cli-plus 3.0.0. See [lsp-cli-plus release notes](https://github.com/ltex-plus/lsp-cli-plus/releases/tag/3.0.0).
       </action>
+      <action type="fix" due-to="Andrea Alberti (@alberti42)">
+        Say what a magic comment expects when its syntax is wrong, instead of reporting it as an unknown setting. `dictionary` and `rules` are cumulative and require an operator before the `=` — `dictionary+=WORD` to accept a word, `-=` to stop accepting one, `#=` to revert to the global setting — but the operator is part of what the parser matches on, so a plain `dictionary=WORD` matched nothing and fell through to the unknown-setting branch, warning `Ignoring unknown inline setting with name 'dictionary'`. That tells users a supported setting does not exist, which is how [discussion 205](https://github.com/ltex-plus/ltex-ls-plus/discussions/205) came to be filed as a request for a dictionary magic comment that has been there all along; the operator-less forms are now reported with the message the parser already had for a malformed operator, which names `+=`, `-=` and `#=`. The related warning for a line that cannot be parsed at all now also names the expected form, since the same report shows a user pasting the JSON value of the `ltex.dictionary` client setting into a magic comment, where values are whitespace-separated and JSON is not accepted. Both are message changes: no magic comment that worked before parses differently, and settings that genuinely are not supported still report as unknown.
+      </action>
       <action type="fix" issue="ltex-plus/vscode-ltex-plus#206" due-to="Daniel Spitzer (@spitzerd)">
         Fix StackOverflowError for Typst, AsciiDoc, and Org documents. The issue occurred on long comments, for example.
       </action>
