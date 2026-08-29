@@ -25,6 +25,13 @@ object SettingsParser {
     Regex("^(?:ltex\\.)?dictionary(?<op>[+#-])$", RegexOption.IGNORE_CASE)
   private val RULE_REGEX = Regex("^(?:ltex\\.)?rules(?<op>[+#-])$", RegexOption.IGNORE_CASE)
 
+  // The two cumulative settings written without their required "+"/"-"/"#"
+  // operator, e.g. "dictionary=Foo". Such a key matches neither regex above, so
+  // without this it reaches the "unknown setting" branch and the warning claims a
+  // supported setting does not exist -- the very confusion behind discussion #205.
+  private val CUMULATIVE_WITHOUT_OPERATOR_REGEX =
+    Regex("^(?:ltex\\.)?(?<name>dictionary|rules)$", RegexOption.IGNORE_CASE)
+
   @Suppress("UnusedPrivateProperty") // False positives are too complex to parse for now.
   private val FALSE_POSITIVE_REGEX =
     Regex("^(?:ltex\\.)?hiddenFalsePositives(?<op>[+#-])$", RegexOption.IGNORE_CASE)
@@ -159,6 +166,13 @@ object SettingsParser {
                 )
               }
             },
+          )
+        } != null -> {
+        }
+
+        CUMULATIVE_WITHOUT_OPERATOR_REGEX.matchEntire(key)?.let {
+          Logging.LOGGER.warning(
+            I18n.format("ignoringMalformedInlineSettingOperation", "", key),
           )
         } != null -> {
         }
