@@ -19,9 +19,9 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
   protected var curChar = '\u0000'
   var characterProcessed = false
     protected set
-  var codeBlockDelimiter = BracketType.RoundBracket
-    protected set
   val codeMode = CodeModeHandler()
+  val codeBlockDelimiter: BracketType
+    get() = this.codeMode.codeBlockDelimiter
 
   var isPreventingInfiniteLoops = false
 
@@ -82,10 +82,8 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
       }
       addMarkup(matchResult.value, interpretAsString)
       if (startofCodeBlock) {
-        codeBlockDelimiter = delimiter
-        codeMode.adjustBracketsCounter(1)
+        codeMode.openBlock(delimiter)
         codeMode.stringCounter = 0
-        codeMode.mode = true
       }
     }
   }
@@ -120,6 +118,18 @@ abstract class CharacterBasedCodeAnnotatedTextBuilder(
   }
 
   protected abstract fun processCharacter()
+
+  /**
+   * The last character before the current position that is not whitespace, or
+   * `null` if there is none. Lets a caller see what a construct is chained onto
+   * even when whitespace separates them (`#counter(page).display("1")`,
+   * `} else {`, `#let f = (n) => ...`).
+   */
+  fun previousNonWhitespaceCharacter(): Char? {
+    var previousPos = this.pos - 1
+    while (previousPos >= 0 && this.code[previousPos].isWhitespace()) previousPos--
+    return if (previousPos < 0) null else this.code[previousPos]
+  }
 
   fun matchFromPosition(
     regex: Regex,

@@ -453,4 +453,142 @@ class TypstAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("typst") {
       "This is a Dummy0 to a label.\nHeading 1.\nMore text.",
     )
   }
+
+  @Test
+  fun testShowRuleWithCodeBlockBody() {
+    // https://github.com/ltex-plus/ltex-ls-plus/issues/208 Case 1
+    assertPlainText(
+      """
+      #show heading: it => { set text(font: "Bricolage Grotesque", weight: "bold"); it }
+      #show heading: it => {
+        set text(font: "Bricolage Grotesque", weight: "bold")
+        it
+      }
+      #show heading: it => [ #text(font: "Bricolage Grotesque")[#it] ]
+      #set text(font: "Bricolage Grotesque", weight: "bold")
+      #let x = { set text(font: "Bricolage Grotesque") }
+      More text.
+      """.trimIndent(),
+      "\n\nDummy0 \n\n\nMore text.",
+    )
+  }
+
+  @Test
+  fun testChainedMethodCall() {
+    // https://github.com/ltex-plus/ltex-ls-plus/issues/208 Case 2
+    assertPlainText(
+      """
+      Text before #counter(page).display("1") text after.
+      More text.
+      """.trimIndent(),
+      "Text before 1 text after.\nMore text.",
+    )
+  }
+
+  @Test
+  fun testContentBlockInCodeBlock() {
+    // https://github.com/ltex-plus/ltex-ls-plus/issues/208 Case 3
+    assertPlainText(
+      """
+      #let a = { [#text(size: 12pt)[Ahoj]] }
+      #let b = [#text(size: 12pt)[Ahoj]]
+      #{ [#text(size: 12pt)[Ahoj]] }
+      More text.
+      """.trimIndent(),
+      "Ahoj\nAhoj\nAhoj\nMore text.",
+    )
+  }
+
+  @Test
+  fun testNamedArgumentsInContentBlock() {
+    // https://github.com/ltex-plus/ltex-ls-plus/issues/208 Case 4
+    assertPlainText(
+      """
+      #grid(columns: 2, [#text(size: 9pt, fill: luma(100))[Stav]])
+      #grid(columns: 2, [#text(fill: luma(100))[Stav]])
+      #text(size: 9pt, fill: luma(100))[Stav]
+      More text.
+      """.trimIndent(),
+      "Stav\nStav\nStav\nMore text.",
+    )
+  }
+
+  @Test
+  fun testLabelFunction() {
+    // https://github.com/ltex-plus/ltex-ls-plus/issues/208 Case 5
+    assertPlainText(
+      """
+      Before. #label("article-one") After.
+      #label("article-one")
+      #ref(<article-one>)
+      More text.
+      """.trimIndent(),
+      "Before.  After.\n\n\nMore text.",
+    )
+  }
+
+  @Test
+  fun testClosureWithChainedCall() {
+    // https://github.com/ltex-plus/ltex-ls-plus/issues/209
+    assertPlainText(
+      """
+      #set heading(numbering: (n) => numbering("I.", n.pos().last()))
+      #set par(justify: true)
+      #set text(size: 11pt, font: "Inter")
+      #let formline(label, width: 100%) = { v(3em) }
+
+      A sentence.
+      """.trimIndent(),
+      "I.\n\n\n\nA sentence.",
+    )
+  }
+
+  @Test
+  fun testLambdaArrow() {
+    assertPlainText(
+      """
+      #let f = (n) => "x"
+      More text.
+      """.trimIndent(),
+      "\nMore text.",
+    )
+  }
+
+  @Test
+  fun testIfElseWithCodeBlockBodies() {
+    // `#for`/`#while`/`#if` bodies are left to FOR_WHILE_IF_REGEX and stay
+    // spell-checked, like the `#while` body in testLoops.
+    assertPlainText(
+      """
+      #if x { y(z) } else { w(v) }
+      More text.
+      """.trimIndent(),
+      " y(z)  w(v) \nMore text.",
+    )
+  }
+
+  @Test
+  fun testContentBlockAfterCall() {
+    assertPlainText(
+      """
+      #align(center)[
+        #text(size: 16pt, weight: "bold")[Nadpis]
+      ]
+      More text.
+      """.trimIndent(),
+      "\nNadpis\n\nMore text.",
+    )
+  }
+
+  @Test
+  fun testCallToUserDefinedFunction() {
+    assertPlainText(
+      """
+      #let formline(popis) = [#popis: #line(length: 5cm)]
+      #formline("Meno dieťaťa")
+      More text.
+      """.trimIndent(),
+      "\nMeno dieťaťa\nMore text.",
+    )
+  }
 }

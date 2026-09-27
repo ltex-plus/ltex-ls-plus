@@ -39,8 +39,7 @@ open class TypstAnnotatedTextBuilder(
     addMarkup(ENUM_REGEX, "\n")
     processFootnote()
     registerAbbreviation()
-    addMarkup(CODE_REGEX, "", false, true)
-    addMarkup(CODE_CURLY_BRACKETS_REGEX, "", false, true, BracketType.CurlyBracket)
+    modeHandler.processCodeStartMarkup()
     addMarkup(SQUARE_BRACKETS_REGEX_MID, "\n")
     addMarkup(FOR_WHILE_IF_REGEX)
     addMarkup(ELSE_REGEX)
@@ -62,6 +61,10 @@ open class TypstAnnotatedTextBuilder(
   }
 
   fun addBasicMarkup() {
+    // Inside a content block of code mode the markup chain of processCharacter()
+    // is never reached, so code starts have to be detected here as well.
+    modeHandler.processCodeStartMarkup()
+
     if (this.isStartOfLine) {
       addMarkup(LIST_REGEX)
       addMarkup(LEADING_WHITESPACE_REGEX)
@@ -184,8 +187,6 @@ open class TypstAnnotatedTextBuilder(
     private val FOOTNOTE_REGEX = Regex("^#footnote\\[[\\s\\S]*?\\]")
     private val FOOTNOTE_WITH_TRAILING_WHITESPACE_REGEX =
       Regex("^#footnote\\[[\\s\\S]*?\\][\\t ]+")
-    private val CODE_REGEX = Regex("^#.*?\\(")
-    private val CODE_CURLY_BRACKETS_REGEX = Regex("^#\\{")
     private val SQUARE_BRACKETS_REGEX_MID = Regex("^\\]\\[")
     private val FOR_WHILE_IF_REGEX = Regex("^(#for|#while|#if)\\s.*?(\\[|\\{)")
     private val ELSE_REGEX = Regex("^(\\]|\\})\\s*else.*?(\\[|\\{)")

@@ -8,6 +8,8 @@
 
 package org.bsplines.ltexls.parsing.typst
 
+import org.bsplines.ltexls.parsing.CharacterBasedCodeAnnotatedTextBuilder
+
 class TypstModeHandler(
   private val typstTextBuilder: TypstAnnotatedTextBuilder,
 ) {
@@ -75,7 +77,9 @@ class TypstModeHandler(
       typstTextBuilder.addMarkup(FILENAME_REGEX, typstTextBuilder.generateDummy())
       // String within code mode to be spell checked
       typstTextBuilder.addText(typstTextBuilder.curString)
-    } else if (typstTextBuilder.codeMode.codeModeContentBlock) {
+    } else if (typstTextBuilder.codeMode.codeModeContentBlock &&
+      !typstTextBuilder.codeMode.isContentBlockCode()
+    ) {
       typstTextBuilder.addBasicMarkup()
       typstTextBuilder.addText(typstTextBuilder.curString)
     } else {
@@ -138,14 +142,61 @@ class TypstModeHandler(
     }
   }
 
+  /**
+   * Markup that starts a code construct: a call, a code block, the argument of
+   * `#label`, a chained method call, or a lambda arrow. Also used from inside a
+   * content block of code mode, where the markup chain of
+   * [TypstAnnotatedTextBuilder.processCharacter] is never reached.
+   */
+  fun processCodeStartMarkup() {
+    typstTextBuilder.addMarkup(LABEL_FUNCTION_REGEX)
+    typstTextBuilder.addMarkup(CODE_REGEX, "", false, true)
+    typstTextBuilder.addMarkup(
+      CODE_CURLY_BRACKETS_REGEX,
+      "",
+      false,
+      true,
+      CharacterBasedCodeAnnotatedTextBuilder.BracketType.CurlyBracket,
+    )
+    val curString = typstTextBuilder.curString
+    val couldChain = curString == "." || curString == "=" || curString == " " || curString == "\t"
+    if (typstTextBuilder.characterProcessed || !couldChain) return
+
+    // Only a value a call can be chained onto may open code mode here, so that
+    // prose like `2.5(...)` or `else => ...` stays prose.
+    val previousChar = typstTextBuilder.previousNonWhitespaceCharacter()
+    val endsValue =
+      previousChar != null && (previousChar.isLetterOrDigit() || previousChar in ")]\"_")
+    if (!endsValue) return
+
+    if (curString == ".") {
+      typstTextBuilder.addMarkup(METHOD_CALL_REGEX, "", false, true)
+    } else {
+      typstTextBuilder.addMarkup(LAMBDA_ARROW_REGEX)
+    }
+  }
+
   companion object {
     private val QUOTATION_MARK_WHITESPACE_REGEX = Regex("^\"\\s*")
     private val WHITESPACE_QUOTATION_MARK_REGEX = Regex("^\\s*(?=\")")
-    private val FILENAME_REGEX = Regex("^.+\\.\\w{1,4}")
+
+    // Never let the match run past the closing quotation mark: doing so used to
+    // leave code mode's string state stuck on for the rest of the document
+    // (e.g. `numbering("I.", n.pos())`), which made every following `#set` and
+    // `#let` leak into the checked text.
+    private val FILENAME_REGEX = Regex("^[^\"]+\\.\\w{1,4}")
     private val DOT_REGEX = Regex("^.(?=\\.)")
     private val PROPERTY_REGEX =
       Regex(
         "^(font|fit|style|weight|top-edge|bottom-edge|lang|region|script|number-type|number-width)\\s?:\\s?\".*?\"",
       )
+    private val LABEL_FUNCTION_REGEX = Regex("^#label\\s*\\(\\s*\"[^\"]*\"\\s*\\)")
+    private val CODE_REGEX = Regex("^#[^{}\\r\\n]*?\\(")
+
+    // `#for`/`#while`/`#if` are left to FOR_WHILE_IF_REGEX, which drops only
+    // their header and keeps the body spell-checked.
+    private val CODE_CURLY_BRACKETS_REGEX = Regex("^#(?!(?:for|while|if)\\s)[^{}\\[\\]\\r\\n]*?\\{")
+    private val METHOD_CALL_REGEX = Regex("^\\.\\w+\\s*\\(")
+    private val LAMBDA_ARROW_REGEX = Regex("^[ \\t]*=>[^\\r\\n]*")
   }
 }
