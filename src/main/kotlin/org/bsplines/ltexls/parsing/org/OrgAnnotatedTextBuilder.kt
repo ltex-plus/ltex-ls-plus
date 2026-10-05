@@ -18,7 +18,11 @@ class OrgAnnotatedTextBuilder(
   private var appendAtEndOfLine = ""
   private var itemBodyIndent = -1
   private val elementTypeStack: ArrayDeque<ElementType> = ArrayDeque(listOf(ElementType.Paragraph))
-  private var latexEnvironmentName: String? = null
+
+  // Start offsets of the closing lines of the open blocks, drawers, dynamic blocks and LaTeX
+  // environments, innermost last. Each entry belongs to one of these element types on
+  // elementTypeStack.
+  private val closingLineStartStack = ArrayDeque<Int>()
   private val objectTypeStack = ArrayDeque<ObjectType>()
 
   override fun processCharacter() {
@@ -85,43 +89,11 @@ class OrgAnnotatedTextBuilder(
       popElementType()
     }
 
-    if (isInBlockElementType()) {
-      matchResult = matchFromPosition(BLOCK_END_REGEX)
-
-      when (matchResult) {
-        null -> {
-          addMarkup(this.curString)
-        }
-
-        else -> {
-          popElementType()
-          addMarkup(matchResult.value)
-        }
-      }
-    } else if (this.elementTypeStack.contains(ElementType.PropertyDrawer)) {
-      matchResult = matchFromPosition(DRAWER_END_REGEX)
-
-      when (matchResult) {
-        null -> {
-          addMarkup(this.curString)
-        }
-
-        else -> {
-          popElementType()
-          addMarkup(matchResult.value)
-        }
-      }
-    } else if (this.elementTypeStack.contains(ElementType.LatexEnvironment)) {
-      if ((matchFromPosition(LATEX_ENVIRONMENT_END_REGEX)?.also { matchResult = it } != null) &&
-        (this.latexEnvironmentName != null) &&
-        (this.latexEnvironmentName == matchResult?.groupValues?.get(1))
-      ) {
-        popElementType()
-        this.latexEnvironmentName = null
-        addMarkup(matchResult?.value)
-      } else {
-        addMarkup(this.curString)
-      }
+    if (this.pos - this.indentation == this.closingLineStartStack.lastOrNull()) {
+      closeContainerElement()
+      addMarkup(this.code.substring(this.pos, findLineEnd(this.pos)))
+    } else if (isInIgnoredElementType()) {
+      addMarkup(this.curString)
     } else if (
       (this.indentation == 0) &&
       (matchFromPosition(HEADLINE_COMMENT_REGEX)?.also { matchResult = it } != null)
@@ -136,6 +108,12 @@ class OrgAnnotatedTextBuilder(
       addMarkup(matchResult?.value, "\n")
     } else if (matchFromPosition(CAPTION_PREFIX_REGEX)?.also { matchResult = it } != null) {
       addMarkup(matchResult?.value)
+    } else if (
+      matchFromPosition(PROSE_KEYWORD_PREFIX_REGEX)?.also { matchResult = it } != null
+    ) {
+      // Like a headline: the value is prose, but it stands in its own paragraph.
+      this.appendAtEndOfLine = "\n"
+      addMarkup(matchResult?.value, "\n")
     } else if (
       matchFromPosition(AFFILIATED_KEYWORDS_REGEX)?.also { matchResult = it } != null
     ) {
@@ -156,34 +134,34 @@ class OrgAnnotatedTextBuilder(
           else -> ElementType.GreaterSpecialBlock
         }
 
-      this.elementTypeStack.addLast(elementType)
-      addMarkup(matchResult?.value)
-    } else if (matchFromPosition(BLOCK_END_REGEX)?.also { matchResult = it } != null) {
-      popElementType()
+      val closingRegex =
+        Regex(
+          "^[ \t]*#\\+END_" + Regex.escape(blockType ?: "") + "[ \t]*$",
+          setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE),
+        )
+      openContainerElement(elementType, matchResult, closingRegex)
+    } else if (
+      (matchFromPosition(BLOCK_END_REGEX)?.also { matchResult = it } != null) ||
+      (matchFromPosition(DRAWER_END_REGEX)?.also { matchResult = it } != null) ||
+      (matchFromPosition(DYNAMIC_BLOCK_END_REGEX)?.also { matchResult = it } != null)
+    ) {
+      // Closing line without a matching opening line.
       addMarkup(matchResult?.value)
     } else if (matchFromPosition(DRAWER_BEGIN_REGEX)?.also { matchResult = it } != null) {
       val drawerName: String? = matchResult?.groups?.get(1)?.value
 
-      if ((drawerName != null) && drawerName.equals("PROPERTIES", ignoreCase = true)) {
-        this.elementTypeStack.addLast(ElementType.PropertyDrawer)
-      } else {
-        this.elementTypeStack.addLast(ElementType.Drawer)
-      }
+      val elementType: ElementType =
+        if ((drawerName != null) && drawerName.equals("PROPERTIES", ignoreCase = true)) {
+          ElementType.PropertyDrawer
+        } else {
+          ElementType.Drawer
+        }
 
-      addMarkup(matchResult?.value)
-    } else if (matchFromPosition(DRAWER_END_REGEX)?.also { matchResult = it } != null) {
-      popElementType()
-      addMarkup(matchResult?.value)
+      openContainerElement(elementType, matchResult, DRAWER_CLOSING_REGEX)
     } else if (
       matchFromPosition(DYNAMIC_BLOCK_BEGIN_REGEX)?.also { matchResult = it } != null
     ) {
-      this.elementTypeStack.addLast(ElementType.DynamicBlock)
-      addMarkup(matchResult?.value)
-    } else if (
-      matchFromPosition(DYNAMIC_BLOCK_END_REGEX)?.also { matchResult = it } != null
-    ) {
-      popElementType()
-      addMarkup(matchResult?.value)
+      openContainerElement(ElementType.DynamicBlock, matchResult, DYNAMIC_BLOCK_CLOSING_REGEX)
     } else if (
       matchFromPosition(FOOTNOTE_DEFINITION_REGEX)?.also { matchResult = it } != null
     ) {
@@ -223,14 +201,82 @@ class OrgAnnotatedTextBuilder(
     } else if (
       matchFromPosition(LATEX_ENVIRONMENT_BEGIN_REGEX)?.also { matchResult = it } != null
     ) {
-      this.elementTypeStack.addLast(ElementType.LatexEnvironment)
-      this.latexEnvironmentName = matchResult?.groups?.get(1)?.value
-      addMarkup(matchResult?.value)
+      val closingRegex =
+        Regex(
+          "\\\\end\\{" + Regex.escape(matchResult?.groupValues?.get(1) ?: "") + "\\}[ \t]*$",
+          setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE),
+        )
+      openContainerElement(ElementType.LatexEnvironment, matchResult, closingRegex)
     } else {
       elementFound = false
     }
 
     return elementFound
+  }
+
+  // Org treats an opening line as a block, drawer or environment only if its closing line
+  // follows before the next headline and inside the enclosing element. Otherwise the opening
+  // line is an ordinary line, and the lines after it are parsed as usual.
+  private fun openContainerElement(
+    elementType: ElementType,
+    openingMatchResult: MatchResult?,
+    closingRegex: Regex,
+  ) {
+    val openingLine: String = openingMatchResult?.value ?: ""
+    val lineStart: Int = this.pos - this.indentation
+    val closingLineStart: Int? = findClosingLineStart(closingRegex, this.pos + openingLine.length)
+
+    if (closingLineStart == null) {
+      addMarkup(openingLine)
+    } else if (closingLineStart == lineStart) {
+      // A LaTeX environment that closes on its opening line.
+      addMarkup(this.code.substring(this.pos, findLineEnd(this.pos)))
+    } else {
+      this.elementTypeStack.addLast(elementType)
+      this.closingLineStartStack.addLast(closingLineStart)
+      addMarkup(openingLine)
+    }
+  }
+
+  private fun findClosingLineStart(
+    closingRegex: Regex,
+    searchStart: Int,
+  ): Int? {
+    var limit: Int = this.closingLineStartStack.lastOrNull() ?: this.code.length
+    val headlineMatcher = HEADLINE_START_REGEX.toPattern().matcher(this.code)
+    if (headlineMatcher.find(searchStart) && (headlineMatcher.start() < limit)) {
+      limit = headlineMatcher.start()
+    }
+
+    if (searchStart > limit) return null
+    val closingMatcher =
+      closingRegex
+        .toPattern()
+        .matcher(this.code)
+        .region(searchStart, limit)
+        .useAnchoringBounds(false)
+        .useTransparentBounds(true)
+    if (!closingMatcher.find()) return null
+
+    return this.code.lastIndexOf('\n', closingMatcher.start() - 1) + 1
+  }
+
+  private fun closeContainerElement() {
+    while (
+      (this.elementTypeStack.lastOrNull() == ElementType.Headline) ||
+      (this.elementTypeStack.lastOrNull() == ElementType.Table)
+    ) {
+      popElementType()
+    }
+
+    popElementType()
+    this.closingLineStartStack.removeLastOrNull()
+  }
+
+  private fun findLineEnd(start: Int): Int {
+    var end: Int = start
+    while ((end < this.code.length) && (this.code[end] != '\r') && (this.code[end] != '\n')) end++
+    return end
   }
 
   @Suppress("ComplexMethod", "LongMethod", "NestedBlockDepth")
@@ -499,14 +545,6 @@ class OrgAnnotatedTextBuilder(
         this.elementTypeStack.contains(ElementType.LatexEnvironment)
     )
 
-  private fun isInBlockElementType(): Boolean =
-    (
-      this.elementTypeStack.contains(ElementType.CommentBlock) ||
-        this.elementTypeStack.contains(ElementType.ExampleBlock) ||
-        this.elementTypeStack.contains(ElementType.ExportBlock) ||
-        this.elementTypeStack.contains(ElementType.SourceBlock)
-    )
-
   private fun popElementType() {
     this.elementTypeStack.removeLastOrNull()
     if (this.elementTypeStack.isEmpty()) this.elementTypeStack.addLast(ElementType.Paragraph)
@@ -598,6 +636,12 @@ class OrgAnnotatedTextBuilder(
         RegexOption.IGNORE_CASE,
       )
 
+    private val PROSE_KEYWORD_PREFIX_REGEX =
+      Regex(
+        "^#\\+(TITLE|SUBTITLE|DESCRIPTION):[ \t]*",
+        RegexOption.IGNORE_CASE,
+      )
+
     private val AFFILIATED_KEYWORDS_REGEX =
       Regex(
         "^#\\+((HEADER|NAME|PLOT|RESULTS)|" +
@@ -632,6 +676,20 @@ class OrgAnnotatedTextBuilder(
         "^#\\+BEGIN: ([^ \t\r\n]+)([ \t]+[^\r\n]*?)[ \t]*(?=\r?\n|$)",
         RegexOption.IGNORE_CASE,
       )
+    private val DRAWER_CLOSING_REGEX =
+      Regex(
+        "^[ \t]*:END:[ \t]*$",
+        setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE),
+      )
+
+    private val DYNAMIC_BLOCK_CLOSING_REGEX =
+      Regex(
+        "^[ \t]*#\\+END:?[ \t]*$",
+        setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE),
+      )
+
+    private val HEADLINE_START_REGEX = Regex("^\\*+ ", RegexOption.MULTILINE)
+
     private val DYNAMIC_BLOCK_END_REGEX =
       Regex(
         "^#\\+END:[ \t]*(?=\r?\n|$)",
@@ -646,7 +704,7 @@ class OrgAnnotatedTextBuilder(
 
     private val ITEM_REGEX =
       Regex(
-        "^(\\*|-|\\+|([0-9]+|[A-Za-z])[.)])(?=[ \t]|$)([ \t]+\\[@([0-9]+|[A-Za-z])])?" +
+        "^(\\*|-|\\+|([0-9]+)[.)])(?=[ \t]|$)([ \t]+\\[@([0-9]+|[A-Za-z])])?" +
           "([ \t]+\\[[- \tX]])?([ \t]+[^\r\n]*?[ \t]+::)?[ \t]*",
         RegexOption.IGNORE_CASE,
       )
@@ -733,11 +791,6 @@ class OrgAnnotatedTextBuilder(
     private val LATEX_ENVIRONMENT_BEGIN_REGEX =
       Regex(
         "^\\\\begin\\{([*0-9A-Za-z]+)}[ \t]*",
-        RegexOption.IGNORE_CASE,
-      )
-    private val LATEX_ENVIRONMENT_END_REGEX =
-      Regex(
-        "^\\\\end\\{([*0-9A-Za-z]+)}[ \t]*",
         RegexOption.IGNORE_CASE,
       )
 

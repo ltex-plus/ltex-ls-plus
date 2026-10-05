@@ -53,6 +53,15 @@
       <action type="fix" issue="ltex-plus/ltex-ls-plus#209">
         Fix a chained method call inside a closure desynchronizing the Typst markup stripper for the rest of the file. The filename pattern used for strings in code mode could match past the closing quotation mark — in `#set heading(numbering: (n) => numbering("I.", n.pos().last()))` it matched `I.", n.pos().last` — so the string state never closed again and every following `#set` and `#let` leaked into the checked text, with the function name glued to its first named argument (`#set par(justify: true)` was reported as `parjustify`). The pattern now stops at the quotation mark, so only the string itself is checked. A lambda arrow written in markup (`#let f = (n) => "x"`) is likewise ignored as code instead of reaching LanguageTool as prose.
       </action>
+      <action type="add" due-to="Andrea Alberti (@alberti42)">
+        Spell-check the values of the Org keywords `#+TITLE`, `#+SUBTITLE` and `#+DESCRIPTION`. Each value is checked as its own paragraph, like a headline. Other keywords, such as `#+AUTHOR` and `#+DATE`, remain unchecked.
+      </action>
+      <action type="fix" due-to="Andrea Alberti (@alberti42)">
+        Fix Org blocks, drawers and LaTeX environments hiding text from the checker when their closing line is missing. Following Org's own rule, an element now opens only if its matching closing line (`#+END_SRC` for `#+BEGIN_SRC`, `:END:` for a drawer, `\end{name}` for `\begin{name}`) comes before the next headline; otherwise the lines after the opening line are checked as usual. Before, an unclosed `#+BEGIN_SRC` hid the rest of the file, and any `#+END_…` line ended a block, so an `#+END_QUOTE` inside a `#+BEGIN_SRC org` example ended the source block early.
+      </action>
+      <action type="fix" due-to="Andrea Alberti (@alberti42)">
+        Fix Org lines that start with a letter followed by `.` or `)`, such as `A. Smith wrote …`, being read as list items, which removed the letter from the checked text. Org accepts letter bullets only when `org-list-allow-alphabetical` is set, and it is off by default.
+      </action>
     </release>
     <release version="18.7.0" date="2026-06-13">
       <action type="add" issue="ltex-plus/ltex-ls-plus#183" due-to="Andrea Alberti (@alberti42)">

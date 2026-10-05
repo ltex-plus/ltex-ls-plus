@@ -185,6 +185,57 @@ class OrgAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("org") {
   }
 
   @Test
+  fun testUnclosedElements() {
+    // Org parses an opening line without a closing line as an ordinary line.
+    assertPlainText(
+      "This is a test.\n#+BEGIN_SRC python\nx = 1\n\nThis is another test.\n",
+      "This is a test.\n\nx = 1\n\nThis is another test.\n",
+    )
+    assertPlainText(
+      "This is a test.\n:PROPERTIES:\nThis is another test.\n",
+      "This is a test.\n\nThis is another test.\n",
+    )
+    assertPlainText(
+      "This is a test.\n\\begin{equation}\nThis is another test.\n",
+      "This is a test.\n\nThis is another test.\n",
+    )
+    // The closing line must come before the next headline.
+    assertPlainText(
+      "This is a test.\n#+BEGIN_SRC\nContents.\n* Headline\n#+END_SRC\nThis is another test.\n",
+      "This is a test.\n\nContents.\n\nHeadline\n\n\nThis is another test.\n",
+    )
+  }
+
+  @Test
+  fun testClosingLines() {
+    // A block ends only at the closing line with its own name.
+    assertPlainText(
+      """
+      This is a test.
+      #+BEGIN_SRC org
+      #+BEGIN_QUOTE
+      Contents.
+      #+END_QUOTE
+      More contents.
+      #+END_SRC
+      This is another test.
+
+      """.trimIndent(),
+      "This is a test.\n\nThis is another test.\n",
+    )
+    // A LaTeX environment may end after text on its closing line.
+    assertPlainText(
+      "This is a test.\n\\begin{equation}\n  x = 1 \\end{equation}\nThis is another test.\n",
+      "This is a test.\n\nThis is another test.\n",
+    )
+    // A closing line without an opening line is markup.
+    assertPlainText(
+      "This is a test.\n#+END_SRC\n:END:\nThis is another test.\n",
+      "This is a test.\n\n\nThis is another test.\n",
+    )
+  }
+
+  @Test
   fun testVerseBlocks() {
     assertPlainText(
       """
@@ -232,7 +283,7 @@ class OrgAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("org") {
       This is a test.
       #+BEGIN: test-block :abc
       Contents.
-      :END:
+      #+END:
       This is another test.
 
       """.trimIndent(),
@@ -263,6 +314,12 @@ class OrgAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("org") {
 
       """.trimIndent(),
       "\nTest 1.\n\n\nTest 2.\n\n\nTest tag\nTest 3.\n\n",
+    )
+    // Org accepts letter bullets only when org-list-allow-alphabetical is set,
+    // which is off by default.
+    assertPlainText(
+      "A. Smith wrote this.\nB.\n",
+      "A. Smith wrote this.\nB.\n",
     )
   }
 
@@ -295,10 +352,6 @@ class OrgAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("org") {
     )
     assertPlainText(
       "1. Apple :: a red fruit\n",
-      "\nApple\na red fruit\n\n",
-    )
-    assertPlainText(
-      "a) Apple :: a red fruit\n",
       "\nApple\na red fruit\n\n",
     )
   }
@@ -358,15 +411,6 @@ class OrgAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("org") {
     assertPlainText(
       """
       1. first
-         continuation
-
-      """.trimIndent(),
-      "\nfirst\ncontinuation\n\n",
-    )
-    // Alphabetical bullet "a)" (2-char body, continuation indent 3):
-    assertPlainText(
-      """
-      a) first
          continuation
 
       """.trimIndent(),
@@ -516,6 +560,27 @@ class OrgAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("org") {
 
       """.trimIndent(),
       "This is a test.\n\nThis is another test.\n",
+    )
+  }
+
+  @Test
+  fun testProseKeywords() {
+    assertPlainText(
+      """
+      #+TITLE: A Short Title
+      #+subtitle: A *bold* subtitle
+      This is a test.
+
+      """.trimIndent(),
+      "\nA Short Title\n\n\nA bold subtitle\n\nThis is a test.\n",
+    )
+    assertPlainText(
+      "#+DESCRIPTION: A short description\nThis is a test.\n",
+      "\nA short description\n\nThis is a test.\n",
+    )
+    assertPlainText(
+      "#+TITLE:\nThis is a test.\n",
+      "\n\n\nThis is a test.\n",
     )
   }
 
