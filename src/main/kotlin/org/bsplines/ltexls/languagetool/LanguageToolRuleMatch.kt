@@ -106,11 +106,24 @@ data class LanguageToolRuleMatch(
       // the prose the user actually wrote. Gated on the same rule-family
       // predicate as the dictionary-normalization path (cadea8a4) so
       // non-Premium traffic is bit-for-bit unchanged.
+      //
+      // The same rule families also report a missing period at the end of a
+      // line (e.g. after an Org title or headline) as a match on the line
+      // breaks alone, with "." as the suggestion. Mapped back to the source,
+      // those line breaks can enclose whole lines of markup (an Org
+      // `#+filetags:` line between a title and a headline), so the diagnostic
+      // underlines them and the quick fix replaces them with ".". Such a match
+      // is reduced to an empty range at its start, the end of the prose line,
+      // where the quick fix inserts the suggestion.
       val clampedToPos: Int =
-        if (isPremiumPunctuationAdjacentSpanRule(ruleId)) {
-          clampToPosToTextSegmentEnd(annotatedTextFragment.annotatedText, fromPos, toPos)
-        } else {
+        if (!isPremiumPunctuationAdjacentSpanRule(ruleId)) {
           toPos
+        } else if (
+          isLineBreakOnlySpan(annotatedTextFragment.getSubstringOfPlainText(fromPos, toPos))
+        ) {
+          fromPos
+        } else {
+          clampToPosToTextSegmentEnd(annotatedTextFragment.annotatedText, fromPos, toPos)
         }
 
       val messageBuilder = StringBuilder()
@@ -159,6 +172,12 @@ data class LanguageToolRuleMatch(
       }
       return toPos
     }
+
+    // True if the matched plain text is whitespace that includes a line break.
+    // Whitespace within a line (e.g. a doubled space) is a real match on the
+    // text and keeps its range.
+    internal fun isLineBreakOnlySpan(matchedPlainText: String): Boolean =
+      matchedPlainText.isBlank() && matchedPlainText.contains('\n')
 
     // Name parses as "is this a rule [that flags an] unknown word", not
     // "is this an unknown [word rule]". The "unknown" refers to the *word*

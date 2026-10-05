@@ -62,6 +62,9 @@
       <action type="fix" due-to="Andrea Alberti (@alberti42)">
         Fix Org lines that start with a letter followed by `.` or `)`, such as `A. Smith wrote …`, being read as list items, which removed the letter from the checked text. Org accepts letter bullets only when `org-list-allow-alphabetical` is set, and it is off by default.
       </action>
+      <action type="fix" due-to="Andrea Alberti (@alberti42)">
+        Fix LanguageTool Premium diagnostics on line endings covering the lines that follow. Premium reports a missing period at the end of a line, such as after an Org title or headline, as a match on the line breaks alone, with `.` as the suggestion. When markup sat between those line breaks, such as an Org `#+filetags:` line between the title and the first headline, the diagnostic underlined that markup, and its quick fix replaced it with `.`. Such a match now has an empty range at the end of the line, and its quick fix inserts `.` there.
+      </action>
     </release>
     <release version="18.7.0" date="2026-06-13">
       <action type="add" issue="ltex-plus/ltex-ls-plus#183" due-to="Andrea Alberti (@alberti42)">
