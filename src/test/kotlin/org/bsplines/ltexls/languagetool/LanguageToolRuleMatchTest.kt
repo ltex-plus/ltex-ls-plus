@@ -8,8 +8,15 @@
 
 package org.bsplines.ltexls.languagetool
 
+import org.bsplines.ltexls.parsing.AnnotatedTextFragment
+import org.bsplines.ltexls.parsing.CodeFragment
+import org.bsplines.ltexls.parsing.org.OrgAnnotatedTextBuilder
+import org.bsplines.ltexls.server.LtexLanguageServer
+import org.bsplines.ltexls.server.LtexTextDocumentItem
+import org.bsplines.ltexls.settings.Settings
 import org.languagetool.markup.AnnotatedText
 import org.languagetool.markup.AnnotatedTextBuilder
+import org.languagetool.rules.RuleMatch
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -199,6 +206,65 @@ class LanguageToolRuleMatchTest {
         markerSegmentEnd + 50,
       )
     assertEquals(markerSegmentEnd, clamped)
+  }
+
+  @Test
+  fun testIsLineBreakOnlySpan() {
+    assertTrue(LanguageToolRuleMatch.isLineBreakOnlySpan("\n"))
+    assertTrue(LanguageToolRuleMatch.isLineBreakOnlySpan("\n\n \n"))
+    assertFalse(LanguageToolRuleMatch.isLineBreakOnlySpan(""))
+    assertFalse(LanguageToolRuleMatch.isLineBreakOnlySpan("  "))
+    assertFalse(LanguageToolRuleMatch.isLineBreakOnlySpan("word\n"))
+  }
+
+  // Premium QB_NEW_EN_OTHER_ERROR_IDS_29 reports a missing period after an Org
+  // title as a match on the line breaks that follow it ("\n\n\n\n" in the
+  // plain text, suggestion "."). In the source, those line breaks enclose the
+  // `#+filetags:` line and the headline stars.
+  @Test
+  fun testLineBreakOnlyPremiumMatchIsReducedToEmptyRange() {
+    val code =
+      "#+title: Compiling ltex-ls-plus\n#+filetags: :Computer:\n\n* Compiling ltex-ls-plus\n"
+    val settings = Settings()
+    val annotatedText: AnnotatedText =
+      OrgAnnotatedTextBuilder("org").apply { setSettings(settings) }.addCode(code).build()
+    val document = LtexTextDocumentItem(LtexLanguageServer(), "untitled:test.org", "org", 1, code)
+    val fragment =
+      AnnotatedTextFragment(annotatedText, CodeFragment("org", code, 0, settings), document)
+
+    val plainFromPos: Int = annotatedText.plainText.indexOf("\n\n\n\n")
+    val fromPos: Int = annotatedText.getOriginalTextPositionFor(plainFromPos, false)
+    val toPos: Int = annotatedText.getOriginalTextPositionFor(plainFromPos + 4, true)
+    assertEquals("Compiling ltex-ls-plus".length + "#+title: ".length, fromPos)
+    assertTrue(code.substring(fromPos, toPos).contains("#+filetags:"))
+
+    val match: LanguageToolRuleMatch =
+      LanguageToolRuleMatch.fromLanguageTool(
+        "QB_NEW_EN_OTHER_ERROR_IDS_29",
+        null,
+        fromPos,
+        toPos,
+        "Use hyphens correctly",
+        listOf("."),
+        RuleMatch.Type.Hint,
+        fragment,
+      )
+    assertEquals(fromPos, match.fromPos)
+    assertEquals(fromPos, match.toPos)
+
+    // Outside the Premium rule families, the range is left as LanguageTool reported it.
+    val otherMatch: LanguageToolRuleMatch =
+      LanguageToolRuleMatch.fromLanguageTool(
+        "SOME_RULE",
+        null,
+        fromPos,
+        toPos,
+        "Message",
+        listOf("."),
+        RuleMatch.Type.Hint,
+        fragment,
+      )
+    assertEquals(toPos, otherMatch.toPos)
   }
 
   @Test
