@@ -21,7 +21,7 @@ jobs:
       NEW_COMMIT: ${{ steps.check_latest_commit.outputs.NEW_COMMIT }}
     steps:
       - name: "Checkout Repository"
-        uses: "actions/checkout@v6"
+        uses: "actions/checkout@v7"
 
       - id: "check_latest_commit"
         name: "Check if there were any commits in the last 48 hours"
@@ -36,7 +36,7 @@ jobs:
       contents: write
     steps:
       - name: "Checkout Repository"
-        uses: "actions/checkout@v6"
+        uses: "actions/checkout@v7"
         with:
           # Full history + tags so git-commit-id can count commits since the last release tag.
           fetch-depth: 0
