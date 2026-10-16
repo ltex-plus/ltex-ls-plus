@@ -11,12 +11,15 @@ package org.bsplines.ltexls
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import org.bsplines.ltexls.server.LtexLanguageServer
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.PrintStream
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -53,6 +56,23 @@ class LtexLanguageServerLauncherTest {
 
     val javaJsonElement: JsonElement = rootJsonObject.get("java")
     assertTrue(javaJsonElement.isJsonPrimitive)
+  }
+
+  @Test
+  fun testExecutorStopsWhenInputEnds() {
+    val server = LtexLanguageServer()
+    // occupy the worker thread, which is not a daemon thread, with a task that waits for a
+    // response the client never sends, as a check does when it requests the configuration
+    server.singleThreadExecutorService.submit { CompletableFuture<Any>().get() }
+
+    // input ends without the client sending shutdown and exit
+    LtexLanguageServerLauncher.launch(
+      ByteArrayInputStream(ByteArray(0)),
+      ByteArrayOutputStream(),
+      server,
+    )
+
+    assertTrue(server.singleThreadExecutorService.awaitTermination(5, TimeUnit.SECONDS))
   }
 
   companion object {
