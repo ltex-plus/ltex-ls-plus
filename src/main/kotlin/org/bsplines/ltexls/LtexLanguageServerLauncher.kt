@@ -255,8 +255,8 @@ class LtexLanguageServerLauncher : Callable<Int> {
     fun launch(
       inputStream: InputStream,
       outputStream: OutputStream,
+      server: LtexLanguageServer = LtexLanguageServer(),
     ) {
-      val server = LtexLanguageServer()
       val executorService: ExecutorService = Executors.newSingleThreadScheduledExecutor()
 
       val launcherBuilder = LSPLauncher.Builder<LtexLanguageClient>()
@@ -273,7 +273,16 @@ class LtexLanguageServerLauncher : Callable<Int> {
 
       val listener: Future<Void> = launcher.startListening()
       executorService.shutdown()
-      listener.get()
+
+      try {
+        listener.get()
+      } finally {
+        // The input ends without a shutdown request when the client dies. Stop the server's
+        // executors anyway: their threads are not daemon threads and would keep the JVM alive.
+        // Interrupt running tasks, as a check may be waiting for a response from the client.
+        server.shutdown()
+        server.singleThreadExecutorService.shutdownNow()
+      }
     }
   }
 }
