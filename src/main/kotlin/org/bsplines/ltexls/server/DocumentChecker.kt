@@ -73,6 +73,17 @@ class DocumentChecker(
   var lastCheckedDocument: LtexTextDocumentItem? = null
     private set
 
+  // Backs ltex.languageToolHttpServerOfflineFallback. A separate SettingsManager
+  // keeps the bundled LanguageTool's interfaces apart from the HTTP ones, so
+  // switching between the two does not reinitialize either. Created on the first
+  // connection failure, so users who are never offline do not load it.
+  private var offlineFallbackSettingsManager: SettingsManager? = null
+
+  // True from the first check that used the fallback until the HTTP server
+  // answers again. Used to log the switch once in each direction and to clear
+  // the fragment cache when the server is back.
+  private var offlineFallbackActive = false
+
   private fun fragmentizeDocument(
     document: LtexTextDocumentItem,
     range: Range? = null,
@@ -179,21 +190,7 @@ class DocumentChecker(
     // back-fills codeFragment.languageShortCode from the response. Only the Java backend
     // needs local resolution, because LT does not support language=auto in-process.
     if (settings.languageShortCode == "auto" && settings.languageToolHttpServerUri.isEmpty()) {
-      val cleanText: String =
-        this.simpleLanguageIdentifier.cleanAndShortenText(
-          annotatedTextFragment.annotatedText.plainText,
-        )
-      val detectedLanguage: DetectedLanguage? =
-        this.simpleLanguageIdentifier.detectLanguage(cleanText, emptyList(), emptyList())
-      val detectedCode: String =
-        detectedLanguage?.detectedLanguage?.shortCodeWithCountryAndVariant ?: "en-US"
-      // SimpleLanguageIdentifier only returns bare codes (e.g. "en"); promote to the
-      // first matching ltex.preferredVariants entry so LT's variant-specific spell-check
-      // dictionary is activated rather than silently skipped.
-      val languageShortCode: String =
-        Settings.promoteToPreferredVariant(detectedCode, settings.preferredVariants)
-      annotatedTextFragment.codeFragment.languageShortCode = languageShortCode
-      settings = settings.copy(_languageShortCode = languageShortCode)
+      settings = detectLanguageLocally(annotatedTextFragment, settings)
     }
 
     this.settingsManager.settings = settings
@@ -220,7 +217,7 @@ class DocumentChecker(
     val beforeCheckingInstant: Instant = Instant.now()
     val matches: ArrayList<LanguageToolRuleMatch> =
       try {
-        ArrayList(checkWithBackend(languageToolInterface, annotatedTextFragment))
+        ArrayList(checkWithBackend(languageToolInterface, annotatedTextFragment, settings))
       } catch (e: RuntimeException) {
         Tools.rethrowCancellationException(e)
         Logging.LOGGER.severe(I18n.format("languageToolFailed", e))
@@ -248,18 +245,106 @@ class DocumentChecker(
     return matches
   }
 
+  // Resolves ltex.language="auto" with the bundled detector, writes the result to
+  // the fragment and returns settings for that language.
+  private fun detectLanguageLocally(
+    annotatedTextFragment: AnnotatedTextFragment,
+    settings: Settings,
+  ): Settings {
+    val cleanText: String =
+      this.simpleLanguageIdentifier.cleanAndShortenText(
+        annotatedTextFragment.annotatedText.plainText,
+      )
+    val detectedLanguage: DetectedLanguage? =
+      this.simpleLanguageIdentifier.detectLanguage(cleanText, emptyList(), emptyList())
+    val detectedCode: String =
+      detectedLanguage?.detectedLanguage?.shortCodeWithCountryAndVariant ?: "en-US"
+    // SimpleLanguageIdentifier only returns bare codes (e.g. "en"); promote to the
+    // first matching ltex.preferredVariants entry so LT's variant-specific spell-check
+    // dictionary is activated rather than silently skipped.
+    val languageShortCode: String =
+      Settings.promoteToPreferredVariant(detectedCode, settings.preferredVariants)
+    annotatedTextFragment.codeFragment.languageShortCode = languageShortCode
+    return settings.copy(_languageShortCode = languageShortCode)
+  }
+
   // Checks with the configured backend. If that is an HTTP server that cannot be
-  // reached, logs the failure and reports no matches.
+  // reached, either checks with the bundled LanguageTool
+  // (ltex.languageToolHttpServerOfflineFallback) or logs the failure and reports
+  // no matches.
   private fun checkWithBackend(
     languageToolInterface: LanguageToolInterface,
     annotatedTextFragment: AnnotatedTextFragment,
-  ): List<LanguageToolRuleMatch> =
-    try {
-      languageToolInterface.check(annotatedTextFragment)
-    } catch (e: LanguageToolHttpServerUnreachableException) {
-      Logging.LOGGER.severe(I18n.format("couldNotSendHttpRequestToLanguageTool", e.reason))
-      emptyList()
+    settings: Settings,
+  ): List<LanguageToolRuleMatch> {
+    if (settings.languageToolHttpServerUri.isEmpty()) {
+      return languageToolInterface.check(annotatedTextFragment)
     }
+
+    val matches: List<LanguageToolRuleMatch> =
+      try {
+        languageToolInterface.check(annotatedTextFragment)
+      } catch (e: LanguageToolHttpServerUnreachableException) {
+        if (!settings.languageToolHttpServerOfflineFallback) {
+          Logging.LOGGER.severe(
+            I18n.format("couldNotSendHttpRequestToLanguageTool", e.reason),
+          )
+          return emptyList()
+        }
+
+        return checkWithOfflineFallback(annotatedTextFragment, settings, e)
+      }
+
+    if (this.offlineFallbackActive) {
+      // The cached matches of unchanged paragraphs came from the bundled
+      // LanguageTool. Drop them so the next check sends them to the server.
+      this.offlineFallbackActive = false
+      this.fragmentCache.clear()
+      Logging.LOGGER.info(
+        I18n.format("languageToolHttpServerReachableAgain", settings.languageToolHttpServerUri),
+      )
+    }
+
+    return matches
+  }
+
+  private fun checkWithOfflineFallback(
+    annotatedTextFragment: AnnotatedTextFragment,
+    settings: Settings,
+    e: LanguageToolHttpServerUnreachableException,
+  ): List<LanguageToolRuleMatch> {
+    if (!this.offlineFallbackActive) {
+      this.offlineFallbackActive = true
+      Logging.LOGGER.warning(
+        I18n.format(
+          "languageToolHttpServerUnreachableCheckingLocally",
+          e.reason,
+          settings.languageToolHttpServerUri,
+        ),
+      )
+    }
+
+    var localSettings: Settings = settings.copy(_languageToolHttpServerUri = "")
+
+    if (settings.languageShortCode == "auto") {
+      localSettings = detectLanguageLocally(annotatedTextFragment, localSettings)
+    }
+
+    val settingsManager: SettingsManager =
+      this.offlineFallbackSettingsManager
+        ?: SettingsManager().also { this.offlineFallbackSettingsManager = it }
+    settingsManager.settings = localSettings
+
+    val languageToolInterface: LanguageToolInterface =
+      settingsManager.languageToolInterface ?: run {
+        Logging.LOGGER.warning(
+          I18n.format("skippingTextCheckAsLanguageToolHasNotBeenInitialized"),
+        )
+        return emptyList()
+      }
+
+    return languageToolInterface.check(annotatedTextFragment)
+  }
 
   private fun logTextToBeChecked(
     annotatedText: AnnotatedText,

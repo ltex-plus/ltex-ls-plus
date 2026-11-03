@@ -39,6 +39,7 @@ data class Settings(
   private val _languageToolHttpServerUri: String? = null,
   private val _languageToolOrgUsername: String? = null,
   private val _languageToolOrgApiKey: String? = null,
+  private val _languageToolHttpServerOfflineFallback: Boolean? = null,
   private val _logLevel: Level? = null,
   private val _sentenceCacheSize: Long? = null,
   private val _completionEnabled: Boolean? = null,
@@ -101,6 +102,14 @@ data class Settings(
     get() = resolveEnvironmentVariableReference(this._languageToolOrgUsername ?: "")
   val languageToolOrgApiKey: String
     get() = resolveEnvironmentVariableReference(this._languageToolOrgApiKey ?: "")
+
+  // When true and the LanguageTool HTTP server cannot be reached (no network),
+  // DocumentChecker checks the text with the bundled LanguageTool instead. See
+  // LanguageToolHttpServerUnreachableException for what counts as unreachable.
+  // Any HTTP response, including an authentication error, means the server was
+  // reached and does not trigger the fallback.
+  val languageToolHttpServerOfflineFallback: Boolean
+    get() = (this._languageToolHttpServerOfflineFallback ?: false)
   val logLevel: Level
     get() = (this._logLevel ?: Level.FINE)
   val sentenceCacheSize: Long
@@ -396,6 +405,9 @@ data class Settings(
           }
         }
 
+      val languageToolHttpServerOfflineFallback: Boolean? =
+        getSettingFromJsonAsBoolean(jsonSettings, "languageToolHttpServerOfflineFallback")
+
       val logLevel: Level? =
         getSettingFromJsonAsEnum(
           jsonSettings,
@@ -448,6 +460,7 @@ data class Settings(
         languageToolHttpServerUri,
         languageToolOrgUsername,
         languageToolOrgApiKey,
+        languageToolHttpServerOfflineFallback,
         logLevel,
         sentenceCacheSize,
         completionEnabled,
