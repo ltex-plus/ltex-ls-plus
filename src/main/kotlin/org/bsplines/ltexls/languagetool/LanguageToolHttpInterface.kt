@@ -20,6 +20,10 @@ import org.languagetool.markup.AnnotatedText
 import org.languagetool.markup.TextPart
 import java.io.IOException
 import java.io.UnsupportedEncodingException
+import java.net.ConnectException
+import java.net.DatagramSocket
+import java.net.InetAddress
+import java.net.InetSocketAddress
 import java.net.MalformedURLException
 import java.net.URI
 import java.net.URISyntaxException
@@ -30,6 +34,16 @@ import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse
 import java.net.http.HttpResponse.BodyHandlers
 
+// Thrown when the server cannot be reached: the laptop has no route to the
+// server (see checkRouteToServer), or a new connection fails
+// (java.net.ConnectException, which Java's HttpClient throws both for a host
+// name that cannot be resolved and for a refused connection). Any HTTP
+// response, whatever its status, means the server was reached. DocumentChecker
+// logs the failure.
+class LanguageToolHttpServerUnreachableException(
+  val reason: IOException,
+) : RuntimeException(reason)
+
 class LanguageToolHttpInterface(
   uriString: String,
   private val languageShortCode: String,
@@ -37,7 +51,7 @@ class LanguageToolHttpInterface(
   private val preferredVariants: List<String> = emptyList(),
 ) : LanguageToolInterface() {
   private val enabledRules: MutableList<String> = ArrayList()
-  private val httpClient: HttpClient = HttpClient.newHttpClient()
+  private var httpClient: HttpClient = HttpClient.newHttpClient()
   private val uri: URI?
 
   init {
@@ -72,23 +86,8 @@ class LanguageToolHttpInterface(
     if (!isInitialized()) return emptyList()
 
     val requestBody: String = createRequestBody(annotatedTextFragment) ?: return emptyList()
-    val httpRequest: HttpRequest =
-      HttpRequest
-        .newBuilder(this.uri)
-        .header("Content-Type", "application/x-www-form-urlencoded")
-        .header("Accept", "application/json")
-        .POST(BodyPublishers.ofString(requestBody))
-        .build()
     val httpResponse: HttpResponse<String> =
-      try {
-        this.httpClient.send(httpRequest, BodyHandlers.ofString())
-      } catch (e: InterruptedException) {
-        Logging.LOGGER.severe(I18n.format("couldNotSendHttpRequestToLanguageTool", e))
-        return emptyList()
-      } catch (e: IOException) {
-        Logging.LOGGER.severe(I18n.format("couldNotSendHttpRequestToLanguageTool", e))
-        return emptyList()
-      }
+      sendCheck(requestBody) ?: return emptyList()
 
     val statusCode: Int = httpResponse.statusCode()
 
@@ -136,6 +135,70 @@ class LanguageToolHttpInterface(
     }
 
     return result
+  }
+
+  // Sends the check and returns the response, or logs the failure and returns
+  // null. Throws LanguageToolHttpServerUnreachableException when the laptop
+  // has no route to the server or a new connection fails.
+  private fun sendCheck(requestBody: String): HttpResponse<String>? {
+    val httpRequest: HttpRequest =
+      HttpRequest
+        .newBuilder(this.uri)
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .header("Accept", "application/json")
+        .POST(BodyPublishers.ofString(requestBody))
+        .build()
+
+    checkRouteToServer()
+
+    return try {
+      this.httpClient.send(httpRequest, BodyHandlers.ofString())
+    } catch (e: ConnectException) {
+      throw LanguageToolHttpServerUnreachableException(e)
+    } catch (e: InterruptedException) {
+      Logging.LOGGER.severe(I18n.format("couldNotSendHttpRequestToLanguageTool", e))
+      null
+    } catch (e: IOException) {
+      Logging.LOGGER.severe(I18n.format("couldNotSendHttpRequestToLanguageTool", e))
+      null
+    }
+  }
+
+  // Detects a laptop that is not connected to the internet, before the check
+  // is sent. The client keeps its connection to the server open between
+  // checks, and when the laptop goes offline that connection reports no
+  // error: a check sent over it would wait until the network is back.
+  // "Connecting" a UDP socket asks the operating system for a route to the
+  // server without sending anything; it takes about a millisecond. Offline,
+  // it fails with SocketException ("Network is unreachable"), or the host
+  // name cannot be resolved (UnknownHostException). A host name can have
+  // several addresses (IPv4 and IPv6); the laptop counts as offline only if
+  // none of them has a route. This does not test whether the server works.
+  private fun checkRouteToServer() {
+    val uri: URI = this.uri ?: return
+    val port: Int =
+      when {
+        uri.port >= 0 -> uri.port
+        uri.scheme == "https" -> HTTPS_PORT
+        else -> HTTP_PORT
+      }
+
+    var failure: IOException? = null
+    val addresses: Array<InetAddress> =
+      try {
+        InetAddress.getAllByName(uri.host)
+      } catch (e: IOException) {
+        failure = e
+        emptyArray()
+      }
+
+    // Stops at the first address with a route.
+    for (address: InetAddress in addresses) failure = routeFailure(address, port) ?: return
+
+    // The open connection is unusable: close it, so the next check opens a new one.
+    this.httpClient.shutdownNow()
+    this.httpClient = HttpClient.newHttpClient()
+    throw LanguageToolHttpServerUnreachableException(failure ?: IOException(uri.host))
   }
 
   private fun createRequestBody(annotatedTextFragment: AnnotatedTextFragment): String? {
@@ -207,6 +270,20 @@ class LanguageToolHttpInterface(
 
   companion object {
     private const val STATUS_CODE_SUCCESS = 200
+    private const val HTTP_PORT = 80
+    private const val HTTPS_PORT = 443
+
+    // Null if the operating system has a route to the address, otherwise why not.
+    private fun routeFailure(
+      address: InetAddress,
+      port: Int,
+    ): IOException? =
+      try {
+        DatagramSocket().use { it.connect(InetSocketAddress(address, port)) }
+        null
+      } catch (e: IOException) {
+        e
+      }
 
     private fun convertAnnotatedTextToJson(annotatedText: AnnotatedText): JsonElement {
       val jsonDataAnnotation = JsonArray()

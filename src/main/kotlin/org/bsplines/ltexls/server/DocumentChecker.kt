@@ -9,6 +9,7 @@
 package org.bsplines.ltexls.server
 
 import org.apache.commons.text.StringEscapeUtils
+import org.bsplines.ltexls.languagetool.LanguageToolHttpServerUnreachableException
 import org.bsplines.ltexls.languagetool.LanguageToolInterface
 import org.bsplines.ltexls.languagetool.LanguageToolRuleMatch
 import org.bsplines.ltexls.parsing.AnnotatedTextFragment
@@ -219,7 +220,7 @@ class DocumentChecker(
     val beforeCheckingInstant: Instant = Instant.now()
     val matches: ArrayList<LanguageToolRuleMatch> =
       try {
-        ArrayList(languageToolInterface.check(annotatedTextFragment))
+        ArrayList(checkWithBackend(languageToolInterface, annotatedTextFragment))
       } catch (e: RuntimeException) {
         Tools.rethrowCancellationException(e)
         Logging.LOGGER.severe(I18n.format("languageToolFailed", e))
@@ -246,6 +247,19 @@ class DocumentChecker(
 
     return matches
   }
+
+  // Checks with the configured backend. If that is an HTTP server that cannot be
+  // reached, logs the failure and reports no matches.
+  private fun checkWithBackend(
+    languageToolInterface: LanguageToolInterface,
+    annotatedTextFragment: AnnotatedTextFragment,
+  ): List<LanguageToolRuleMatch> =
+    try {
+      languageToolInterface.check(annotatedTextFragment)
+    } catch (e: LanguageToolHttpServerUnreachableException) {
+      Logging.LOGGER.severe(I18n.format("couldNotSendHttpRequestToLanguageTool", e.reason))
+      emptyList()
+    }
 
   private fun logTextToBeChecked(
     annotatedText: AnnotatedText,
