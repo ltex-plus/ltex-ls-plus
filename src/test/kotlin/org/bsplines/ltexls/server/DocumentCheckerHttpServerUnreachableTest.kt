@@ -16,6 +16,7 @@ import org.bsplines.ltexls.settings.Settings
 import org.bsplines.ltexls.settings.SettingsManager
 import java.net.InetSocketAddress
 import java.net.ServerSocket
+import java.net.Socket
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.Test
@@ -62,7 +63,35 @@ class DocumentCheckerHttpServerUnreachableTest {
     assertEquals(emptyList(), matches)
   }
 
-  // A slow check waits for the server and does not fall back.
+  // A server that accepts connections and never answers: the route check
+  // passes, and the check falls back once
+  // ltex.languageToolHttpServerTimeoutSeconds runs out.
+  @Test
+  fun testFallbackWhenConnectionStopsAnswering() {
+    val (serverSocket, acceptedSockets) = startSilentServer()
+
+    try {
+      val start: Long = System.currentTimeMillis()
+      val (matches, _) =
+        check(
+          settings(
+            "http://127.0.0.1:${serverSocket.localPort}",
+            fallback = true,
+            language = "en-US",
+            timeoutSeconds = 1,
+          ),
+        )
+      val elapsedMillis: Long = System.currentTimeMillis() - start
+      assertTrue(matches.any { it.isUnknownWordRule() }, "expected a spelling match, got $matches")
+      assertTrue(elapsedMillis < 30_000, "fallback took $elapsedMillis ms")
+    } finally {
+      serverSocket.close()
+      acceptedSockets.forEach { it.close() }
+    }
+  }
+
+  // A slow check within ltex.languageToolHttpServerTimeoutSeconds (default
+  // 60 s) waits for the server and does not fall back.
   @Test
   fun testNoFallbackWhenCheckIsSlow() {
     val server: HttpServer = startSlowCheckServer(4_000)
@@ -71,6 +100,50 @@ class DocumentCheckerHttpServerUnreachableTest {
       val (matches, _) = check(settings(serverUri(server), fallback = true, language = "en-US"))
       // The bundled LanguageTool would report the misspelling; the server reports nothing.
       assertEquals(emptyList(), matches)
+    } finally {
+      stopServer(server)
+    }
+  }
+
+  // ltex.languageToolHttpServerTimeoutSeconds with the fallback off: a check
+  // whose answer never comes ends after the limit with no matches, instead of
+  // waiting forever.
+  @Test
+  fun testTimeoutEndsCheckWithoutFallback() {
+    val (serverSocket, acceptedSockets) = startSilentServer()
+
+    try {
+      val start: Long = System.currentTimeMillis()
+      val (matches, _) =
+        check(
+          settings(
+            "http://127.0.0.1:${serverSocket.localPort}",
+            fallback = null,
+            language = "en-US",
+            timeoutSeconds = 1,
+          ),
+        )
+      val elapsedMillis: Long = System.currentTimeMillis() - start
+      assertEquals(emptyList(), matches)
+      assertTrue(elapsedMillis < 10_000, "check took $elapsedMillis ms")
+    } finally {
+      serverSocket.close()
+      acceptedSockets.forEach { it.close() }
+    }
+  }
+
+  // With the fallback on, a check that is not answered within the limit is
+  // checked with the bundled LanguageTool.
+  @Test
+  fun testTimeoutFallsBackWhenFallbackIsOn() {
+    val server: HttpServer = startSlowCheckServer(4_000)
+
+    try {
+      val (matches, _) =
+        check(
+          settings(serverUri(server), fallback = true, language = "en-US", timeoutSeconds = 2),
+        )
+      assertTrue(matches.any { it.isUnknownWordRule() }, "expected a spelling match, got $matches")
     } finally {
       stopServer(server)
     }
@@ -142,12 +215,33 @@ class DocumentCheckerHttpServerUnreachableTest {
       uri: String,
       fallback: Boolean?,
       language: String,
+      timeoutSeconds: Long? = null,
     ): Settings =
       Settings(
         _languageShortCode = language,
         _languageToolHttpServerUri = uri,
         _languageToolHttpServerOfflineFallback = fallback,
+        _languageToolHttpServerTimeoutSeconds = timeoutSeconds,
       )
+
+    // Accepts connections and never answers, like an open connection after the
+    // laptop lost its network.
+    private fun startSilentServer(): Pair<ServerSocket, MutableList<Socket>> {
+      val serverSocket = ServerSocket(0)
+      val acceptedSockets: MutableList<Socket> =
+        java.util.Collections.synchronizedList(ArrayList<Socket>())
+      val acceptor =
+        Thread {
+          try {
+            while (true) acceptedSockets.add(serverSocket.accept())
+          } catch (ignored: java.io.IOException) {
+            // serverSocket closed at the end of the test
+          }
+        }
+      acceptor.isDaemon = true
+      acceptor.start()
+      return Pair(serverSocket, acceptedSockets)
+    }
 
     // Answers a check after delayMillis.
     private fun startSlowCheckServer(delayMillis: Long): HttpServer {
@@ -162,7 +256,7 @@ class DocumentCheckerHttpServerUnreachableTest {
         } catch (ignored: InterruptedException) {
           // server stopped at the end of the test
         } catch (ignored: java.io.IOException) {
-          // the client closed the connection
+          // the client closed the connection after its timeout
         }
       }
       server.start()

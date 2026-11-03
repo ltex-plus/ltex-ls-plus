@@ -40,6 +40,7 @@ data class Settings(
   private val _languageToolOrgUsername: String? = null,
   private val _languageToolOrgApiKey: String? = null,
   private val _languageToolHttpServerOfflineFallback: Boolean? = null,
+  private val _languageToolHttpServerTimeoutSeconds: Long? = null,
   private val _logLevel: Level? = null,
   private val _sentenceCacheSize: Long? = null,
   private val _completionEnabled: Boolean? = null,
@@ -110,6 +111,13 @@ data class Settings(
   // reached and does not trigger the fallback.
   val languageToolHttpServerOfflineFallback: Boolean
     get() = (this._languageToolHttpServerOfflineFallback ?: false)
+
+  // How long LanguageToolHttpInterface waits for the answer to a check. Without
+  // a limit, a check whose answer never comes (the network was lost after the
+  // request was sent) would wait forever, and every later check with it, since
+  // checks run one after another. 0 or less means no limit.
+  val languageToolHttpServerTimeoutSeconds: Long
+    get() = (this._languageToolHttpServerTimeoutSeconds ?: DEFAULT_HTTP_SERVER_TIMEOUT_SECONDS)
   val logLevel: Level
     get() = (this._logLevel ?: Level.FINE)
   val sentenceCacheSize: Long
@@ -253,6 +261,10 @@ data class Settings(
     // per-paragraph FragmentCache (see LanguageToolJavaInterface.resultCache).
     private const val DEFAULT_SENTENCE_CACHE_SIZE = 0L
     private const val DEFAULT_PARAGRAPH_CACHE_TTL_MINUTES = 30L
+
+    // api.languagetoolplus.com answers a check it cannot finish with HTTP 504
+    // after 60 s, so this limit does not cut off an answer Premium would send.
+    private const val DEFAULT_HTTP_SERVER_TIMEOUT_SECONDS = 60L
 
     // Caps the plain-text characters sent to LanguageTool per request (a run of
     // contiguous changed paragraphs is split across requests if it exceeds this;
@@ -407,6 +419,8 @@ data class Settings(
 
       val languageToolHttpServerOfflineFallback: Boolean? =
         getSettingFromJsonAsBoolean(jsonSettings, "languageToolHttpServerOfflineFallback")
+      val languageToolHttpServerTimeoutSeconds: Long? =
+        getSettingFromJsonAsLong(jsonSettings, "languageToolHttpServerTimeoutSeconds")
 
       val logLevel: Level? =
         getSettingFromJsonAsEnum(
@@ -461,6 +475,7 @@ data class Settings(
         languageToolOrgUsername,
         languageToolOrgApiKey,
         languageToolHttpServerOfflineFallback,
+        languageToolHttpServerTimeoutSeconds,
         logLevel,
         sentenceCacheSize,
         completionEnabled,
