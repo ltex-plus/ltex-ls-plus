@@ -84,6 +84,13 @@ class FragmentCache(
     this.map.keys.removeIf { it.uri == uri }
   }
 
+  // Called when the LanguageTool HTTP server can be reached again after the
+  // offline fallback was used: the cached matches came from the bundled
+  // LanguageTool, and the cache key does not record which backend produced them.
+  fun clear() {
+    this.map.clear()
+  }
+
   fun evictIdleOlderThan(ttlMillis: Long) {
     val cutoff: Long = this.clock() - ttlMillis
     this.map.entries.removeIf { it.value.lastAccessMillis < cutoff }

@@ -39,7 +39,8 @@ import java.net.http.HttpResponse.BodyHandlers
 // (java.net.ConnectException, which Java's HttpClient throws both for a host
 // name that cannot be resolved and for a refused connection). Any HTTP
 // response, whatever its status, means the server was reached. DocumentChecker
-// logs the failure.
+// logs the failure or, with the offline fallback on, checks with the bundled
+// LanguageTool.
 class LanguageToolHttpServerUnreachableException(
   val reason: IOException,
 ) : RuntimeException(reason)
