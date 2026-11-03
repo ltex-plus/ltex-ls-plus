@@ -33,14 +33,17 @@ import java.net.http.HttpRequest
 import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse
 import java.net.http.HttpResponse.BodyHandlers
+import java.net.http.HttpTimeoutException
+import java.time.Duration
 
 // Thrown when the server cannot be reached: the laptop has no route to the
-// server (see checkRouteToServer), or a new connection fails
+// server (see checkRouteToServer), a new connection fails
 // (java.net.ConnectException, which Java's HttpClient throws both for a host
-// name that cannot be resolved and for a refused connection). Any HTTP
-// response, whatever its status, means the server was reached. DocumentChecker
-// logs the failure or, with the offline fallback on, checks with the bundled
-// LanguageTool.
+// name that cannot be resolved and for a refused connection), or, with
+// ltex.languageToolHttpServerOfflineFallback on, the check was not answered
+// within ltex.languageToolHttpServerTimeoutSeconds. Any HTTP response, whatever
+// its status, means the server was reached. DocumentChecker logs the failure
+// or, with the offline fallback on, checks with the bundled LanguageTool.
 class LanguageToolHttpServerUnreachableException(
   val reason: IOException,
 ) : RuntimeException(reason)
@@ -88,7 +91,7 @@ class LanguageToolHttpInterface(
 
     val requestBody: String = createRequestBody(annotatedTextFragment) ?: return emptyList()
     val httpResponse: HttpResponse<String> =
-      sendCheck(requestBody) ?: return emptyList()
+      sendCheck(requestBody, annotatedTextFragment.codeFragment.settings) ?: return emptyList()
 
     val statusCode: Int = httpResponse.statusCode()
 
@@ -140,15 +143,22 @@ class LanguageToolHttpInterface(
 
   // Sends the check and returns the response, or logs the failure and returns
   // null. Throws LanguageToolHttpServerUnreachableException when the laptop
-  // has no route to the server or a new connection fails.
-  private fun sendCheck(requestBody: String): HttpResponse<String>? {
-    val httpRequest: HttpRequest =
+  // has no route to the server or a new connection fails, and, with the
+  // offline fallback on, when no answer came within
+  // ltex.languageToolHttpServerTimeoutSeconds.
+  private fun sendCheck(
+    requestBody: String,
+    settings: Settings,
+  ): HttpResponse<String>? {
+    val builder: HttpRequest.Builder =
       HttpRequest
         .newBuilder(this.uri)
         .header("Content-Type", "application/x-www-form-urlencoded")
         .header("Accept", "application/json")
         .POST(BodyPublishers.ofString(requestBody))
-        .build()
+    val timeoutSeconds: Long = settings.languageToolHttpServerTimeoutSeconds
+    if (timeoutSeconds > 0) builder.timeout(Duration.ofSeconds(timeoutSeconds))
+    val httpRequest: HttpRequest = builder.build()
 
     checkRouteToServer()
 
@@ -156,6 +166,19 @@ class LanguageToolHttpInterface(
       this.httpClient.send(httpRequest, BodyHandlers.ofString())
     } catch (e: ConnectException) {
       throw LanguageToolHttpServerUnreachableException(e)
+    } catch (e: HttpTimeoutException) {
+      // The connection may be dead: close it, so the next check opens a new one.
+      this.httpClient.shutdownNow()
+      this.httpClient = HttpClient.newHttpClient()
+
+      if (settings.languageToolHttpServerOfflineFallback) {
+        throw LanguageToolHttpServerUnreachableException(e)
+      }
+
+      Logging.LOGGER.severe(
+        I18n.format("languageToolHttpServerDidNotAnswer", e, timeoutSeconds),
+      )
+      null
     } catch (e: InterruptedException) {
       Logging.LOGGER.severe(I18n.format("couldNotSendHttpRequestToLanguageTool", e))
       null
@@ -174,7 +197,9 @@ class LanguageToolHttpInterface(
   // it fails with SocketException ("Network is unreachable"), or the host
   // name cannot be resolved (UnknownHostException). A host name can have
   // several addresses (IPv4 and IPv6); the laptop counts as offline only if
-  // none of them has a route. This does not test whether the server works.
+  // none of them has a route. This does not test whether the server works;
+  // a server that does not answer is ended by
+  // ltex.languageToolHttpServerTimeoutSeconds.
   private fun checkRouteToServer() {
     val uri: URI = this.uri ?: return
     val port: Int =
