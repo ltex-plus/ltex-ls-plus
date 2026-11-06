@@ -728,6 +728,7 @@ object LatexAnnotatedTextBuilderDefaults {
           LatexCommandSignature("\\footcitetext[][]{}", LatexCommandSignature.Action.Dummy),
           LatexCommandSignature("\\footnote{}"),
           LatexCommandSignature("\\footnote[]{}"),
+          LatexCommandSignature("\\footref{}", LatexCommandSignature.Action.Ignore),
           LatexCommandSignature(
             "\\foreignlanguage{}{}",
             LatexCommandSignature.Action.Dummy,
