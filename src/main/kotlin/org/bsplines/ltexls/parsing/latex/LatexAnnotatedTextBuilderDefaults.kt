@@ -970,6 +970,7 @@ object LatexAnnotatedTextBuilderDefaults {
           LatexCommandSignature("\\sievert", LatexCommandSignature.Action.Dummy),
           LatexCommandSignature("\\sisetup{}"),
           LatexCommandSignature("\\skipeval{}", LatexCommandSignature.Action.Dummy),
+          LatexCommandSignature("\\slash", LatexCommandSignature.Action.Dummy),
           LatexCommandSignature("\\smartcite{}", LatexCommandSignature.Action.Dummy),
           LatexCommandSignature("\\smartcite[]{}", LatexCommandSignature.Action.Dummy),
           LatexCommandSignature("\\smartcite[][]{}", LatexCommandSignature.Action.Dummy),
