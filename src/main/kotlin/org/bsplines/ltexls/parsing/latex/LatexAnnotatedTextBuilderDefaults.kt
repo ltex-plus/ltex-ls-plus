@@ -739,6 +739,7 @@ object LatexAnnotatedTextBuilderDefaults {
           LatexCommandSignature("\\fpeval{}", LatexCommandSignature.Action.Dummy),
           LatexCommandSignature("\\framed[]"),
           LatexCommandSignature("\\from[]", LatexCommandSignature.Action.Dummy),
+          LatexCommandSignature("\\footref{}", LatexCommandSignature.Action.Ignore),
           LatexCommandSignature("\\geometry{}"),
           LatexCommandSignature("\\gls{}", LatexCommandSignature.Action.Dummy),
           LatexCommandSignature("\\glsaddstoragekey{}{}{}"),
