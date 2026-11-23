@@ -140,6 +140,11 @@ jobs:
     runs-on: "ubuntu-latest"
     permissions:
       contents: write
+      # Needed by actions/attest: the OIDC token for the Sigstore signing
+      # certificate, storing the attestation, and the artifact storage record.
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     steps:
       - name: "Checkout Repository"
         uses: "actions/checkout@v7"
@@ -191,6 +196,22 @@ jobs:
           --prefix='ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}/'
           -o 'target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-src.tar.gz'
           HEAD
+
+      - name: "Attest Build Provenance"
+        # Record that these files were built by this workflow run from this commit.
+        # Anyone can check a downloaded file with
+        # `gh attestation verify <file> --repo ltex-plus/ltex-ls-plus`.
+        uses: "actions/attest@v4"
+        with:
+          subject-path: |
+            target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}.tar.gz
+            target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-src.tar.gz
+            target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-linux-x64.tar.gz
+            target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-mac-x64.tar.gz
+            target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-windows-x64.zip
+            target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-linux-aarch64.tar.gz
+            target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-mac-aarch64.tar.gz
+            target/ltex-ls-plus-${{ needs.get-version.outputs.ltex_ls_version }}-windows-aarch64.zip
 
       - name: "Create GitHub Release"
         # Stage as a draft so a maintainer can review the release and its assets,
