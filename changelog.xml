@@ -13,7 +13,7 @@
     <author>Julian Valentin, Daniel Spitzer and LTeX+ Development Community</author>
   </properties>
   <body>
-    <release version="18.7.1" date="upcoming">
+    <release version="19.0.0" date="2026-11-23">
       <action type="fix" due-to="Andrea Alberti (@alberti42)">
         Stop waiting on the HTTP server when the laptop is offline. The server keeps its connection to `ltex.languageToolHttpServerUri` open between checks, and when the laptop goes offline that connection reports no error: a check sent over it waited until the network was back, and every later check with it, since checks run one after another. Before each check, the server now asks the operating system whether the laptop has a route to the server; this sends nothing and takes about a millisecond. Without a route to any of the server's addresses, or when its host name cannot be resolved, the check ends at once: the failure is logged, the check reports no matches, and the connection is closed so that the next check opens a new one. The route check only tests that the laptop is connected, not that the server works.
       </action>
