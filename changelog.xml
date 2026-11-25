@@ -14,9 +14,6 @@
   </properties>
   <body>
     <release version="19.0.1" date="upcoming">
-      <action type="fix">
-        Update bundled Java runtime from 21.0.10+7 to 21.0.13.1+2. This fixes the [java4shell](https://adoptium.net/de/news/2026/11/temurin-november-2026-cspu-java4shell) issue.
-      </action>
     </release>
     <release version="19.0.0" date="2026-11-23">
       <action type="fix" due-to="Andrea Alberti (@alberti42)">
