@@ -12,11 +12,7 @@ import org.bsplines.ltexls.server.LtexTextDocumentItem
 import org.bsplines.ltexls.tools.I18n
 import org.bsplines.ltexls.tools.Logging
 import org.languagetool.markup.AnnotatedText
-import org.languagetool.markup.AnnotatedTextBuilder
 import org.languagetool.markup.TextPart
-import java.lang.reflect.Field
-import java.lang.reflect.Method
-import kotlin.math.roundToInt
 
 class AnnotatedTextFragment(
   val annotatedText: AnnotatedText,
@@ -30,7 +26,6 @@ class AnnotatedTextFragment(
   val additionalDictionary: Set<String> = emptySet(),
 ) {
   private var plainText: String? = null
-  private var inverseAnnotatedText: AnnotatedText? = null
 
   // Matched against the *collapsed* entry forms, exactly as the configured
   // dictionary is, so a multi-word label joined by the builder is recognized too.
@@ -43,6 +38,8 @@ class AnnotatedTextFragment(
   fun isAdditionalDictionaryEntry(word: String): Boolean =
     this.additionalDictionary.isNotEmpty() && this.additionalEntryMatcher.isEntry(word)
 
+  // Returns the plain text between two source positions, such as the word a
+  // match covers. The positions are relative to this fragment's annotated text.
   fun getSubstringOfPlainText(
     fromPos: Int,
     toPos: Int,
@@ -53,15 +50,9 @@ class AnnotatedTextFragment(
         this.plainText = plainText
         plainText
       }
-    val inverseAnnotatedText: AnnotatedText =
-      this.inverseAnnotatedText ?: run {
-        val inverseAnnotatedText: AnnotatedText = invertAnnotatedText(this.annotatedText)
-        this.inverseAnnotatedText = inverseAnnotatedText
-        inverseAnnotatedText
-      }
 
-    val plainTextFromPos: Int = getOriginalTextPosition(inverseAnnotatedText, fromPos, false)
-    val plainTextToPos: Int = getOriginalTextPosition(inverseAnnotatedText, toPos, true)
+    val plainTextFromPos: Int = getPlainTextPosition(this.annotatedText, fromPos, false)
+    val plainTextToPos: Int = getPlainTextPosition(this.annotatedText, toPos, true)
 
     return if (plainTextFromPos <= plainTextToPos) {
       plainText.substring(plainTextFromPos, plainTextToPos)
@@ -80,138 +71,79 @@ class AnnotatedTextFragment(
   }
 
   companion object {
-    private val ANNOTATED_TEXT_MAPPING_FIELD: Field =
-      run {
-        val annotatedTextMappingField: Field = AnnotatedText::class.java.getDeclaredField("mapping")
-        annotatedTextMappingField.isAccessible = true
-        annotatedTextMappingField
-      }
-
-    private val MAPPING_VALUE_GET_TOTAL_POSITION_METHOD: Method =
-      run {
-        val mappingValueClass: Class<*> = Class.forName("org.languagetool.markup.MappingValue")
-        val mappingValueGetTotalPositionMethod: Method =
-          mappingValueClass.getDeclaredMethod("getTotalPosition")
-        mappingValueGetTotalPositionMethod.isAccessible = true
-        mappingValueGetTotalPositionMethod
-      }
-
-    fun getOriginalTextPosition(
+    // Maps a source position to a plain-text position by walking the parts in
+    // order. A TEXT part has the same length in the source and in the plain text,
+    // so a position inside it maps one to one. A MARKUP part has its own length in
+    // the source and the length of the FAKE_CONTENT that follows it (if any) in
+    // the plain text. A position inside a markup part maps to the start of its
+    // plain text for the start of a range, and to the end for the end of a range.
+    // A markup part with no source, such as the "Dummy0" that AnnotatedTextSlicer
+    // leaves when it cuts a paragraph inside a markup part, is skipped.
+    //
+    // An earlier version interpolated between the mapping points of an inverted
+    // AnnotatedText. LanguageTool's AnnotatedTextBuilder keeps one mapping point
+    // per position, so a markup part with no source added none, and the quoted
+    // word after it was shifted (ltex-plus/ltex-ls-plus#226).
+    fun getPlainTextPosition(
       annotatedText: AnnotatedText,
-      plainTextPos: Int,
+      sourcePos: Int,
       isToPos: Boolean,
     ): Int {
-      @Suppress("UNCHECKED_CAST")
-      val mapping: Map<Int, *> = ANNOTATED_TEXT_MAPPING_FIELD.get(annotatedText) as Map<Int, *>
+      var sourceStart = 0
+      var plainStart = 0
 
-      val mappingList: MutableList<Pair<Int, Int>> =
-        run {
-          val mappingList = ArrayList<Pair<Int, Int>>()
-          mappingList.add(Pair(0, 0))
+      for (segment: Segment in getSegments(annotatedText.parts)) {
+        val sourceEnd: Int = sourceStart + segment.sourceLength
+        val isInSegment: Boolean =
+          if (isToPos) (sourcePos <= sourceEnd) else (sourcePos < sourceEnd)
 
-          for ((key: Int, value: Any?) in mapping) {
-            val totalPosition: Int = MAPPING_VALUE_GET_TOTAL_POSITION_METHOD.invoke(value) as Int
-            if (key == plainTextPos) return totalPosition
-            mappingList.add(Pair(key, totalPosition))
-          }
-
-          mappingList
+        if (isInSegment) {
+          val offset: Int = sourcePos - sourceStart
+          return plainStart +
+            when {
+              segment.isText -> offset
+              isToPos && (offset > 0) -> segment.plainLength
+              else -> 0
+            }
         }
 
-      val i: Int = searchPlainTextPos(mappingList, plainTextPos, isToPos)
-      val lowerNeighbor: Pair<Int, Int> = mappingList[i - 1]
-      val upperNeighbor: Pair<Int, Int> = mappingList[i]
-
-      if (!isToPos) {
-        if (lowerNeighbor.first == plainTextPos) {
-          return lowerNeighbor.second
-        } else if (upperNeighbor.first == plainTextPos) {
-          return upperNeighbor.second
-        }
-      } else {
-        if (upperNeighbor.first == plainTextPos) {
-          return upperNeighbor.second
-        } else if (lowerNeighbor.first == plainTextPos) {
-          return lowerNeighbor.second
-        }
+        sourceStart = sourceEnd
+        plainStart += segment.plainLength
       }
 
-      val t: Float = (
-        (plainTextPos - lowerNeighbor.first).toFloat() /
-          (upperNeighbor.first - lowerNeighbor.first).toFloat()
-      )
-      return ((1 - t) * lowerNeighbor.second + t * upperNeighbor.second).roundToInt()
+      return plainStart
     }
 
-    private fun searchPlainTextPos(
-      mappingList: MutableList<Pair<Int, Int>>,
-      plainTextPos: Int,
-      isToPos: Boolean,
-    ): Int {
-      // cannot use compareBy/thenBy, otherwise Jacoco tries to find a file "Comparisons.kt"
-      // (probably due to inlining), which doesn't exist, and uploading to Coveralls fails
-      val comparator =
-        Comparator<Pair<Int, Int>> { a, b ->
-          if (a.first < b.first) {
-            -1
-          } else if (a.first > b.first) {
-            1
-          } else if (a.second < b.second) {
-            -1
-          } else if (a.second > b.second) {
-            1
-          } else {
-            0
-          }
-        }
+    // A TEXT part, or a MARKUP part together with the FAKE_CONTENT that follows it.
+    private data class Segment(
+      val sourceLength: Int,
+      val plainLength: Int,
+      val isText: Boolean,
+    )
 
-      mappingList.sortWith(comparator)
-
-      val pairToFind: Pair<Int, Int> = Pair(plainTextPos, Int.MAX_VALUE)
-      var i: Int = -mappingList.binarySearch(pairToFind, comparator) - 1
-
-      if (i <= 0) i = 1
-      if (i >= mappingList.size) i = mappingList.size - 1
-
-      if (isToPos) {
-        while ((i < mappingList.size - 1) && (mappingList[i + 1].first <= plainTextPos)) i++
-      } else {
-        while ((i > 1) && (mappingList[i - 1].first >= plainTextPos)) i--
-      }
-
-      return i
-    }
-
-    fun invertAnnotatedText(annotatedText: AnnotatedText): AnnotatedText {
-      val inverseAnnotatedTextBuilder = AnnotatedTextBuilder()
-      val textParts: List<TextPart> = annotatedText.parts
+    private fun getSegments(parts: List<TextPart>): List<Segment> {
+      val segments = ArrayList<Segment>()
       var i = 0
 
-      while (i < textParts.size) {
-        val textPart: TextPart = textParts[i]
+      while (i < parts.size) {
+        val part: TextPart = parts[i]
 
-        when (textPart.type) {
+        when (part.type) {
           TextPart.Type.TEXT -> {
-            inverseAnnotatedTextBuilder.addText(textPart.part)
-          }
-
-          TextPart.Type.FAKE_CONTENT -> {
-            inverseAnnotatedTextBuilder.addMarkup(textPart.part)
+            segments.add(Segment(part.part.length, part.part.length, true))
           }
 
           TextPart.Type.MARKUP -> {
-            val markup: String =
-              if (
-                (i < textParts.size - 1) &&
-                (textParts[i + 1].type == TextPart.Type.FAKE_CONTENT)
-              ) {
-                i++
-                textParts[i].part
-              } else {
-                ""
-              }
+            var plainLength = 0
+            if ((i + 1 < parts.size) && (parts[i + 1].type == TextPart.Type.FAKE_CONTENT)) {
+              i++
+              plainLength = parts[i].part.length
+            }
+            segments.add(Segment(part.part.length, plainLength, false))
+          }
 
-            inverseAnnotatedTextBuilder.addMarkup(markup, textPart.part)
+          TextPart.Type.FAKE_CONTENT -> {
+            segments.add(Segment(0, part.part.length, false))
           }
 
           null -> {}
@@ -220,7 +152,7 @@ class AnnotatedTextFragment(
         i++
       }
 
-      return inverseAnnotatedTextBuilder.build()
+      return segments
     }
   }
 }
