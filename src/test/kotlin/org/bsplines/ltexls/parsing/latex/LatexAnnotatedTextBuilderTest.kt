@@ -639,20 +639,11 @@ class LatexAnnotatedTextBuilderTest : CodeAnnotatedTextBuilderTest("latex") {
     originalTextEndPos: Int,
     settings: Settings = Settings(),
   ) {
-    val invertedAnnotatedText: AnnotatedText =
-      AnnotatedTextFragment.invertAnnotatedText(buildAnnotatedText(code, settings))
+    val annotatedText: AnnotatedText = buildAnnotatedText(code, settings)
     val plainStartPos: Int =
-      AnnotatedTextFragment.getOriginalTextPosition(
-        invertedAnnotatedText,
-        originalTextStartPos,
-        false,
-      )
+      AnnotatedTextFragment.getPlainTextPosition(annotatedText, originalTextStartPos, false)
     val plainEndPos: Int =
-      AnnotatedTextFragment.getOriginalTextPosition(
-        invertedAnnotatedText,
-        originalTextEndPos,
-        true,
-      )
+      AnnotatedTextFragment.getPlainTextPosition(annotatedText, originalTextEndPos, true)
     assertTrue(plainStartPos < plainEndPos)
   }
 }

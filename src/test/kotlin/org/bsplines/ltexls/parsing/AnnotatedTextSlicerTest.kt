@@ -169,7 +169,7 @@ class AnnotatedTextSlicerTest {
   // addMarkup(markup) + addMarkup("", interpretAs). The latter inserts a spurious
   // empty MARKUP part between the markup and its fake content, which desynchronizes
   // the one-part-lookahead markup<->fake pairing used by
-  // AnnotatedTextFragment.invertAnnotatedText and shifts getSubstringOfPlainText.
+  // AnnotatedTextFragment.getPlainTextPosition and shifts getSubstringOfPlainText.
   @Test
   fun testMarkupFakeContentPairNotSplitByEmptyMarkup() {
     val builder = AnnotatedTextBuilder()

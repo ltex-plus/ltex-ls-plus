@@ -14,6 +14,9 @@
   </properties>
   <body>
     <release version="19.0.1" date="upcoming">
+      <action type="fix" issue="ltex-plus/ltex-ls-plus#226" due-to="Andrea Alberti (@alberti42)">
+        Fix `ltex.dictionary` entries not being accepted after inline code at the start of a paragraph. In Markdown, Org and reStructuredText, when such a paragraph was checked in the same request as the paragraph before it (for example when a file is opened), the word quoted in a spelling diagnostic was taken from the wrong part of the text — `'runs frobn': Possible spelling mistake found.` instead of `'frobnitz': …` — although the underline was in the right place. The dictionary check compares its entries against that quoted word, so the entry never matched and the word stayed flagged. This happened with every backend.
+      </action>
     </release>
     <release version="19.0.0" date="2026-11-23">
       <action type="fix" due-to="Andrea Alberti (@alberti42)">

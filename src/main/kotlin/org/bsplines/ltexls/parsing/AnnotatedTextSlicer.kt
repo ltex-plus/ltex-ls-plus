@@ -250,15 +250,14 @@ object AnnotatedTextSlicer {
     // Emits one segment, splitting it at any cut points strictly inside its plain
     // text and closing a slice at each. Returns the advanced cut index.
     //
-    // In practice only TextSegments are ever split: a cut is the end of a "\n\n"
-    // run with content before it, and the builders only ever emit such a run as
-    // genuine prose (a TextSegment) or as a whole fake equal to "\n\n" (whose cut
-    // lands on the segment boundary, handled by the caller's boundary loop, not
-    // here). A fake containing a paragraph break *followed by more content* — the
-    // only way a cut could land strictly inside a MarkupSegment — is never
-    // produced. splitAtPlain still handles that case correctly (markup stays with
-    // the head, tail becomes a bare fake) so correctness does not depend on the
-    // invariant; it just is not exercised by real input.
+    // A cut is the end of a "\n\n" run with content before it. It lands strictly
+    // inside a MarkupSegment when the builder put a paragraph break and the
+    // markup after it into one part: the Markdown, Org and reStructuredText
+    // builders do this for a paragraph that starts with inline code (source
+    // "\n\n`code`", fake "\n\nDummy0"). splitAtPlain then keeps all the markup in
+    // the head and leaves the tail as a bare fake ("Dummy0" with no source). The
+    // source offsets stay correct, and AnnotatedTextFragment.getPlainTextPosition
+    // maps them past the bare fake.
     fun emitSegment(
       segment: Segment,
       cutPoints: List<Int>,
