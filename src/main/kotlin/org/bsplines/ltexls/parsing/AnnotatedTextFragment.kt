@@ -27,6 +27,9 @@ class AnnotatedTextFragment(
 ) {
   private var plainText: String? = null
 
+  // Computed on the first call to getSubstringOfPlainText and kept for later calls.
+  private val segments: List<Segment> by lazy { getSegments(this.annotatedText.parts) }
+
   // Matched against the *collapsed* entry forms, exactly as the configured
   // dictionary is, so a multi-word label joined by the builder is recognized too.
   private val additionalEntryMatcher: DictionaryMasker by lazy {
@@ -51,8 +54,8 @@ class AnnotatedTextFragment(
         plainText
       }
 
-    val plainTextFromPos: Int = getPlainTextPosition(this.annotatedText, fromPos, false)
-    val plainTextToPos: Int = getPlainTextPosition(this.annotatedText, toPos, true)
+    val plainTextFromPos: Int = getPlainTextPosition(this.segments, fromPos, false)
+    val plainTextToPos: Int = getPlainTextPosition(this.segments, toPos, true)
 
     return if (plainTextFromPos <= plainTextToPos) {
       plainText.substring(plainTextFromPos, plainTextToPos)
@@ -88,11 +91,17 @@ class AnnotatedTextFragment(
       annotatedText: AnnotatedText,
       sourcePos: Int,
       isToPos: Boolean,
+    ): Int = getPlainTextPosition(getSegments(annotatedText.parts), sourcePos, isToPos)
+
+    private fun getPlainTextPosition(
+      segments: List<Segment>,
+      sourcePos: Int,
+      isToPos: Boolean,
     ): Int {
       var sourceStart = 0
       var plainStart = 0
 
-      for (segment: Segment in getSegments(annotatedText.parts)) {
+      for (segment: Segment in segments) {
         val sourceEnd: Int = sourceStart + segment.sourceLength
         val isInSegment: Boolean =
           if (isToPos) (sourcePos <= sourceEnd) else (sourcePos < sourceEnd)
